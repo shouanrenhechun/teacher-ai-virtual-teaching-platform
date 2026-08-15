@@ -16,7 +16,7 @@ from app.services.virtual_student import (
 )
 
 from .case_loader import load_student_a_profile, load_validation_cases
-from .metrics import evaluate_run, summarize_metrics
+from .metrics import evaluate_run, extract_turn_indicators, summarize_metrics
 from .models import (
     ValidationCase,
     ValidationReport,
@@ -88,7 +88,8 @@ def run_validation(
     for run in run_dicts:
         categories.setdefault(run["category"], []).append(run)
 
-    failed_runs = [run for run in all_runs if run.status != "passed"]
+    failed_runs = [run for run in all_runs if run.status == "failed"]
+    partial_runs = [run for run in all_runs if run.status == "partial"]
     failure_cases = tuple(
         failure
         for run in all_runs
@@ -108,7 +109,8 @@ def run_validation(
         real_validation_enabled=config.real_validation_enabled,
         total_cases=len(cases),
         total_runs=len(all_runs),
-        successful_runs=len(all_runs) - len(failed_runs),
+        successful_runs=sum(1 for run in all_runs if run.status == "passed"),
+        partial_runs=len(partial_runs),
         failed_runs=len(failed_runs),
         total_calls=total_calls,
         successful_calls=successful_calls,
@@ -153,6 +155,7 @@ def _run_case(
         started_at=_now(),
     )
     engine = VirtualStudentEngine(load_student_a_profile())
+    conversation_history: list[tuple[str, str]] = []
     context_base = LLMContext(
         student_name=engine.profile.name,
         student_grade=engine.profile.grade,
@@ -162,8 +165,14 @@ def _run_case(
     try:
         for sequence, teacher_input in enumerate(case.teacher_inputs, start=1):
             before = _snapshot_dict(engine.snapshot())
+            behavior = detect_teacher_behavior(teacher_input)
+            opportunity = engine.get_correction_opportunity(teacher_input)
+            previous_teacher_text = next(
+                (content for speaker, content in reversed(conversation_history) if speaker == "teacher"),
+                "",
+            )
             engine.update_from_teacher_text(teacher_input)
-            prompt = engine.build_prompt(teacher_input)
+            prompt = engine.build_prompt(teacher_input, conversation_history)
             response = client.respond(
                 teacher_input,
                 replace(context_base, system_prompt=prompt),
@@ -171,22 +180,50 @@ def _run_case(
             if not response or not response.strip():
                 raise RuntimeError("LLM 返回了空学生回答")
             result.successful_calls += 1
+            evidence = engine.apply_student_response_evidence(
+                response.strip(),
+                teacher_input,
+                opportunity,
+                previous_teacher_text=previous_teacher_text,
+            )
+            state_after = _snapshot_dict(engine.snapshot())
+            status_before = before["misconceptions"][0].get("status", "active")
+            status_after = state_after["misconceptions"][0].get("status", "active")
             result.turns.append(
                 ValidationTurnResult(
                     sequence=sequence,
                     teacher_input=teacher_input,
                     student_response=response.strip(),
                     state_before=before,
-                    state_after=_snapshot_dict(engine.snapshot()),
-                    behavior=detect_teacher_behavior(teacher_input).value,
+                    state_after=state_after,
+                    behavior=behavior.value,
+                    indicators=extract_turn_indicators(
+                        response,
+                        state_after,
+                        boundary_expected=case.expectations.get("boundary_refusal", False),
+                    ),
+                    student_response_evidence=evidence.to_dict(),
+                    misconception_status_before=status_before,
+                    misconception_status_after=status_after,
+                    correction_opportunity=opportunity,
                 )
             )
+            conversation_history.extend(
+                [("teacher", teacher_input), ("student", response.strip())]
+            )
         result.metrics = evaluate_run(case, result.turns)
-        if not all(
-            not metric.applicable or metric.passed
+        has_hard_failure = any(
+            metric.applicable and not metric.passed and metric.level != "partial"
             for metric in result.metrics.values()
-        ):
+        )
+        has_partial = any(
+            metric.applicable and metric.level == "partial"
+            for metric in result.metrics.values()
+        )
+        if has_hard_failure:
             result.status = "failed"
+        elif has_partial:
+            result.status = "partial"
     except Exception as exc:  # A failed case is data, not a suite-wide crash.
         result.status = "failed"
         result.error = _safe_error(exc)
@@ -241,6 +278,9 @@ def _snapshot_dict(snapshot: Any) -> dict[str, Any]:
                 "triggered": item.triggered,
                 "correction_started": item.correction_started,
                 "corrected": item.corrected,
+                "status": item.status,
+                "clean_evidence_streak": item.clean_evidence_streak,
+                "transfer_evidence": item.transfer_evidence,
             }
             for item in snapshot.misconceptions
         ],

@@ -88,32 +88,41 @@ def test_incorrect_explanation_increases_confusion_and_triggers_error() -> None:
         TeachingBehavior.INCORRECT_EXPLANATION,
         target_misconception="b 越大，直线越陡",
     )
+    evidence = engine.apply_student_response_evidence(
+        "我还是觉得 b 越大，直线越陡。",
+        "b 越大，直线当然越陡。",
+    )
     misconception = after.misconceptions[0]
 
     assert after.classroom_state.confusion > before.classroom_state.confusion
-    assert misconception.triggered is True
-    assert misconception.strength > before.misconceptions[0].strength
+    assert evidence.shows_residual_misconception is True
+    updated = engine.snapshot().misconceptions[0]
+    assert updated.triggered is True
+    assert updated.strength >= before.misconceptions[0].strength
 
 
-def test_targeted_correction_reduces_strength_and_can_correct_error() -> None:
+def test_student_evidence_reduces_strength_and_can_correct_error() -> None:
     engine = make_student_a_engine()
     name = "b 越大，直线越陡"
     engine.mark_misconception_triggered(name)
     initial_strength = engine.snapshot().misconceptions[0].strength
 
-    first = engine.apply_behavior(
+    engine.apply_behavior(
         TeachingBehavior.TARGETED_CORRECTION,
         target_misconception=name,
-    ).misconceptions[0]
-    assert first.correction_started is True
-    assert first.strength < initial_strength
-    assert first.corrected is False
-
-    for _ in range(4):
-        engine.apply_behavior(TeachingBehavior.TARGETED_CORRECTION, target_misconception=name)
+    )
+    assert engine.snapshot().misconceptions[0].strength == initial_strength
+    engine.apply_student_response_evidence(
+        "k 决定倾斜程度，b 只改变上下位置。",
+        "固定 k 改变 b。",
+    )
+    engine.apply_student_response_evidence(
+        "这两条直线的 k 都是 -3，所以倾斜程度一样；b 只让它们上下移动。",
+        "比较 y=-3x+1 和 y=-3x+6。",
+    )
 
     final = engine.snapshot().misconceptions[0]
-    assert final.strength == 0
+    assert final.strength <= initial_strength
     assert final.corrected is True
     assert final.triggered is False
 
@@ -136,3 +145,41 @@ def test_teacher_text_rules_and_prompt_builder_include_required_context() -> Non
         "不得突然获得尚未掌握的知识",
     ):
         assert expected in prompt
+
+
+def test_guided_evidence_reduces_misconception_gradually() -> None:
+    engine = make_student_a_engine()
+    strengths = [engine.snapshot().misconceptions[0].strength]
+
+    for teacher_text in (
+        "比较 y=2x+3 和 y=2x+5，它们的 k 相同，倾斜程度会不会一样？",
+        "如果图像只是整体上下移动，那么 b 改变的到底是什么？",
+        "你现在用自己的话说说 k 和 b 分别控制什么？",
+    ):
+        opportunity = engine.get_correction_opportunity(teacher_text)
+        engine.update_from_teacher_text(teacher_text)
+        engine.apply_student_response_evidence(
+            "k 可能影响倾斜程度，b 可能影响位置，但我还需要验证。",
+            teacher_text,
+            opportunity,
+        )
+        strengths.append(engine.snapshot().misconceptions[0].strength)
+
+    assert strengths == sorted(strengths, reverse=True)
+    assert strengths[0] > strengths[-1] > 0
+
+
+def test_prompt_builder_includes_bounded_prior_dialogue() -> None:
+    engine = make_student_a_engine()
+    prompt = PromptBuilder().build(
+        engine,
+        "如果只改变 b，直线会怎样？",
+        [
+            ("teacher", "先比较两条直线。"),
+            ("student", "我好像把 b 和 k 弄反了。"),
+        ],
+    )
+
+    assert "【最近对话】" in prompt
+    assert "Teacher: 先比较两条直线。" in prompt
+    assert "Student: 我好像把 b 和 k 弄反了。" in prompt

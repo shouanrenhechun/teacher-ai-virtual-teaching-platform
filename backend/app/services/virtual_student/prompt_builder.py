@@ -6,7 +6,12 @@ from .engine import VirtualStudentEngine
 class PromptBuilder:
     """Build a complete, inspectable prompt from the current engine state."""
 
-    def build(self, engine: VirtualStudentEngine, teacher_text: str) -> str:
+    def build(
+        self,
+        engine: VirtualStudentEngine,
+        teacher_text: str,
+        conversation_history: list[tuple[str, str]] | None = None,
+    ) -> str:
         snapshot = engine.snapshot()
         boundary = engine.knowledge_boundary()
         knowledge = "；".join(
@@ -15,11 +20,17 @@ class PromptBuilder:
         ) or "暂无知识状态记录"
         misconceptions = "；".join(
             f"{item.name}（强度={item.strength:.2f}，已触发={item.triggered}，"
-            f"已开始修正={item.correction_started}，已纠正={item.corrected}）"
+            f"已开始修正={item.correction_started}，状态={item.status}，已纠正={item.corrected}）"
             for item in snapshot.misconceptions
             if not item.corrected
         ) or "当前没有未纠正的固定认知错误"
         classroom = snapshot.classroom_state
+        recent_history = (conversation_history or [])[-8:]
+        history_text = "\n".join(
+            f"{'Teacher' if speaker == 'teacher' else 'Student'}: {content.strip()}"
+            for speaker, content in recent_history
+            if content.strip() and content.strip() != teacher_text.strip()
+        ) or "（暂无更早对话）"
 
         return f"""你是教学实训中的{engine.profile.grade}学生{engine.profile.name}。
 
@@ -48,6 +59,9 @@ confidence={classroom.confidence:.2f}
 - 不得突然获得尚未掌握的知识；可以犹豫、猜测或请求提示。
 - 未被有效纠正前，保持未纠正的固定认知错误，不要主动替教师完成教学。
 - 只回应教师刚才的内容，不要直接设计完整课程或替教师总结全部答案。
+
+【最近对话】
+{history_text}
 
 【教师刚才的教学内容】
 {teacher_text.strip()}

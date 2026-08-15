@@ -5,6 +5,7 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from .behavior import TeachingBehavior, detect_teacher_behavior
+from .evidence import StudentResponseEvidence, StudentResponseEvidenceAnalyzer, correction_opportunity
 
 
 def _clamp(value: float) -> float:
@@ -30,9 +31,16 @@ class MisconceptionState:
     triggered: bool = False
     correction_started: bool = False
     corrected: bool = False
+    status: str = "active"
+    clean_evidence_streak: int = 0
+    transfer_evidence: int = 0
 
     def __post_init__(self) -> None:
         self.strength = _clamp(self.strength)
+        if self.status not in {"active", "weakening", "provisional", "corrected"}:
+            self.status = "active"
+        if self.corrected:
+            self.status = "corrected"
 
 
 @dataclass(frozen=True)
@@ -183,10 +191,6 @@ class VirtualStudentEngine:
                 confusion=state.confusion + 0.12,
                 confidence=state.confidence - 0.05,
             )
-            misconception = self._find_misconception(target_misconception)
-            if misconception is not None and not misconception.corrected:
-                misconception.triggered = True
-                misconception.strength = _clamp(misconception.strength + 0.08)
         elif behavior is TeachingBehavior.TARGETED_CORRECTION:
             self._apply_targeted_correction(target_misconception)
         elif behavior is TeachingBehavior.NEUTRAL:
@@ -200,29 +204,99 @@ class VirtualStudentEngine:
         target = self._infer_target_misconception(teacher_text, behavior)
         return self.apply_behavior(behavior, target_misconception=target)
 
-    def build_prompt(self, teacher_text: str) -> str:
+    def get_correction_opportunity(self, teacher_text: str) -> dict[str, object]:
+        behavior = detect_teacher_behavior(teacher_text)
+        return correction_opportunity(behavior.value, teacher_text)
+
+    def apply_student_response_evidence(
+        self,
+        response: str,
+        teacher_text: str,
+        opportunity: dict[str, object] | None = None,
+        *,
+        previous_teacher_text: str = "",
+    ) -> StudentResponseEvidence:
+        """Update misconception state only after inspecting the student's answer."""
+        evidence = StudentResponseEvidenceAnalyzer().analyze(
+            response,
+            teacher_text=teacher_text,
+            previous_teacher_text=previous_teacher_text,
+        )
+        misconception = self._find_misconception(None)
+        if misconception is None:
+            return evidence
+
+        opportunity_strength = float(
+            (opportunity or self.get_correction_opportunity(teacher_text)).get(
+                "opportunity_strength", 0.0
+            )
+        )
+        has_opportunity = opportunity_strength > 0
+        misconception.triggered = evidence.shows_residual_misconception
+        misconception.correction_started = misconception.correction_started or has_opportunity
+
+        if evidence.shows_residual_misconception:
+            misconception.corrected = False
+            misconception.clean_evidence_streak = 0
+            if evidence.states_correct_conclusion and evidence.explains_reason_correctly:
+                reduction = 0.12 * max(opportunity_strength, 0.5)
+                misconception.status = "provisional"
+            elif evidence.states_correct_conclusion:
+                reduction = 0.08 * max(opportunity_strength, 0.5)
+                misconception.status = "provisional"
+            elif evidence.shows_uncertainty and has_opportunity:
+                reduction = 0.04 * max(opportunity_strength, 0.5)
+                misconception.status = "weakening"
+            else:
+                reduction = -0.03 if not has_opportunity else 0.0
+                misconception.status = "active"
+            misconception.strength = _clamp(misconception.strength - reduction)
+        else:
+            if evidence.states_correct_conclusion:
+                misconception.clean_evidence_streak += 1
+            if evidence.transfer_success:
+                misconception.transfer_evidence += 1
+            if evidence.states_correct_conclusion and evidence.explains_reason_correctly:
+                reduction = 0.15 if evidence.transfer_success else 0.1
+                misconception.strength = _clamp(misconception.strength - reduction)
+                misconception.status = "provisional"
+            elif evidence.states_correct_conclusion:
+                misconception.strength = _clamp(misconception.strength - 0.05)
+                misconception.status = "provisional"
+            elif has_opportunity:
+                misconception.status = "weakening"
+
+            if (
+                (evidence.transfer_success or misconception.transfer_evidence > 0)
+                and evidence.explains_reason_correctly
+                and not evidence.shows_uncertainty
+                and not evidence.parrots_teacher
+                and misconception.clean_evidence_streak >= 2
+            ):
+                misconception.strength = min(misconception.strength, 0.05)
+                misconception.status = "corrected"
+                misconception.corrected = True
+                misconception.triggered = False
+
+        return evidence
+
+    def build_prompt(
+        self,
+        teacher_text: str,
+        conversation_history: list[tuple[str, str]] | None = None,
+    ) -> str:
         from .prompt_builder import PromptBuilder
 
-        return PromptBuilder().build(self, teacher_text)
+        return PromptBuilder().build(self, teacher_text, conversation_history)
 
     def _apply_targeted_correction(self, target_misconception: str | None) -> None:
-        misconception = self._find_misconception(target_misconception)
-        if misconception is None or misconception.corrected:
-            return
-        misconception.triggered = False
-        misconception.correction_started = True
-        misconception.strength = _clamp(misconception.strength - 0.18)
-        if misconception.strength <= 0.15:
-            misconception.strength = 0.0
-            misconception.corrected = True
         self._classroom_state = replace(
             self._classroom_state,
-            understanding=self._classroom_state.understanding + 0.08,
+            understanding=self._classroom_state.understanding + 0.04,
             confusion=self._classroom_state.confusion - 0.1,
             engagement=self._classroom_state.engagement + 0.05,
             confidence=self._classroom_state.confidence + 0.03,
         )
-        self._increase_knowledge_if_related(0.05)
 
     def _increase_knowledge_if_related(self, amount: float) -> None:
         for item in self._knowledge.values():
@@ -245,6 +319,8 @@ class VirtualStudentEngine:
         if behavior not in {
             TeachingBehavior.TARGETED_CORRECTION,
             TeachingBehavior.INCORRECT_EXPLANATION,
+            TeachingBehavior.EFFECTIVE_EXAMPLE,
+            TeachingBehavior.EFFECTIVE_QUESTION,
         }:
             return None
         text = teacher_text.lower()

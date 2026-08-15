@@ -45,9 +45,24 @@ def load_session(db: Session, session_id: int) -> TeachingSession | None:
 def load_engine(session: TeachingSession) -> VirtualStudentEngine:
     profile = StudentProfile.from_record(session.virtual_student)
     engine = VirtualStudentEngine(profile)
+    previous_teacher_text = ""
+    pending_teacher_text = ""
+    pending_opportunity: dict[str, object] | None = None
     for record in sorted(session.dialogue_records, key=lambda item: item.sequence):
         if record.speaker == "teacher":
             engine.update_from_teacher_text(record.content)
+            pending_teacher_text = record.content
+            pending_opportunity = engine.get_correction_opportunity(record.content)
+        elif record.speaker == "student" and pending_teacher_text:
+            engine.apply_student_response_evidence(
+                record.content,
+                pending_teacher_text,
+                pending_opportunity,
+                previous_teacher_text=previous_teacher_text,
+            )
+            previous_teacher_text = pending_teacher_text
+            pending_teacher_text = ""
+            pending_opportunity = None
     return engine
 
 
@@ -167,6 +182,15 @@ def send_teacher_message(
         raise RuntimeError("实训已结束，不能继续发送消息")
 
     engine = load_engine(session)
+    conversation_history = [
+        (record.speaker, record.content)
+        for record in sorted(session.dialogue_records, key=lambda item: item.sequence)[-8:]
+    ]
+    previous_teacher_text = next(
+        (content for speaker, content in reversed(conversation_history) if speaker == "teacher"),
+        "",
+    )
+    opportunity = engine.get_correction_opportunity(teacher_text)
     next_sequence = max((record.sequence for record in session.dialogue_records), default=-1) + 1
     teacher_record = DialogueRecord(
         session_id=session.id,
@@ -189,7 +213,7 @@ def send_teacher_message(
         context=context,
     )
     engine.update_from_teacher_text(teacher_text)
-    prompt = engine.build_prompt(teacher_text)
+    prompt = engine.build_prompt(teacher_text, conversation_history)
     student_text = client.respond(
         teacher_text,
         LLMContext(
@@ -202,6 +226,13 @@ def send_teacher_message(
     if not student_text.strip():
         db.rollback()
         raise RuntimeError("学生回答为空，请重试")
+
+    engine.apply_student_response_evidence(
+        student_text.strip(),
+        teacher_text,
+        opportunity,
+        previous_teacher_text=previous_teacher_text,
+    )
 
     db.add(
         TeachingBehaviorRecord(

@@ -16,6 +16,9 @@ def detect_teacher_behavior(teacher_text: str) -> TeachingBehavior:
     """Use small transparent heuristics until a richer behavior tagger exists."""
     text = teacher_text.lower().replace(" ", "")
 
+    if any(phrase in text for phrase in ("用自己的话", "复述一下", "说说k和b", "分别控制什么")):
+        return TeachingBehavior.EFFECTIVE_QUESTION
+
     if any(
         phrase in text
         for phrase in (
@@ -31,7 +34,7 @@ def detect_teacher_behavior(teacher_text: str) -> TeachingBehavior:
         return TeachingBehavior.INCORRECT_EXPLANATION
     if any(phrase in text for phrase in ("答案是", "记住", "直接告诉你", "就是这样")):
         return TeachingBehavior.DIRECT_ANSWER
-    if any(phrase in text for phrase in ("例如", "画两条", "对比", "固定k", "举个例子")):
+    if any(phrase in text for phrase in ("例如", "画两条", "对比", "比较", "固定k", "举个例子")):
         return TeachingBehavior.EFFECTIVE_EXAMPLE
     if any(phrase in text for phrase in ("为什么", "怎么解释", "如果", "你觉得", "能说明")):
         return TeachingBehavior.EFFECTIVE_QUESTION

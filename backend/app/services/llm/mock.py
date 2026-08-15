@@ -19,6 +19,12 @@ class MockLLMClient(LLMClient):
         normalized = text.lower().replace(" ", "")
         branch = len(text) % 3
 
+        if "2和3" in normalized or "2和3".replace("和", "") in normalized:
+            return "2应该影响倾斜程度吧，3的话……我总觉得它越大，直线好像也会越陡？"
+
+        if "y=-3x+1" in normalized or "只改变b" in normalized:
+            return "两条直线一样陡，因为 k 都是 -3；b 只会让它们上下移动，位置不同。"
+
         if "b越大" in normalized or "b更大" in normalized:
             replies = [
                 "我感觉 b 变大以后，直线会变得更陡一些，但我说不太清楚原因。",

@@ -10,6 +10,11 @@ from .engine import (
     VirtualStudentEngine,
 )
 from .prompt_builder import PromptBuilder
+from .evidence import (
+    StudentResponseEvidence,
+    StudentResponseEvidenceAnalyzer,
+    correction_opportunity,
+)
 
 __all__ = [
     "DynamicState",
@@ -21,4 +26,7 @@ __all__ = [
     "TeachingBehavior",
     "VirtualStudentEngine",
     "detect_teacher_behavior",
+    "StudentResponseEvidence",
+    "StudentResponseEvidenceAnalyzer",
+    "correction_opportunity",
 ]

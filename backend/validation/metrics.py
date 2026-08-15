@@ -35,15 +35,30 @@ _ADVANCED_MARKERS = (
     "梯度",
 )
 _REFUSAL_MARKERS = (
+    "还没学",
     "没学过",
     "还没有学",
+    "没有学过",
+    "没接触过",
     "不太懂",
+    "听不懂",
     "不知道",
     "不了解",
     "超出",
     "超出了",
     "不会解释",
+    "这个我们没学",
+    "这个我还不会",
     "需要以后学习",
+)
+_ADVANCED_EXPLANATION_MARKERS = (
+    "就是",
+    "指的是",
+    "表示",
+    "定义",
+    "可以理解为",
+    "把它看成",
+    "映射",
 )
 _UNCERTAINTY_MARKERS = (
     "不确定",
@@ -105,6 +120,36 @@ def evaluate_run(
     }
 
 
+def extract_turn_indicators(
+    response: str,
+    state_after: dict[str, Any],
+    *,
+    boundary_expected: bool = False,
+) -> dict[str, bool]:
+    """Expose lightweight, per-turn evidence alongside aggregate metrics."""
+    advanced = any(marker in response for marker in _ADVANCED_MARKERS)
+    refusal = _contains_any(response, _REFUSAL_MARKERS)
+    detailed_advanced = advanced and _contains_any(
+        response, _ADVANCED_EXPLANATION_MARKERS
+    )
+    classroom = state_after.get("classroom_state", {})
+    misconception = _first_misconception(state_after) or {}
+    return {
+        "role_consistent": not _contains_any(
+            response.lower().replace(" ", ""), _AI_ROLE_MARKERS
+        ),
+        "knowledge_boundary_compliant": not advanced or (refusal and not detailed_advanced),
+        "boundary_refusal_observed": refusal if boundary_expected else not advanced,
+        "correctness": _contains_any(response, _CORRECT_CONCEPT_MARKERS),
+        "misconception_observed": _contains_any_pattern(
+            response, _MISCONCEPTION_MARKERS
+        ),
+        "state_marked_corrected": bool(misconception.get("corrected", False)),
+        "low_confidence_or_confused": float(classroom.get("confusion", 0.0)) >= 0.45
+        or float(classroom.get("understanding", 1.0)) <= 0.65,
+    }
+
+
 def _role_consistency(turns: Sequence[ValidationTurnResult]) -> MetricResult:
     failures: list[str] = []
     for turn in turns:
@@ -129,11 +174,13 @@ def _knowledge_boundary(
     for turn in turns:
         response = turn.student_response
         advanced = [marker for marker in _ADVANCED_MARKERS if marker in response]
-        if advanced and not any(marker in response for marker in _REFUSAL_MARKERS):
+        refusal = any(marker in response for marker in _REFUSAL_MARKERS)
+        detailed_advanced = _contains_any(response, _ADVANCED_EXPLANATION_MARKERS)
+        if advanced and (not refusal or detailed_advanced):
             failures.append(
                 f"第{turn.sequence}轮直接使用超纲术语：{', '.join(advanced)}"
             )
-        if refusal_expected and not any(marker in response for marker in _REFUSAL_MARKERS):
+        if refusal_expected and not refusal:
             failures.append(f"第{turn.sequence}轮未明确承认尚未学习该内容")
     if failures:
         return MetricResult(False, True, "知识边界遵守失败", tuple(failures))
@@ -187,27 +234,85 @@ def _correctability(
 
     initial_strength = float(before.get("strength", 0.0))
     final_strength = float(after.get("strength", 0.0))
+    final_status = str(after.get("status", "active"))
+    if initial_strength <= 0.5:
+        return MetricResult(False, True, "初始认知错误强度不足，无法验证有效纠正", level="fail")
+    strength_series = [
+        float((_first_misconception(turn.state_after) or {}).get("strength", 0.0))
+        for turn in turns
+    ]
+    decreases = sum(
+        1 for previous, current in zip([initial_strength, *strength_series], strength_series)
+        if current < previous
+    )
+    largest_drop = max(
+        (previous - current for previous, current in zip([initial_strength, *strength_series], strength_series)),
+        default=0.0,
+    )
+    effective_behaviors = sum(
+        1
+        for turn in turns
+        if turn.behavior in {"targeted_correction", "effective_example", "effective_question"}
+    )
     correction_markers = sum(
         1
         for turn in turns
         if _contains_any(turn.teacher_input, _CORRECT_CONCEPT_MARKERS)
         or _contains_any(turn.student_response, _CORRECT_CONCEPT_MARKERS)
     )
-    if final_strength >= initial_strength:
+    observed_initial_error = any(
+        bool(turn.student_response_evidence.get("shows_residual_misconception"))
+        or bool((_first_misconception(turn.state_after) or {}).get("triggered"))
+        for turn in turns
+    )
+    if not observed_initial_error:
+        return MetricResult(False, True, "没有从学生回答中观察到初始认知错误", level="fail")
+    if effective_behaviors < 2 or final_strength >= initial_strength or decreases < 2:
         return MetricResult(
             False,
             True,
-            "有效教学轨迹结束后认知错误强度没有降低",
+            "有效教学轨迹没有形成足够的认知进步证据",
             (f"strength {initial_strength:.2f} -> {final_strength:.2f}",),
+            level="fail",
         )
+    if largest_drop >= initial_strength * 0.75:
+        return MetricResult(False, True, "认知错误一次性下降过大，不符合渐进式纠正", level="fail")
     if correction_markers == 0:
-        return MetricResult(False, True, "状态降低但未观察到对应的纠正证据")
-    return MetricResult(
-        True,
-        True,
-        "有效纠正后认知错误强度逐步降低",
-        (f"strength {initial_strength:.2f} -> {final_strength:.2f}",),
+        return MetricResult(False, True, "状态降低但未观察到对应的纠正证据", level="fail")
+    final_evidence = turns[-1].student_response_evidence
+    transfer_observed = any(
+        bool(turn.student_response_evidence.get("transfer_success")) for turn in turns
     )
+    if final_status == "corrected":
+        if not (
+            final_evidence.get("states_correct_conclusion")
+            and final_evidence.get("explains_reason_correctly")
+            and transfer_observed
+            and not final_evidence.get("shows_residual_misconception")
+            and not final_evidence.get("parrots_teacher")
+        ):
+            return MetricResult(
+                False,
+                True,
+                "状态标记为 corrected，但缺少完整学生响应证据",
+                level="fail",
+            )
+        return MetricResult(
+            True,
+            True,
+            "学生独立解释并完成变式迁移，认知错误已满足纠正门槛",
+            (f"strength {initial_strength:.2f} -> {final_strength:.2f}",),
+            level="pass",
+        )
+    if final_status in {"weakening", "provisional"}:
+        return MetricResult(
+            False,
+            True,
+            "学生已有认知进步，但仍未满足 corrected 的完整证据门槛",
+            (f"strength {initial_strength:.2f} -> {final_strength:.2f}", final_status),
+            level="partial",
+        )
+    return MetricResult(False, True, "认知错误仍处于 active，缺少有效修正证据", level="fail")
 
 
 def _language_naturalness(turns: Sequence[ValidationTurnResult]) -> MetricResult:
@@ -249,6 +354,16 @@ def _state_consistency(turns: Sequence[ValidationTurnResult]) -> MetricResult:
             and not _contains_any(response, _UNCERTAINTY_MARKERS)
         ):
             failures.append(f"第{turn.sequence}轮未纠正错误认知却自信表达正确结论")
+        evidence = turn.student_response_evidence
+        prior_transfer = any(
+            bool(previous.student_response_evidence.get("transfer_success"))
+            for previous in turns[: turn.sequence - 1]
+        )
+        if misconception.get("status") == "corrected" and (
+            evidence.get("shows_residual_misconception")
+            or (not evidence.get("transfer_success") and not prior_transfer)
+        ):
+            failures.append(f"第{turn.sequence}轮状态标记 corrected，但学生回答仍缺少稳定纠正证据")
     if failures:
         return MetricResult(False, True, "自然语言回答与后端课堂状态存在冲突", tuple(failures))
     return MetricResult(True, True, "自然语言回答与 understanding、confusion 和 misconception 状态一致")
@@ -270,6 +385,7 @@ def summarize_metrics(
             "passed": passed,
             "total": total,
             "rate": round(passed / total, 4) if total else None,
+            "partial": sum(1 for item in applicable if item.get("level") == "partial"),
         }
     return summary
 

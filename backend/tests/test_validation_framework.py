@@ -8,12 +8,14 @@ import pytest
 from app.services.llm.base import LLMClient, LLMContext, LLMServiceError
 from app.services.llm.mock import MockLLMClient
 from validation.case_loader import load_validation_cases
+from validation.metrics import evaluate_run
 from validation.runner import (
     RealValidationDisabledError,
     ValidationConfig,
     run_validation,
     write_report,
 )
+from validation.models import ValidationTurnResult
 
 
 def test_validation_cases_cover_required_categories() -> None:
@@ -51,7 +53,7 @@ def test_mock_validation_runs_and_exports_report(tmp_path: Path) -> None:
     assert payload["provider"] == "mock"
     assert payload["basic"]["total_cases"] == 19
     assert payload["basic"]["total_runs"] == 19
-    assert payload["basic"]["total_calls"] == 27
+    assert payload["basic"]["total_calls"] == 29
     assert payload["basic"]["api_failures"] == 0
     assert payload["overall_metrics"]["Role Consistency"]["total"] == 19
     assert payload["category_metrics"]["多轮：有效纠正"]
@@ -75,6 +77,38 @@ def test_mock_effective_correction_reduces_misconception() -> None:
     first_strength = run["turns"][0]["state_before"]["misconceptions"][0]["strength"]
     final_strength = run["turns"][-1]["state_after"]["misconceptions"][0]["strength"]
     assert final_strength < first_strength
+
+
+def test_boundary_rule_accepts_common_spoken_refusal() -> None:
+    case = load_validation_cases(case_ids={"out_of_scope_01"})[0]
+    turn = ValidationTurnResult(
+        sequence=1,
+        teacher_input=case.teacher_inputs[0],
+        student_response="线性代数我们还没学呢，仿射变换是什么我听不懂。",
+        state_before={},
+        state_after={},
+        behavior="neutral",
+    )
+
+    metric = evaluate_run(case, [turn])["Knowledge Boundary Compliance"]
+
+    assert metric.passed is True
+
+
+def test_boundary_rule_rejects_refusal_plus_detailed_advanced_explanation() -> None:
+    case = load_validation_cases(case_ids={"out_of_scope_01"})[0]
+    turn = ValidationTurnResult(
+        sequence=1,
+        teacher_input=case.teacher_inputs[0],
+        student_response="我还没学过仿射变换，但它就是把一个图形映射到另一个位置。",
+        state_before={},
+        state_after={},
+        behavior="neutral",
+    )
+
+    metric = evaluate_run(case, [turn])["Knowledge Boundary Compliance"]
+
+    assert metric.passed is False
 
 
 def test_real_provider_requires_explicit_safety_switch() -> None:

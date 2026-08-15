@@ -40,6 +40,7 @@ class MetricResult:
     applicable: bool
     reason: str
     evidence: tuple[str, ...] = ()
+    level: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -47,6 +48,7 @@ class MetricResult:
             "applicable": self.applicable,
             "reason": self.reason,
             "evidence": list(self.evidence),
+            "level": self.level,
         }
 
 
@@ -58,6 +60,11 @@ class ValidationTurnResult:
     state_before: dict[str, Any]
     state_after: dict[str, Any]
     behavior: str
+    indicators: dict[str, bool] = field(default_factory=dict)
+    student_response_evidence: dict[str, object] = field(default_factory=dict)
+    misconception_status_before: str = "active"
+    misconception_status_after: str = "active"
+    correction_opportunity: dict[str, object] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -67,6 +74,11 @@ class ValidationTurnResult:
             "state_before": self.state_before,
             "state_after": self.state_after,
             "behavior": self.behavior,
+            "indicators": self.indicators,
+            "student_response_evidence": self.student_response_evidence,
+            "misconception_status_before": self.misconception_status_before,
+            "misconception_status_after": self.misconception_status_after,
+            "correction_opportunity": self.correction_opportunity,
         }
 
 
@@ -112,6 +124,7 @@ class ValidationReport:
     total_cases: int
     total_runs: int
     successful_runs: int
+    partial_runs: int
     failed_runs: int
     total_calls: int
     successful_calls: int
@@ -132,6 +145,7 @@ class ValidationReport:
                 "total_cases": self.total_cases,
                 "total_runs": self.total_runs,
                 "successful_runs": self.successful_runs,
+                "partial_runs": self.partial_runs,
                 "failed_runs": self.failed_runs,
                 "total_calls": self.total_calls,
                 "successful_calls": self.successful_calls,
