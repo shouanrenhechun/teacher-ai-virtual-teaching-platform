@@ -4,7 +4,7 @@
 
 ## 当前模块
 
-当前已完成模块 0～8：
+当前已完成模块 0～9：
 
 - 前端 React/Vite/TypeScript 首页
 - 后端 FastAPI `/api/health` 健康检查
@@ -48,7 +48,8 @@ cd backend
 终端 1：启动后端 Mock 演示模式。
 
 ```powershell
-cd "C:\Users\18622\Documents\ChatGPT\师范生 AI 虚拟教学实训平台"
+# 将 <repo-path> 替换为本地仓库路径
+cd "<repo-path>"
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
 $env:LLM_PROVIDER = "mock"
@@ -59,12 +60,12 @@ cd backend
 终端 2：启动前端。
 
 ```powershell
-cd "C:\Users\18622\Documents\ChatGPT\师范生 AI 虚拟教学实训平台\frontend"
-npm install
+cd "<repo-path>\frontend"
+npm ci
 npm run dev
 ```
 
-如果 PowerShell 阻止 npm 入口，将两条 npm 命令替换为 `npm.cmd install` 和 `npm.cmd run dev`。
+如果 PowerShell 阻止 npm 入口，将两条 npm 命令替换为 `npm.cmd ci` 和 `npm.cmd run dev`。
 
 打开 <http://127.0.0.1:5173>，按以下路径演示：选择“一次函数：k 与 b 的意义” → 选择学生 A → 开始实训 → 输入“老师，b 越大时直线会怎样？”观察学生暴露混淆 → 输入“不对，b 不影响斜率，只改变截距位置。”完成几轮教学 → 结束实训 → 查看五维雷达图、行为统计、评价建议和实训历史。
 
@@ -73,7 +74,11 @@ npm run dev
 ```powershell
 cd backend
 ..\.venv\Scripts\python.exe -m pytest -q
+cd ..\frontend
+npm run build
 ```
+
+如果 PowerShell 阻止 npm 入口，将构建命令替换为 `npm.cmd run build`。
 
 核心数据接口：
 
@@ -121,15 +126,5 @@ Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/llm/respond `
   -ContentType 'application/json' `
   -Body '{"teacher_text":"请比较 k 和 b 分别会改变什么。"}'
 ```
-
-## 启动前端
-
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-
-如果 PowerShell 的 npm 入口被执行策略阻止，使用 `npm.cmd install` 和 `npm.cmd run dev`。
 
 前端地址：<http://127.0.0.1:5173>
