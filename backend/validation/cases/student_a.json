@@ -1,0 +1,23 @@
+{
+  "name": "学生 A",
+  "grade": "初二",
+  "base_level": 0.68,
+  "personality_description": "偏谨慎，不太主动提问。",
+  "initiative": 0.3,
+  "confidence": 0.55,
+  "knowledge_states": [
+    {"knowledge_point": "一次函数基本定义", "mastery": 0.85},
+    {"knowledge_point": "一次函数图像基础", "mastery": 0.65},
+    {"knowledge_point": "k 的意义", "mastery": 0.4},
+    {"knowledge_point": "b 的意义", "mastery": 0.35}
+  ],
+  "misconceptions": [
+    {
+      "name": "b 越大，直线越陡",
+      "concept": "k 与 b 的意义",
+      "description": "混淆 b 对截距和平移的影响。",
+      "strength": 0.8,
+      "correction_condition": "固定 k、改变 b 进行图像对比。"
+    }
+  ]
+}

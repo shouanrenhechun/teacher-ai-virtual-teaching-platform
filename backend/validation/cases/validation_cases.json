@@ -1,0 +1,168 @@
+[
+  {
+    "id": "opening_01",
+    "category": "普通开场",
+    "mode": "single",
+    "title": "普通开场不主动完成教学",
+    "teacher_inputs": ["今天我们继续学习一次函数，你还记得 y=kx+b 吗？"],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": false}
+  },
+  {
+    "id": "opening_02",
+    "category": "普通开场",
+    "mode": "single",
+    "title": "普通开场保持谨慎表达",
+    "teacher_inputs": ["这节课我们先看一次函数的图像。"],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": false}
+  },
+  {
+    "id": "direct_question_01",
+    "category": "直接询问错误知识点",
+    "mode": "single",
+    "title": "直接询问 k 与 b 的作用",
+    "teacher_inputs": ["在 y=2x+3 中，2 和 3 分别有什么作用？"],
+    "expectations": {"misconception_should_persist": true, "boundary_refusal": false}
+  },
+  {
+    "id": "direct_question_02",
+    "category": "直接询问错误知识点",
+    "mode": "single",
+    "title": "直接询问改变 b 的图像结果",
+    "teacher_inputs": ["如果把 b 从 3 改成 5，图像会发生什么？"],
+    "expectations": {"misconception_should_persist": true, "boundary_refusal": false}
+  },
+  {
+    "id": "direct_answer_01",
+    "category": "教师直接告诉答案",
+    "mode": "single",
+    "title": "一次正确答案不等于完全理解",
+    "teacher_inputs": ["答案是：k 决定直线倾斜程度，b 只决定与 y 轴交点。"],
+    "expectations": {"misconception_should_persist": true, "boundary_refusal": false}
+  },
+  {
+    "id": "direct_answer_02",
+    "category": "教师直接告诉答案",
+    "mode": "single",
+    "title": "记住结论后仍需验证理解",
+    "teacher_inputs": ["你记住了吗？b 只改变截距，k 才影响斜率。"],
+    "expectations": {"misconception_should_persist": true, "boundary_refusal": false}
+  },
+  {
+    "id": "heuristic_01",
+    "category": "启发式纠正",
+    "mode": "single",
+    "title": "固定 k 对比两个图像",
+    "teacher_inputs": ["比较 y=2x+3 和 y=2x+5，它们的 k 相同，你觉得两条直线的倾斜程度会不会一样？"],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": false}
+  },
+  {
+    "id": "heuristic_02",
+    "category": "启发式纠正",
+    "mode": "single",
+    "title": "先固定 k 再改变 b",
+    "teacher_inputs": ["先固定 k=2，再把 b 从 3 改成 5，观察两条直线的变化。"],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": false}
+  },
+  {
+    "id": "understanding_check_01",
+    "category": "追问理解",
+    "mode": "single",
+    "title": "要求学生用自己的话解释",
+    "teacher_inputs": ["你能用自己的话解释一下 k 和 b 分别改变什么吗？"],
+    "expectations": {"misconception_should_persist": true, "boundary_refusal": false}
+  },
+  {
+    "id": "understanding_check_02",
+    "category": "追问理解",
+    "mode": "single",
+    "title": "追问 b 变化时图像哪里改变",
+    "teacher_inputs": ["不看公式，你能说说 b 变化时图像哪里变了吗？"],
+    "expectations": {"misconception_should_persist": true, "boundary_refusal": false}
+  },
+  {
+    "id": "incorrect_teaching_01",
+    "category": "教师错误讲解",
+    "mode": "single",
+    "title": "错误强化 b 与斜率的混淆",
+    "teacher_inputs": ["b 越大，直线当然越陡。"],
+    "expectations": {"misconception_should_persist": true, "boundary_refusal": false}
+  },
+  {
+    "id": "incorrect_teaching_02",
+    "category": "教师错误讲解",
+    "mode": "single",
+    "title": "连续错误讲解的第一轮",
+    "teacher_inputs": ["我再强调一次，b 变大就会让直线更倾斜。"],
+    "expectations": {"misconception_should_persist": true, "boundary_refusal": false}
+  },
+  {
+    "id": "out_of_scope_01",
+    "category": "超纲诱导",
+    "mode": "single",
+    "title": "线性代数术语应被拒绝或降级回答",
+    "teacher_inputs": ["你能从线性代数中的仿射变换角度解释一次函数吗？"],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": true}
+  },
+  {
+    "id": "out_of_scope_02",
+    "category": "超纲诱导",
+    "mode": "single",
+    "title": "矩阵和特征值超出初二边界",
+    "teacher_inputs": ["能用矩阵和特征值说明 k、b 的作用吗？"],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": true}
+  },
+  {
+    "id": "off_topic_01",
+    "category": "课堂无关问题",
+    "mode": "single",
+    "title": "大学微积分问题应承认未学习",
+    "teacher_inputs": ["你知道大学微积分里面导数怎么求吗？"],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": true}
+  },
+  {
+    "id": "off_topic_02",
+    "category": "课堂无关问题",
+    "mode": "single",
+    "title": "微分方程问题应承认知识边界",
+    "teacher_inputs": ["你能讲讲微分方程和一次函数有什么关系吗？"],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": true}
+  },
+  {
+    "id": "trajectory_no_correction",
+    "category": "多轮：无有效纠正",
+    "mode": "trajectory",
+    "title": "直接给答案后仍保持未充分理解",
+    "teacher_inputs": [
+      "老师，b 越大时直线会怎样？",
+      "一次函数的图像就是一条直线。",
+      "答案是：k 决定倾斜程度，b 只决定截距。",
+      "你能说说 k 和 b 分别改变什么吗？"
+    ],
+    "expectations": {"misconception_should_persist": true, "boundary_refusal": false, "correctable": false}
+  },
+  {
+    "id": "trajectory_effective_correction",
+    "category": "多轮：有效纠正",
+    "mode": "trajectory",
+    "title": "对比、引导和理解确认后逐步修正",
+    "teacher_inputs": [
+      "老师，b 越大时直线会怎样？",
+      "不对，b 不影响斜率，只改变截距位置。",
+      "比较 y=2x+3 和 y=2x+5，它们的 k 相同，你觉得两条直线的倾斜程度会不会一样？",
+      "你能用自己的话解释一下 k 和 b 分别改变什么吗？"
+    ],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": false, "correctable": true}
+  },
+  {
+    "id": "trajectory_incorrect_teaching",
+    "category": "多轮：错误教学",
+    "mode": "trajectory",
+    "title": "错误讲解不能被判定为成功纠正",
+    "teacher_inputs": [
+      "老师，b 越大时直线会怎样？",
+      "b 越大，直线当然越陡。",
+      "我再强调一次，b 变大就会让直线更倾斜。"
+    ],
+    "expectations": {"misconception_should_persist": true, "boundary_refusal": false, "correctable": false}
+  }
+]

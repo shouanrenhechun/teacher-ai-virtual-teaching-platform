@@ -13,6 +13,11 @@ backend/data/
 *.sqlite
 *.sqlite3
 
+# Validation reports are generated artifacts
+backend/validation/reports/*.json
+backend/validation/reports/*.md
+backend/validation/reports/*.csv
+
 # Node / Vite
 node_modules/
 frontend/dist/

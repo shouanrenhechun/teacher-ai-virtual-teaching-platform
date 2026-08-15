@@ -4,7 +4,7 @@
 
 ## 当前模块
 
-当前已完成模块 0～9：
+当前已完成模块 0～10：
 
 - 前端 React/Vite/TypeScript 首页
 - 后端 FastAPI `/api/health` 健康检查
@@ -26,6 +26,7 @@
 - 会话详情返回逐轮行为分析和教学行为统计
 - 前端模拟课堂页面和有限训练状态展示
 - 仅允许本地前端开发地址的 CORS
+- 独立的虚拟学生一致性验证框架：案例、规则指标、Mock 验证和 JSON 报告
 
 ## 启动后端
 
@@ -79,6 +80,31 @@ npm run build
 ```
 
 如果 PowerShell 阻止 npm 入口，将构建命令替换为 `npm.cmd run build`。
+
+## 虚拟学生一致性验证
+
+验证对象为“初二数学·一次函数 k 与 b 的意义·学生 A”，覆盖角色一致性、知识边界、错误认知保持性、可纠正性、语言自然度和状态一致性。验证默认不调用真实 API，报告写入 `backend/validation/reports/`，该目录中的生成文件不会提交 Git。
+
+运行 Mock 验证：
+
+```powershell
+cd backend
+$env:LLM_PROVIDER = "mock"
+$env:RUNS_PER_CASE = "3"
+..\.venv\Scripts\python.exe -m validation.runner
+```
+
+运行真实 LLM 验证前，必须同时显式设置以下开关；程序会先输出 provider、模型、重复次数和预计调用数，不会输出 API Key：
+
+```powershell
+cd backend
+$env:LLM_PROVIDER = "real"
+$env:RUN_REAL_LLM_VALIDATION = "true"
+$env:RUNS_PER_CASE = "3"
+..\.venv\Scripts\python.exe -m validation.runner --case-id trajectory_effective_correction
+```
+
+真实验证失败会保存为报告中的失败案例，不会影响正式业务测试。验证指标是虚拟学生模拟一致性检查，不代表真实教育效果或专业教师评价。
 
 核心数据接口：
 
