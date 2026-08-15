@@ -16,7 +16,6 @@ _RESIDUAL_PATTERNS = (
     r"(觉得|感觉|认为|不过|但是|还是|仍然).{0,18}(b|往上移).{0,18}(陡|倾斜)",
     r"往上移.{0,12}(会|有点|看起来).{0,12}(陡|倾斜)",
 )
-_TRANSFER_PROMPT_MARKERS = ("y=-3x+1", "y=-3x+6")
 
 
 @dataclass(frozen=True)
@@ -79,9 +78,8 @@ class StudentResponseEvidenceAnalyzer:
         else:
             conclusion_level = "wrong"
 
-        is_transfer_prompt = any(
-            marker in teacher_normalized for marker in _TRANSFER_PROMPT_MARKERS
-        )
+        slopes = re.findall(r"y=([+-]?\d+)x", teacher_normalized)
+        is_transfer_prompt = len(slopes) >= 2 and len(set(slopes[:2])) == 1
         transfer = (
             is_transfer_prompt
             and states_correct

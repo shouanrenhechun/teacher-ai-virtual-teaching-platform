@@ -22,6 +22,12 @@ class MockLLMClient(LLMClient):
         if "2和3" in normalized or "2和3".replace("和", "") in normalized:
             return "2应该影响倾斜程度吧，3的话……我总觉得它越大，直线好像也会越陡？"
 
+        if "先不看我刚才" in normalized or "y=kx+b" in normalized:
+            return "k 决定直线的倾斜程度，b 决定上下位置；因为 k 改变方向，b 改变截距。"
+
+        if "y=4x-2" in normalized or "y=4x+7" in normalized:
+            return "两条直线一样陡，因为它们的 k 都是 4；b 不同只会让位置上下移动。"
+
         if "y=-3x+1" in normalized or "只改变b" in normalized:
             return "两条直线一样陡，因为 k 都是 -3；b 只会让它们上下移动，位置不同。"
 

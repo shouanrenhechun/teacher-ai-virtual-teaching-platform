@@ -47,6 +47,15 @@ def test_evidence_accepts_complete_transfer_explanation() -> None:
     assert evidence.evidence_level == 3
 
 
+def test_evidence_accepts_transfer_with_a_new_common_slope() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "两条直线一样陡，因为它们的 k 都是 4；b 不同只会让位置上下移动。",
+        teacher_text="y=4x-2 和 y=4x+7 哪一条更陡？",
+    )
+
+    assert evidence.transfer_success is True
+
+
 def test_evidence_does_not_mark_corrected_when_answer_is_only_uncertain() -> None:
     evidence = StudentResponseEvidenceAnalyzer().analyze(
         "好像是 b 改变位置，但我还不太确定。",

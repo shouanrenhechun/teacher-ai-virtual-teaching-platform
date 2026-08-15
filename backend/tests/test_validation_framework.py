@@ -53,7 +53,7 @@ def test_mock_validation_runs_and_exports_report(tmp_path: Path) -> None:
     assert payload["provider"] == "mock"
     assert payload["basic"]["total_cases"] == 19
     assert payload["basic"]["total_runs"] == 19
-    assert payload["basic"]["total_calls"] == 29
+    assert payload["basic"]["total_calls"] == 31
     assert payload["basic"]["api_failures"] == 0
     assert payload["overall_metrics"]["Role Consistency"]["total"] == 19
     assert payload["category_metrics"]["多轮：有效纠正"]
