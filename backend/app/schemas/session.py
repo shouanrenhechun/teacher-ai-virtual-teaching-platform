@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from .dialogue import DialogueRecordRead
+from .cognitive import CognitiveTraceRead
 from .evaluation import EvaluationReportRead
 from .scenario import TrainingScenarioRead
 from .student import VirtualStudentRead
@@ -66,4 +67,5 @@ class TeachingSessionDetailRead(BaseModel):
     behavior_records: list[TeachingBehaviorRecordRead]
     behavior_summary: TeachingBehaviorSummaryRead
     state: SessionStateRead
+    cognitive_trace: CognitiveTraceRead
     evaluation: EvaluationReportRead | None = None

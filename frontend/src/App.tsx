@@ -3,6 +3,16 @@ import * as echarts from "echarts/core";
 import { LineChart as EChartsLineChart, RadarChart as EChartsRadarChart } from "echarts/charts";
 import { GridComponent, RadarComponent, TooltipComponent } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
+import {
+  actionLabel,
+  CognitiveTrace,
+  CognitiveTraceRound,
+  hasStateChange,
+  statusDescription,
+  statusLabel,
+  strengthDelta,
+  teachingAdvice,
+} from "./cognitiveVisualization";
 
 echarts.use([EChartsLineChart, EChartsRadarChart, GridComponent, RadarComponent, TooltipComponent, CanvasRenderer]);
 
@@ -101,6 +111,7 @@ type TeachingSession = {
   dialogue_records: DialogueRecord[];
   state: SessionState;
   behavior_summary: BehaviorSummary;
+  cognitive_trace?: CognitiveTrace;
   evaluation: EvaluationReport | null;
 };
 
@@ -426,6 +437,15 @@ function ProfileBar({ label, value }: { label: string; value: number }) {
   );
 }
 
+function profileStyle(student: VirtualStudent): string {
+  const traits: string[] = [];
+  if (student.confidence < 0.5) traits.push("表达较谨慎");
+  else traits.push("表达较有信心");
+  if (student.initiative < 0.5) traits.push("较少主动猜测");
+  else traits.push("愿意主动表达");
+  return `${traits.join(" · ")} · 会根据提示确认理解`;
+}
+
 function Classroom({
   session,
   onSessionChange,
@@ -513,6 +533,10 @@ function Classroom({
             <span className="detail-label">当前虚拟学生</span>
             <h2>{session.virtual_student.name}</h2>
             <span className="profile-grade">{session.virtual_student.grade} · {session.virtual_student.personality_description}</span>
+            <div className="student-traits">
+              <span>学习风格</span>
+              <p>{profileStyle(session.virtual_student)}</p>
+            </div>
           </div>
           <div className="session-panel topic-summary">
             <span className="detail-label">教学主题</span>
@@ -566,6 +590,7 @@ function Classroom({
         </section>
 
         <aside className="session-sidebar session-right-sidebar">
+          <CognitiveStatePanel trace={session.cognitive_trace} />
           <div className="session-panel state-panel">
             <span className="detail-label">训练状态</span>
             <p className="state-hint">仅展示课堂反馈指标，不显示学生的内部认知错误。</p>
@@ -583,7 +608,7 @@ function Classroom({
         </aside>
       </div>
       {session.evaluation && (
-        <EvaluationPanel report={session.evaluation} behaviorSummary={session.behavior_summary} />
+        <EvaluationPanel report={session.evaluation} behaviorSummary={session.behavior_summary} trace={session.cognitive_trace} />
       )}
       {isCompleted && (
         <HistoryPanel items={history} loading={historyLoading} error={historyError} />
@@ -592,7 +617,7 @@ function Classroom({
   );
 }
 
-function EvaluationPanel({ report, behaviorSummary }: { report: EvaluationReport; behaviorSummary: BehaviorSummary }) {
+function EvaluationPanel({ report, behaviorSummary, trace }: { report: EvaluationReport; behaviorSummary: BehaviorSummary; trace?: CognitiveTrace }) {
   const dimensions = [
     ["知识准确性", report.knowledge_accuracy],
     ["提问与引导", report.questioning],
@@ -620,6 +645,8 @@ function EvaluationPanel({ report, behaviorSummary }: { report: EvaluationReport
       </div>
       <RadarChart report={report} />
       <p className="evaluation-summary">{report.summary}</p>
+      <CognitiveReport trace={trace} />
+      <TeachingBehaviorFeedback summary={behaviorSummary} />
       <div className="evaluation-columns">
         <EvaluationList title="做得较好的地方" items={report.strengths} className="evaluation-good" />
         <EvaluationList title="主要问题" items={report.problems} className="evaluation-problem" />
@@ -640,6 +667,159 @@ function EvaluationPanel({ report, behaviorSummary }: { report: EvaluationReport
       <p className="evaluation-disclaimer">◇ {report.disclaimer}</p>
     </section>
   );
+}
+
+function CognitiveStatePanel({ trace }: { trace?: CognitiveTrace }) {
+  if (!trace) {
+    return <div className="session-panel cognitive-panel"><span className="detail-label">认知状态</span><p className="fallback-copy">暂无该项分析</p></div>;
+  }
+  const current = trace.current_misconception;
+  const latest = trace.rounds.at(-1);
+  return (
+    <div className="session-panel cognitive-panel">
+      <div className="cognitive-panel-heading">
+        <div><span className="detail-label">认知状态</span><h3>{current ? statusLabel(current.status) : "暂无状态记录"}</h3></div>
+        {current && <span className={`cognitive-status-dot status-${current.status}`} />}
+      </div>
+      {current ? (
+        <>
+          <p className="cognitive-description">{statusDescription(current.status)}</p>
+          <div className="misconception-copy"><span>当前错误认知</span><strong>{current.name}</strong></div>
+          <StrengthBar value={current.strength} />
+          {latest && hasStateChange(latest) && (
+            <div className="state-change-note"><strong>认知状态发生变化</strong><span>{statusLabel(latest.misconception_before?.status)} → {statusLabel(latest.misconception_after?.status)}</span></div>
+          )}
+          <EvidenceCard round={latest} />
+          <CognitiveTimeline trace={trace} compact />
+          <details className="technical-details">
+            <summary>查看技术详情</summary>
+            <div className="technical-grid">
+              <span>status <b>{current.status}</b></span>
+              <span>strength <b>{current.strength.toFixed(2)}</b></span>
+              <span>stable evidence <b>{current.stable_correct_evidence_count}</b></span>
+              <span>transfer evidence <b>{current.transfer_evidence}</b></span>
+              <span>semantic type <b>{current.semantic_type}</b></span>
+              <span>surface recall <b>{trace.current_state.surface_recall.toFixed(2)}</b></span>
+            </div>
+          </details>
+        </>
+      ) : <p className="fallback-copy">暂无该项分析</p>}
+    </div>
+  );
+}
+
+function StrengthBar({ value }: { value: number }) {
+  return (
+    <div className="strength-meter">
+      <div><span>错误认知强度</span><strong>{value.toFixed(2)}</strong></div>
+      <div className="strength-track"><i style={{ width: `${value * 100}%` }} /></div>
+      <small>用于表示虚拟学生内部状态变化趋势，并非真实学生心理测量结果。</small>
+    </div>
+  );
+}
+
+function EvidenceCard({ round }: { round?: CognitiveTraceRound }) {
+  if (!round?.evidence) return <div className="evidence-card"><span className="detail-label">本轮学习证据</span><p className="fallback-copy">暂无该项分析</p></div>;
+  const evidence = round.evidence;
+  const surfaceRecall = evidence.parrots_teacher || round.state_after.surface_recall >= 0.1;
+  return (
+    <div className="evidence-card">
+      <div className="evidence-heading"><span className="detail-label">本轮学习证据</span><span>第 {round.round} 轮</span></div>
+      <div className="evidence-list">
+        {evidence.shows_residual_misconception && <span className="evidence-item evidence-warn">⚠ 仍存在原有错误认知</span>}
+        {evidence.states_correct_conclusion && <span className="evidence-item evidence-good">✓ 得出了正确结论</span>}
+        {evidence.explains_reason_correctly && <span className="evidence-item evidence-good">✓ 能解释原因</span>}
+        {evidence.transfer_success && <span className="evidence-item evidence-good">✓ 能迁移到新的题目</span>}
+        {surfaceRecall && <span className="evidence-item evidence-neutral">○ 可能只是复述教师结论</span>}
+        {evidence.conceptual_uncertainty && <span className="evidence-item evidence-neutral">○ 对概念仍存在真实犹豫</span>}
+        {evidence.linguistic_hedging && <span className="evidence-item evidence-style">表达风格：较谨慎（不等于错误）</span>}
+        {!evidence.shows_residual_misconception && !evidence.states_correct_conclusion && !evidence.conceptual_uncertainty && <span className="evidence-item evidence-neutral">○ 当前证据仍不足以判断稳定掌握</span>}
+      </div>
+    </div>
+  );
+}
+
+function CognitiveTimeline({ trace, compact = false }: { trace: CognitiveTrace; compact?: boolean }) {
+  if (trace.rounds.length === 0) return <div className="timeline-empty">完成一轮教学后，这里会显示认知变化轨迹。</div>;
+  const rounds = compact ? trace.rounds.slice(-4) : trace.rounds;
+  return (
+    <div className={`cognitive-timeline ${compact ? "timeline-compact" : ""}`}>
+      <div className="timeline-heading"><span className="detail-label">认知变化轨迹</span><span>{trace.rounds.length} 轮</span></div>
+      <div className="timeline-list">
+        {rounds.map((round) => {
+          const delta = strengthDelta(round);
+          return <div className="timeline-node" key={round.round}>
+            <div className="timeline-marker"><b>R{round.round}</b><i /></div>
+            <div className="timeline-content">
+              <strong>{statusLabel(round.misconception_after?.status)}</strong>
+              <span>教师行为：{actionLabel(round.action_type)}</span>
+              <span>学生反应：{round.student_text}</span>
+              <span className={delta < 0 ? "delta-down" : ""}>强度 {round.misconception_after?.strength.toFixed(2) ?? "—"}{delta !== 0 ? `（${delta > 0 ? "+" : ""}${delta.toFixed(2)}）` : ""}</span>
+            </div>
+          </div>;
+        })}
+      </div>
+    </div>
+  );
+}
+
+function CognitiveReport({ trace }: { trace?: CognitiveTrace }) {
+  if (!trace) return <section className="cognitive-report"><span className="detail-label">本次教学中的认知变化</span><p className="fallback-copy">暂无该项分析</p></section>;
+  const initial = trace.initial_misconception;
+  const current = trace.current_misconception;
+  return (
+    <section className="cognitive-report">
+      <div className="evaluation-header cognitive-report-header">
+        <div><span className="section-kicker">过程证据</span><h3>本次教学中的认知变化</h3></div>
+        <span className={`status-pill status-${current?.status ?? "unknown"}`}>{statusLabel(current?.status)}</span>
+      </div>
+      <div className="cognitive-summary-grid">
+        <div><span>初始</span><strong>{statusLabel(initial?.status)}</strong><b>{initial?.strength.toFixed(2) ?? "—"}</b></div>
+        <div><span>最终</span><strong>{statusLabel(current?.status)}</strong><b>{current?.strength.toFixed(2) ?? "—"}</b></div>
+        <div><span>下一步建议</span><p>{teachingAdvice(current?.status)}</p></div>
+      </div>
+      <CognitiveStrengthChart trace={trace} />
+      <CognitiveTimeline trace={trace} />
+      <p className="cognitive-disclaimer">系统不会因为学生说出一次正确答案就认定已经掌握；以上结论来自多轮结构化证据。</p>
+    </section>
+  );
+}
+
+function TeachingBehaviorFeedback({ summary }: { summary: BehaviorSummary }) {
+  const items: string[] = [];
+  if (summary.direct_answer_count === 0) items.push("没有立即直接公布答案，给学生留下了思考空间。");
+  if (summary.guided_question_count > 0) items.push(`使用了 ${summary.guided_question_count} 次引导式提问，帮助学生逐步表达理解。`);
+  if (summary.example_count > 0) items.push(`使用了 ${summary.example_count} 次具体例子或对比。`);
+  if (summary.understanding_check_count > 0) items.push(`进行了 ${summary.understanding_check_count} 次理解确认。`);
+  if (summary.correction_count > 0) items.push(`进行了 ${summary.correction_count} 次针对性纠错。`);
+  if (items.length === 0) items.push("本次还没有足够的结构化教学行为记录。可以尝试加入提问、举例或理解确认。");
+  return (
+    <div className="behavior-feedback">
+      <span className="detail-label">教师做对了什么</span>
+      <ul>{items.slice(0, 4).map((item) => <li key={item}>✓ {item}</li>)}</ul>
+    </div>
+  );
+}
+
+function CognitiveStrengthChart({ trace }: { trace: CognitiveTrace }) {
+  const chartRef = useRef<HTMLDivElement>(null);
+  const values = [trace.initial_misconception?.strength ?? 0, ...trace.rounds.map((round) => round.misconception_after?.strength ?? 0)];
+  useEffect(() => {
+    if (!chartRef.current || values.length < 2) return;
+    const chart = echarts.init(chartRef.current);
+    chart.setOption({
+      animation: false,
+      tooltip: { trigger: "axis" },
+      grid: { left: 38, right: 18, top: 24, bottom: 30 },
+      xAxis: { type: "category", data: values.map((_, index) => index === 0 ? "初始" : `R${index}`), axisLabel: { color: "#78908b" } },
+      yAxis: { type: "value", min: 0, max: 1, axisLabel: { color: "#78908b" }, splitLine: { lineStyle: { color: "#edf3f0" } } },
+      series: [{ type: "line", data: values, smooth: false, symbol: "circle", symbolSize: 7, lineStyle: { color: "#0f766e", width: 2 }, itemStyle: { color: "#0f766e" }, areaStyle: { color: "rgba(76, 174, 153, .12)" } }],
+    });
+    const resize = () => chart.resize();
+    window.addEventListener("resize", resize);
+    return () => { window.removeEventListener("resize", resize); chart.dispose(); };
+  }, [trace, values.length]);
+  return <div className="strength-chart" ref={chartRef} aria-label="错误认知强度变化图" />;
 }
 
 function RadarChart({ report }: { report: EvaluationReport }) {

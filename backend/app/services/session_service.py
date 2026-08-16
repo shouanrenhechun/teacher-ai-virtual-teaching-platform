@@ -9,6 +9,7 @@ from .evaluation_engine import EvaluationEngine
 from .llm import LLMClient, LLMContext
 from .teaching_behavior import TeachingBehaviorAnalyzer
 from .virtual_student import StudentProfile, VirtualStudentEngine
+from .virtual_student.prompt_builder import misconception_prompt_mode
 from ..models import (
     DialogueRecord,
     Evaluation,
@@ -22,6 +23,14 @@ from ..schemas.session import (
     SessionStateRead,
     TeachingSessionDetailRead,
 )
+from ..schemas.cognitive import (
+    CognitiveStateRead,
+    CognitiveTraceRead,
+    CognitiveTraceRoundRead,
+    CorrectionOpportunityRead,
+    MisconceptionStateRead,
+    StudentResponseEvidenceRead,
+)
 from ..schemas.teaching_behavior import TeachingBehaviorSummaryRead
 
 
@@ -33,6 +42,9 @@ def load_session(db: Session, session_id: int) -> TeachingSession | None:
             selectinload(TeachingSession.scenario),
             selectinload(TeachingSession.virtual_student).selectinload(
                 VirtualStudent.knowledge_states
+            ),
+            selectinload(TeachingSession.virtual_student).selectinload(
+                VirtualStudent.misconceptions
             ),
             selectinload(TeachingSession.dialogue_records),
             selectinload(TeachingSession.behavior_records),
@@ -112,6 +124,114 @@ def build_session_detail(
             engagement=state.engagement,
             confidence=state.confidence,
         ),
+        cognitive_trace=build_cognitive_trace(session),
+    )
+
+
+def _state_read(snapshot: object) -> CognitiveStateRead:
+    state = snapshot.classroom_state
+    return CognitiveStateRead(
+        understanding=state.understanding,
+        confusion=state.confusion,
+        engagement=state.engagement,
+        confidence=state.confidence,
+        surface_recall=state.surface_recall,
+    )
+
+
+def _misconception_read(misconception: object | None) -> MisconceptionStateRead | None:
+    if misconception is None:
+        return None
+    return MisconceptionStateRead(
+        name=misconception.name,
+        concept=misconception.concept,
+        description=misconception.description,
+        semantic_type=misconception.semantic_type,
+        strength=misconception.strength,
+        status=misconception.status,
+        triggered=misconception.triggered,
+        correction_started=misconception.correction_started,
+        corrected=misconception.corrected,
+        stable_correct_evidence_count=misconception.stable_correct_evidence_count,
+        transfer_evidence=misconception.transfer_evidence,
+    )
+
+
+def build_cognitive_trace(session: TeachingSession) -> CognitiveTraceRead:
+    """Replay persisted dialogue through the existing engine for read-only UI data."""
+    # Rebuild from the profile so this function can capture each transition.
+    engine = VirtualStudentEngine(StudentProfile.from_record(session.virtual_student))
+    ordered_dialogue = sorted(session.dialogue_records, key=lambda item: item.sequence)
+    behavior_by_dialogue_id = {
+        record.dialogue_record_id: record.action_type for record in session.behavior_records
+    }
+    initial_snapshot = engine.snapshot()
+    rounds: list[CognitiveTraceRoundRead] = []
+    previous_teacher_text = ""
+    pending_teacher_text = ""
+    pending_teacher_id: int | None = None
+    pending_before = initial_snapshot
+    pending_opportunity: dict[str, object] | None = None
+
+    for record in ordered_dialogue:
+        if record.speaker == "teacher":
+            pending_teacher_text = record.content
+            pending_teacher_id = record.id
+            pending_before = engine.snapshot()
+            pending_opportunity = engine.get_correction_opportunity(record.content)
+            engine.update_from_teacher_text(record.content)
+            continue
+        if record.speaker != "student" or not pending_teacher_text:
+            continue
+
+        evidence = engine.apply_student_response_evidence(
+            record.content,
+            pending_teacher_text,
+            pending_opportunity,
+            previous_teacher_text=previous_teacher_text,
+        )
+        after = engine.snapshot()
+        before_misconception = pending_before.misconceptions[0] if pending_before.misconceptions else None
+        after_misconception = after.misconceptions[0] if after.misconceptions else None
+        opportunity = pending_opportunity or engine.get_correction_opportunity(pending_teacher_text)
+        rounds.append(
+            CognitiveTraceRoundRead(
+                round=len(rounds) + 1,
+                teacher_text=pending_teacher_text,
+                student_text=record.content,
+                action_type=behavior_by_dialogue_id.get(pending_teacher_id),
+                state_before=_state_read(pending_before),
+                state_after=_state_read(after),
+                misconception_before=_misconception_read(before_misconception),
+                misconception_after=_misconception_read(after_misconception),
+                evidence=StudentResponseEvidenceRead(**evidence.to_dict()),
+                correction_opportunity=CorrectionOpportunityRead(
+                    correction_opportunity=bool(opportunity.get("correction_opportunity", False)),
+                    opportunity_strength=float(opportunity.get("opportunity_strength", 0.0)),
+                ),
+                prompt_mode=(
+                    misconception_prompt_mode(after_misconception.status, after_misconception.corrected)
+                    if after_misconception is not None
+                    else None
+                ),
+            )
+        )
+        previous_teacher_text = pending_teacher_text
+        pending_teacher_text = ""
+        pending_teacher_id = None
+        pending_opportunity = None
+
+    final_snapshot = engine.snapshot()
+    return CognitiveTraceRead(
+        initial_state=_state_read(initial_snapshot),
+        initial_misconception=_misconception_read(
+            initial_snapshot.misconceptions[0] if initial_snapshot.misconceptions else None
+        ),
+        current_state=_state_read(final_snapshot),
+        current_misconception=_misconception_read(
+            final_snapshot.misconceptions[0] if final_snapshot.misconceptions else None
+        ),
+        rounds=rounds,
     )
 
 

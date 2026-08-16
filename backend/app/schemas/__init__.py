@@ -1,6 +1,14 @@
 """Pydantic response schemas for the core data layer."""
 
 from .dialogue import DialogueRecordRead
+from .cognitive import (
+    CognitiveStateRead,
+    CognitiveTraceRead,
+    CognitiveTraceRoundRead,
+    CorrectionOpportunityRead,
+    MisconceptionStateRead,
+    StudentResponseEvidenceRead,
+)
 from .evaluation import (
     EvaluationQualitativeAnalysis,
     EvaluationRead,
@@ -28,6 +36,12 @@ from .teaching_behavior import (
 
 __all__ = [
     "DialogueRecordRead",
+    "CognitiveStateRead",
+    "CognitiveTraceRead",
+    "CognitiveTraceRoundRead",
+    "CorrectionOpportunityRead",
+    "MisconceptionStateRead",
+    "StudentResponseEvidenceRead",
     "EvaluationRead",
     "EvaluationQualitativeAnalysis",
     "EvaluationReportRead",
