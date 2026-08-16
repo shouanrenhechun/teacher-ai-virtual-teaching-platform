@@ -121,6 +121,63 @@ export function strengthDelta(round: CognitiveTraceRound): number {
   return Number((after - before).toFixed(4));
 }
 
+export function strengthInterpretation(value: number): string {
+  if (value >= 0.7) return "错误认知仍较牢固";
+  if (value >= 0.35) return "错误认知正在减弱";
+  return "错误认知较弱";
+}
+
+export function strengthChangeLabel(before: number, after: number): string {
+  const delta = after - before;
+  if (delta <= -0.03) return "错误认知明显减弱";
+  if (delta >= 0.03) return "错误认知进一步强化";
+  return "错误认知暂时没有明显变化";
+}
+
+export function masteryReasons(round?: CognitiveTraceRound): string[] {
+  if (!round?.evidence) return [];
+  const evidence = round.evidence;
+  const reasons: string[] = [];
+  if (evidence.explains_reason_correctly) reasons.push("能独立说明关键关系");
+  if (evidence.transfer_success) reasons.push("能在新题中完成迁移");
+  if (!evidence.shows_residual_misconception && evidence.states_correct_conclusion) {
+    reasons.push("最近回答未再表现原有错误认知");
+  }
+  if (round.misconception_after?.stable_correct_evidence_count && round.misconception_after.stable_correct_evidence_count > 1) {
+    reasons.push("连续获得了正确理解证据");
+  }
+  return reasons.slice(0, 3);
+}
+
+export function missingEvidence(trace: CognitiveTrace): string[] {
+  const current = trace.current_misconception;
+  const latest = trace.rounds.at(-1);
+  if (!current) return ["完成一轮教学后再观察学生的认知证据"];
+  if (current.status === "corrected") return masteryReasons(latest);
+  const evidence = latest?.evidence;
+  const missing: string[] = [];
+  if (current.status === "active") {
+    missing.push("先让学生说出当前判断依据");
+    missing.push("用对比或例子建立认知冲突");
+  } else {
+    if (!evidence?.explains_reason_correctly) missing.push("需要学生说明关键关系，而不只是复述结论");
+    if (evidence?.shows_residual_misconception || current.status === "weakening") missing.push("还需检查原有错误认知是否真正消退");
+    if ((current.transfer_evidence ?? 0) < 1) missing.push("再完成一次新的变式迁移");
+    if ((current.stable_correct_evidence_count ?? 0) < 2) missing.push("再获得一次独立且稳定的正确解释");
+  }
+  return missing.slice(0, 3);
+}
+
+export function timelineNodeLabel(round: CognitiveTraceRound): string | null {
+  const before = round.misconception_before;
+  const after = round.misconception_after;
+  if (before?.status !== after?.status) return `状态：${statusLabel(after?.status)}`;
+  if (round.evidence?.transfer_success) return "迁移成功";
+  if ((after?.stable_correct_evidence_count ?? 0) > (before?.stable_correct_evidence_count ?? 0)) return "获得稳定证据";
+  if (hasStateChange(round)) return strengthChangeLabel(before?.strength ?? 0, after?.strength ?? 0);
+  return null;
+}
+
 export function hasStateChange(round: CognitiveTraceRound): boolean {
   return round.misconception_before?.status !== round.misconception_after?.status
     || Math.abs(strengthDelta(round)) >= 0.005;

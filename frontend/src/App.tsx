@@ -8,10 +8,15 @@ import {
   CognitiveTrace,
   CognitiveTraceRound,
   hasStateChange,
+  masteryReasons,
+  missingEvidence,
   statusDescription,
   statusLabel,
   strengthDelta,
+  strengthChangeLabel,
+  strengthInterpretation,
   teachingAdvice,
+  timelineNodeLabel,
 } from "./cognitiveVisualization";
 
 echarts.use([EChartsLineChart, EChartsRadarChart, GridComponent, RadarComponent, TooltipComponent, CanvasRenderer]);
@@ -390,6 +395,9 @@ function App() {
                 </div>
                 <div className="profile-section">
                   <span className="detail-label">性格特点</span>
+                  <div className="profile-tag-list">
+                    {profileTags(selectedStudent).map((tag) => <span key={tag}>{tag}</span>)}
+                  </div>
                   <p>{selectedStudent.personality_description}</p>
                 </div>
                 <div className="profile-section">
@@ -437,13 +445,13 @@ function ProfileBar({ label, value }: { label: string; value: number }) {
   );
 }
 
-function profileStyle(student: VirtualStudent): string {
-  const traits: string[] = [];
-  if (student.confidence < 0.5) traits.push("表达较谨慎");
-  else traits.push("表达较有信心");
-  if (student.initiative < 0.5) traits.push("较少主动猜测");
-  else traits.push("愿意主动表达");
-  return `${traits.join(" · ")} · 会根据提示确认理解`;
+function profileTags(student: VirtualStudent): string[] {
+  const cautious = /谨慎|低自信|确认/.test(student.personality_description) || student.confidence < 0.5;
+  return [
+    cautious ? "较谨慎" : "表达较有信心",
+    student.initiative < 0.5 ? "倾向确认" : "愿意主动表达",
+    cautious ? "较少主动猜测" : "愿意尝试猜测",
+  ];
 }
 
 function Classroom({
@@ -532,10 +540,13 @@ function Classroom({
             <span className={`avatar avatar-large avatar-${session.virtual_student.id}`}>{session.virtual_student.name.slice(-1)}</span>
             <span className="detail-label">当前虚拟学生</span>
             <h2>{session.virtual_student.name}</h2>
-            <span className="profile-grade">{session.virtual_student.grade} · {session.virtual_student.personality_description}</span>
+            <span className="profile-grade">{session.virtual_student.grade} · 虚拟学生</span>
+            <div className="profile-tag-list session-profile-tags">
+              {profileTags(session.virtual_student).map((tag) => <span key={tag}>{tag}</span>)}
+            </div>
             <div className="student-traits">
               <span>学习风格</span>
-              <p>{profileStyle(session.virtual_student)}</p>
+              <p>{session.virtual_student.personality_description}</p>
             </div>
           </div>
           <div className="session-panel topic-summary">
@@ -633,8 +644,11 @@ function EvaluationPanel({ report, behaviorSummary, trace }: { report: Evaluatio
           <span className="section-kicker">训练辅助评价</span>
           <h2>本次教学复盘</h2>
         </div>
-        <div className="evaluation-total"><strong>{report.overall_score}</strong><span>/ 100</span></div>
+        <div className="evaluation-total"><span>参考分</span><strong>{report.overall_score}</strong><span>/ 100</span></div>
       </div>
+      <p className="evaluation-order-note">先看学生的认知变化，再结合行为指标复盘教学过程。</p>
+      <CognitiveReport trace={trace} />
+      <p className="evaluation-summary">{report.summary}</p>
       <div className="evaluation-scores">
         {dimensions.map(([label, score]) => (
           <div className="evaluation-score" key={label}>
@@ -644,8 +658,6 @@ function EvaluationPanel({ report, behaviorSummary, trace }: { report: Evaluatio
         ))}
       </div>
       <RadarChart report={report} />
-      <p className="evaluation-summary">{report.summary}</p>
-      <CognitiveReport trace={trace} />
       <TeachingBehaviorFeedback summary={behaviorSummary} />
       <div className="evaluation-columns">
         <EvaluationList title="做得较好的地方" items={report.strengths} className="evaluation-good" />
@@ -685,11 +697,17 @@ function CognitiveStatePanel({ trace }: { trace?: CognitiveTrace }) {
         <>
           <p className="cognitive-description">{statusDescription(current.status)}</p>
           <div className="misconception-copy"><span>当前错误认知</span><strong>{current.name}</strong></div>
-          <StrengthBar value={current.strength} />
+          <StrengthBar value={current.strength} latest={latest} />
           {latest && hasStateChange(latest) && (
             <div className="state-change-note"><strong>认知状态发生变化</strong><span>{statusLabel(latest.misconception_before?.status)} → {statusLabel(latest.misconception_after?.status)}</span></div>
           )}
           <EvidenceCard round={latest} />
+          <div className={`next-evidence next-evidence-${current.status}`}>
+            <span className="detail-label">{current.status === "corrected" ? "为什么认为已经掌握？" : "当前还缺什么？"}</span>
+            <ul>
+              {(current.status === "corrected" ? masteryReasons(latest) : missingEvidence(trace)).map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </div>
           <CognitiveTimeline trace={trace} compact />
           <details className="technical-details">
             <summary>查看技术详情</summary>
@@ -708,12 +726,15 @@ function CognitiveStatePanel({ trace }: { trace?: CognitiveTrace }) {
   );
 }
 
-function StrengthBar({ value }: { value: number }) {
+function StrengthBar({ value, latest }: { value: number; latest?: CognitiveTraceRound }) {
+  const before = latest?.misconception_before?.strength;
+  const change = before === undefined ? null : strengthChangeLabel(before, value);
   return (
     <div className="strength-meter">
       <div><span>错误认知强度</span><strong>{value.toFixed(2)}</strong></div>
       <div className="strength-track"><i style={{ width: `${value * 100}%` }} /></div>
-      <small>用于表示虚拟学生内部状态变化趋势，并非真实学生心理测量结果。</small>
+      <div className="strength-scale"><span>0 · 错误较弱</span><span>1 · 错误较强</span></div>
+      <small>数值越高，表示该错误认知越牢固。{change ? ` ${before?.toFixed(2)} → ${value.toFixed(2)} · ${change}。` : ` 当前：${strengthInterpretation(value)}。`}</small>
     </div>
   );
 }
@@ -722,19 +743,24 @@ function EvidenceCard({ round }: { round?: CognitiveTraceRound }) {
   if (!round?.evidence) return <div className="evidence-card"><span className="detail-label">本轮学习证据</span><p className="fallback-copy">暂无该项分析</p></div>;
   const evidence = round.evidence;
   const surfaceRecall = evidence.parrots_teacher || round.state_after.surface_recall >= 0.1;
+  const primaryEvidence: Array<{ text: string; className: string }> = [];
+  if (evidence.shows_residual_misconception) primaryEvidence.push({ text: "⚠ 仍存在原有错误认知", className: "evidence-warn" });
+  if (evidence.states_correct_conclusion) primaryEvidence.push({ text: "✓ 得出了正确结论", className: "evidence-good" });
+  if (evidence.explains_reason_correctly) primaryEvidence.push({ text: "✓ 能解释原因", className: "evidence-good" });
+  if (evidence.transfer_success) primaryEvidence.push({ text: "✓ 能迁移到新的题目", className: "evidence-good" });
+  const secondaryEvidence: string[] = [];
+  if (surfaceRecall) secondaryEvidence.push("可能只是复述教师结论");
+  if (evidence.conceptual_uncertainty) secondaryEvidence.push("对概念仍存在真实犹豫");
+  if (evidence.linguistic_hedging) secondaryEvidence.push("表达较谨慎（不等于错误）");
+  if (evidence.evidence_insufficient) secondaryEvidence.push("当前证据仍不足以判断稳定掌握");
   return (
     <div className="evidence-card">
       <div className="evidence-heading"><span className="detail-label">本轮学习证据</span><span>第 {round.round} 轮</span></div>
       <div className="evidence-list">
-        {evidence.shows_residual_misconception && <span className="evidence-item evidence-warn">⚠ 仍存在原有错误认知</span>}
-        {evidence.states_correct_conclusion && <span className="evidence-item evidence-good">✓ 得出了正确结论</span>}
-        {evidence.explains_reason_correctly && <span className="evidence-item evidence-good">✓ 能解释原因</span>}
-        {evidence.transfer_success && <span className="evidence-item evidence-good">✓ 能迁移到新的题目</span>}
-        {surfaceRecall && <span className="evidence-item evidence-neutral">○ 可能只是复述教师结论</span>}
-        {evidence.conceptual_uncertainty && <span className="evidence-item evidence-neutral">○ 对概念仍存在真实犹豫</span>}
-        {evidence.linguistic_hedging && <span className="evidence-item evidence-style">表达风格：较谨慎（不等于错误）</span>}
-        {!evidence.shows_residual_misconception && !evidence.states_correct_conclusion && !evidence.conceptual_uncertainty && <span className="evidence-item evidence-neutral">○ 当前证据仍不足以判断稳定掌握</span>}
+        {primaryEvidence.slice(0, 3).map((item) => <span className={`evidence-item ${item.className}`} key={item.text}>{item.text}</span>)}
+        {primaryEvidence.length === 0 && <span className="evidence-item evidence-neutral">○ 当前证据仍不足以判断稳定掌握</span>}
       </div>
+      {secondaryEvidence.length > 0 && <div className="evidence-secondary">{secondaryEvidence.join(" · ")}</div>}
     </div>
   );
 }
@@ -748,12 +774,16 @@ function CognitiveTimeline({ trace, compact = false }: { trace: CognitiveTrace; 
       <div className="timeline-list">
         {rounds.map((round) => {
           const delta = strengthDelta(round);
-          return <div className="timeline-node" key={round.round}>
+          const keyLabel = timelineNodeLabel(round);
+          const isKey = Boolean(keyLabel);
+          const responsePreview = round.student_text.length > 76 ? `${round.student_text.slice(0, 76)}…` : round.student_text;
+          return <div className={`timeline-node ${isKey ? "timeline-node-key" : "timeline-node-ordinary"}`} key={round.round}>
             <div className="timeline-marker"><b>R{round.round}</b><i /></div>
             <div className="timeline-content">
               <strong>{statusLabel(round.misconception_after?.status)}</strong>
+              {keyLabel && <em>{keyLabel}</em>}
               <span>教师行为：{actionLabel(round.action_type)}</span>
-              <span>学生反应：{round.student_text}</span>
+              {(!compact || isKey) && <span>学生反应：{responsePreview}</span>}
               <span className={delta < 0 ? "delta-down" : ""}>强度 {round.misconception_after?.strength.toFixed(2) ?? "—"}{delta !== 0 ? `（${delta > 0 ? "+" : ""}${delta.toFixed(2)}）` : ""}</span>
             </div>
           </div>;
@@ -776,8 +806,9 @@ function CognitiveReport({ trace }: { trace?: CognitiveTrace }) {
       <div className="cognitive-summary-grid">
         <div><span>初始</span><strong>{statusLabel(initial?.status)}</strong><b>{initial?.strength.toFixed(2) ?? "—"}</b></div>
         <div><span>最终</span><strong>{statusLabel(current?.status)}</strong><b>{current?.strength.toFixed(2) ?? "—"}</b></div>
-        <div><span>下一步建议</span><p>{teachingAdvice(current?.status)}</p></div>
+        <div><span>{current?.status === "corrected" ? "为什么认为已经掌握？" : "当前还缺什么？"}</span><ul className="cognitive-reason-list">{(current?.status === "corrected" ? masteryReasons(trace.rounds.at(-1)) : missingEvidence(trace)).map((item) => <li key={item}>{item}</li>)}</ul></div>
       </div>
+      <div className="cognitive-next-advice"><span className="detail-label">下一步教学建议</span><p>{teachingAdvice(current?.status)}</p></div>
       <CognitiveStrengthChart trace={trace} />
       <CognitiveTimeline trace={trace} />
       <p className="cognitive-disclaimer">系统不会因为学生说出一次正确答案就认定已经掌握；以上结论来自多轮结构化证据。</p>

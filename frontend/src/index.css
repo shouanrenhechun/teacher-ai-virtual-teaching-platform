@@ -119,6 +119,10 @@ h2 { margin-bottom: 0; color: #173b37; font-size: 1.35rem; letter-spacing: -.03e
 .student-traits { display: grid; gap: 5px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #e4efec; }
 .student-traits span { color: #78908b; font-size: .7rem; }
 .student-traits p { margin: 0; color: #56746e; font-size: .76rem; line-height: 1.5; }
+.profile-tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.profile-tag-list span { padding: 4px 7px; border-radius: 999px; color: #35625b; background: #eef8f4; font-size: .66rem; font-weight: 700; }
+.session-profile-tags { margin-top: 10px; }
+.session-profile-tags span { color: #536b9e; background: #f1f4fb; }
 .topic-summary h2 { margin-bottom: 8px; font-size: 1.1rem; line-height: 1.5; }
 .topic-summary p { margin-bottom: 20px; color: #56746e; font-size: .83rem; line-height: 1.65; }
 .topic-summary p:last-child { margin-bottom: 0; }
@@ -161,9 +165,11 @@ h2 { margin-bottom: 0; color: #173b37; font-size: 1.35rem; letter-spacing: -.03e
 .state-purple { background: #9b8cc1; }
 .evaluation-panel { margin-top: 18px; padding: 25px; border: 1px solid rgba(15,118,110,.12); border-radius: 20px; background: rgba(255,255,255,.9); box-shadow: 0 14px 38px rgba(25,86,77,.07); }
 .evaluation-header { display: flex; align-items: start; justify-content: space-between; gap: 20px; padding-bottom: 19px; border-bottom: 1px solid #e4efec; }
-.evaluation-total { display: flex; align-items: baseline; gap: 4px; color: #6c8984; }
-.evaluation-total strong { color: #0f766e; font-size: 2.1rem; letter-spacing: -.06em; }
+.evaluation-total { display: flex; align-items: baseline; gap: 5px; color: #8aa09b; }
+.evaluation-total strong { color: #35625b; font-size: 1.65rem; letter-spacing: -.05em; }
 .evaluation-total span { font-size: .8rem; }
+.evaluation-total span:first-child { font-size: .7rem; }
+.evaluation-order-note { margin: 14px 0 0; color: #78908b; font-size: .76rem; line-height: 1.5; }
 .evaluation-scores { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; padding: 21px 0; }
 .evaluation-score { display: grid; gap: 8px; }
 .evaluation-score > div:first-child { display: flex; justify-content: space-between; gap: 8px; color: #6c8984; font-size: .76rem; }
@@ -210,7 +216,8 @@ h2 { margin-bottom: 0; color: #173b37; font-size: 1.35rem; letter-spacing: -.03e
 .strength-meter strong { color: #a15e3f; }
 .strength-track { height: 8px; overflow: hidden; border-radius: 8px; background: #f1e7df; }
 .strength-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #e2a153, #c87457); transition: width .45s ease; }
-.strength-meter small { color: #9aaea9; font-size: .67rem; line-height: 1.45; }
+.strength-scale { display: flex; justify-content: space-between; color: #9aaea9; font-size: .64rem; }
+.strength-meter small { color: #8a9e99; font-size: .68rem; line-height: 1.5; }
 .state-change-note { display: grid; gap: 3px; margin-top: 13px; padding: 10px 11px; border-left: 3px solid #4cae99; border-radius: 0 9px 9px 0; color: #35625b; background: #eef8f4; font-size: .72rem; line-height: 1.45; }
 .state-change-note strong { font-size: .76rem; }
 .evidence-card { margin-top: 16px; padding-top: 15px; border-top: 1px solid #e4efec; }
@@ -221,6 +228,12 @@ h2 { margin-bottom: 0; color: #173b37; font-size: 1.35rem; letter-spacing: -.03e
 .evidence-warn { color: #9a6335; background: #fff3e5; }
 .evidence-neutral { color: #6a688c; background: #f3f3fa; }
 .evidence-style { color: #56746e; background: #f7faf9; }
+.evidence-secondary { margin-top: 8px; color: #8a9e99; font-size: .66rem; line-height: 1.5; }
+.next-evidence { margin-top: 14px; padding: 12px; border-radius: 11px; background: #f7faf9; }
+.next-evidence-corrected { background: #eef8f4; }
+.next-evidence ul, .cognitive-reason-list { display: grid; gap: 5px; margin: 7px 0 0; padding-left: 16px; color: #56746e; font-size: .72rem; line-height: 1.5; }
+.next-evidence-corrected li::marker { color: #4cae99; }
+.next-evidence-active li::marker, .next-evidence-weakening li::marker, .next-evidence-provisional li::marker { color: #e0a15c; }
 .cognitive-timeline { margin-top: 18px; padding-top: 16px; border-top: 1px solid #e4efec; }
 .timeline-list { display: grid; gap: 0; margin-top: 11px; }
 .timeline-node { display: grid; grid-template-columns: 28px 1fr; gap: 9px; min-height: 75px; }
@@ -229,6 +242,11 @@ h2 { margin-bottom: 0; color: #173b37; font-size: 1.35rem; letter-spacing: -.03e
 .timeline-node:last-child .timeline-marker i { display: none; }
 .timeline-content { display: grid; align-content: start; gap: 3px; padding-bottom: 13px; }
 .timeline-content strong { color: #35625b; font-size: .76rem; }
+.timeline-node-ordinary { opacity: .7; }
+.timeline-node-key { opacity: 1; }
+.timeline-node-key .timeline-marker { color: #0f766e; }
+.timeline-node-key .timeline-content { padding: 9px 10px 12px; margin-left: -10px; border-radius: 10px; background: #f4faf8; }
+.timeline-content em { width: max-content; padding: 2px 6px; border-radius: 999px; color: #24715f; background: #e6f6ef; font-size: .62rem; font-style: normal; font-weight: 800; }
 .timeline-content span { overflow: hidden; color: #78908b; font-size: .7rem; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
 .timeline-content .delta-down { color: #24715f; }
 .timeline-compact { margin-top: 15px; }
@@ -251,6 +269,9 @@ h2 { margin-bottom: 0; color: #173b37; font-size: 1.35rem; letter-spacing: -.03e
 .cognitive-summary-grid strong { color: #35625b; font-size: .78rem; }
 .cognitive-summary-grid b { color: #0f766e; font-size: 1.15rem; }
 .cognitive-summary-grid p { margin: 0; color: #56746e; font-size: .74rem; line-height: 1.55; }
+.cognitive-summary-grid .cognitive-reason-list { margin-top: 0; padding-left: 16px; font-size: .74rem; }
+.cognitive-next-advice { display: grid; gap: 4px; margin-top: 13px; padding: 11px 12px; border-left: 3px solid #4cae99; border-radius: 0 9px 9px 0; background: #f4faf8; }
+.cognitive-next-advice p { margin: 0; color: #56746e; font-size: .75rem; line-height: 1.55; }
 .strength-chart { height: 230px; margin-top: 14px; border-radius: 12px; background: #fff; }
 .cognitive-report .cognitive-timeline { border-top: 0; }
 .cognitive-disclaimer { margin: 13px 0 0; color: #8aa09b; font-size: .72rem; line-height: 1.5; }

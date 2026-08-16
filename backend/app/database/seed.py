@@ -117,7 +117,7 @@ def seed_initial_data(db: Session) -> None:
         name="学生 B",
         grade="初二",
         base_level=0.62,
-        personality_description="擅长代入和计算，习惯套用公式，但需要追问才能解释计算背后的图像意义。",
+        personality_description="回答较谨慎，常先确认自己的理解；较少在不确定时强行猜测。基础计算能力正常，但解释概念时容易犹豫。",
         initiative=0.45,
         confidence=0.6,
         knowledge_states=[
