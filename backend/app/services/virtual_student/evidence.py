@@ -19,8 +19,9 @@ _REASON_MARKERS = (
 )
 _RESIDUAL_PATTERNS = (
     r"b.{0,18}(越大|变大|更大|增加).{0,18}(陡|倾斜|斜率)",
-    r"(?:b|[+＋]\d+).{0,20}(?:更陡|越陡|变陡|会陡|有点(?:更)?陡)",
+    r"(?:b|截距|[+＋]\d+).{0,20}(?:更陡|越陡|变陡|会陡|更斜|越斜|变斜|有点(?:更)?陡)",
     r"(?:b|[+＋]\d+).{0,20}影响.{0,12}(?:陡|倾斜|斜率)",
+    r"截距.{0,18}(越大|变大|更大|增加).{0,18}(陡|倾斜|斜率|更斜)",
     r"(觉得|感觉|认为|不过|但是|还是|仍然|可能|也许).{0,18}(?:b|往上移|[+＋]\d+).{0,20}(?:陡|倾斜|斜率|影响)",
     r"往上移.{0,12}(会|有点|看起来).{0,12}(陡|倾斜)",
 )
@@ -168,16 +169,37 @@ def _normalize(text: str) -> str:
 
 
 def _has_residual_misconception(response: str, teacher_text: str) -> bool:
-    negative_claim = re.search(
-        r"(?:b|往上移).{0,8}(?:不|不会|没有|并不).{0,10}(?:影响|更陡|变陡|倾斜|斜率)",
+    rhetorical_positive = re.search(
+        r"(?:b|截距).{0,18}不是会.{0,12}(?:更陡|更斜|倾斜|斜率).{0,4}吗",
         response,
     )
+    negative_claim = re.search(
+        r"(?:b|截距|往上移).{0,8}(?:不|不会|没有|并不).{0,10}(?:影响|更陡|越陡|变陡|更斜|变斜|倾斜|斜率)",
+        response,
+    )
+    if rhetorical_positive:
+        negative_claim = None
+    historical_correction = re.search(
+        r"(?:以前|原来|曾经).{0,20}(?:b|截距).{0,18}(?:越大|变大|更大|增加).{0,18}(?:陡|倾斜|斜率|更斜).{0,20}(?:现在|后来).{0,12}(?:不是|不对|不会|知道)",
+        response,
+    )
+    if historical_correction and not any(
+        marker in response for marker in ("不过", "但是", "还是觉得", "仍然觉得")
+    ):
+        return False
     positive_residual = any(
         re.search(pattern, response, flags=re.IGNORECASE)
         for pattern in _RESIDUAL_PATTERNS
     )
-    if negative_claim and not positive_residual:
-        return False
+    if negative_claim:
+        # A positive phrase before the negation is not current evidence.
+        # Only a new residual claim after the explicit negation can override it.
+        tail = response[negative_claim.end() :]
+        if not any(
+            re.search(pattern, tail, flags=re.IGNORECASE)
+            for pattern in _RESIDUAL_PATTERNS
+        ):
+            return False
     if any(
         re.search(pattern, response, flags=re.IGNORECASE)
         for pattern in _RESIDUAL_PATTERNS

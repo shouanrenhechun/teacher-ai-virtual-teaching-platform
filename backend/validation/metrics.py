@@ -60,22 +60,12 @@ _REFUSAL_MARKERS = (
     "才刚学",
     "需要以后学习",
 )
-_ADVANCED_EXPLANATION_MARKERS = (
-    "就是",
-    "指的是",
-    "表示",
-    "定义",
-    "可以理解为",
-    "把它看成",
-    "映射",
-    "通解",
-    "解为",
-    "变化率",
-    "用极限",
-    "分离变量",
-    "可以通过",
-    "可通过",
-    "求导",
+_ADVANCED_PROPOSITION_PATTERNS = (
+    r"仿射变换.{0,24}(?:可以|可|就是|表示|写成).{0,24}(?:矩阵|映射|变换|a.?x.?[+]b)",
+    r"微分方程.{0,32}(?:积分因子|分离变量|通解|解为|求解)",
+    r"(?:y['′]?\s*[+]\s*y|微分方程).{0,24}(?:解是|解为|通解)",
+    r"导数.{0,28}(?:差商|极限|变化率|求导)",
+    r"矩阵.{0,28}(?:的特征值|特征值是|行列式|逆矩阵|矩阵乘法)",
 )
 _UNCERTAINTY_MARKERS = (
     "不确定",
@@ -131,6 +121,7 @@ class BoundaryEvidence:
     acknowledges_not_learned: bool
     asks_for_explanation: bool
     retreats_to_known_scope: bool
+    speculates_from_known_scope: bool
     demonstrates_out_of_scope_knowledge: bool
 
     @property
@@ -184,15 +175,20 @@ def analyze_boundary_evidence(response: str) -> BoundaryEvidence:
         response,
         ("我只知道", "只知道", "只会", "目前只学", "我们才刚学"),
     )
-    demonstrates = advanced and _contains_any(
+    speculates = _contains_any(
         response,
-        _ADVANCED_EXPLANATION_MARKERS,
+        ("可能", "也许", "好像", "应该", "不确定", "我觉得", "猜"),
+    )
+    demonstrates = advanced and any(
+        re.search(pattern, response, flags=re.IGNORECASE)
+        for pattern in _ADVANCED_PROPOSITION_PATTERNS
     )
     return BoundaryEvidence(
         acknowledges_unknown=acknowledges_unknown,
         acknowledges_not_learned=acknowledges_not_learned,
         asks_for_explanation=asks_for_explanation,
         retreats_to_known_scope=retreats_to_known_scope,
+        speculates_from_known_scope=speculates,
         demonstrates_out_of_scope_knowledge=demonstrates,
     )
 
@@ -235,6 +231,7 @@ def extract_turn_indicators(
         "boundary_acknowledges_not_learned": boundary.acknowledges_not_learned,
         "boundary_asks_for_explanation": boundary.asks_for_explanation,
         "boundary_retreated_to_known_scope": boundary.retreats_to_known_scope,
+        "boundary_speculates_from_known_scope": boundary.speculates_from_known_scope,
         "boundary_demonstrates_out_of_scope_knowledge": boundary.demonstrates_out_of_scope_knowledge,
         "correctness": _contains_any(response, _CORRECT_CONCEPT_MARKERS),
         "misconception_observed": _contains_any_pattern(
@@ -306,6 +303,8 @@ def _misconception_persistence(
             observed_in_turn = _fallback_misconception_observed(response)
         if observed_in_turn:
             observed = True
+        if _is_surface_correct_recall(turn, turns):
+            continue
         if _contains_any(response, _CORRECT_CONCEPT_MARKERS) and not _contains_any(
             response, _UNCERTAINTY_MARKERS
         ):
@@ -374,17 +373,20 @@ def _correctability(
         return MetricResult(False, True, "状态降低但未观察到对应的纠正证据", level="fail")
     if _premature_correction(turns):
         return MetricResult(False, True, "在稳定纠正证据不足前过早标记为 corrected", level="fail")
-    final_evidence = turns[-1].student_response_evidence
     transfer_observed = any(
         bool(turn.student_response_evidence.get("transfer_success")) for turn in turns
     )
     if final_status == "corrected":
-        if not (
-            is_strong_correct_evidence(final_evidence)
-            and transfer_observed
-            and int((_first_misconception(turns[-1].state_after) or {}).get(
-                "stable_correct_evidence_count", 0
-            )) >= 2
+        final_misconception = _first_misconception(turns[-1].state_after) or {}
+        cumulative_strong_evidence = sum(
+            1 for turn in turns if is_strong_correct_evidence(turn.student_response_evidence)
+        )
+        if (
+            cumulative_strong_evidence < 2
+            or not transfer_observed
+            or int(final_misconception.get("stable_correct_evidence_count", 0)) < 2
+            or int(final_misconception.get("transfer_evidence", 0)) < 1
+            or bool(turns[-1].student_response_evidence.get("shows_residual_misconception"))
         ):
             return MetricResult(
                 False,
@@ -483,6 +485,35 @@ def _state_consistency(turns: Sequence[ValidationTurnResult]) -> MetricResult:
     if failures:
         return MetricResult(False, True, "自然语言回答与后端课堂状态存在冲突", tuple(failures))
     return MetricResult(True, True, "自然语言回答与 understanding、confusion 和 misconception 状态一致")
+
+
+def _is_surface_correct_recall(
+    turn: ValidationTurnResult | None,
+    turns: Sequence[ValidationTurnResult],
+) -> bool:
+    """Identify direct-answer recall without treating it as conceptual correction."""
+    if turn is None:
+        return False
+    direct_answer_seen = any(
+        previous.behavior == "direct_answer"
+        for previous in turns[: turn.sequence]
+    )
+    if not direct_answer_seen:
+        return False
+    misconception = _first_misconception(turn.state_after) or {}
+    evidence = turn.student_response_evidence
+    return (
+        bool(evidence.get("states_correct_conclusion"))
+        and bool(evidence.get("evidence_insufficient"))
+        and not bool(evidence.get("shows_residual_misconception"))
+        and misconception.get("status") in {"active", "weakening"}
+        and int(misconception.get("stable_correct_evidence_count", 0)) == 0
+        and int(misconception.get("transfer_evidence", 0)) == 0
+        and not any(
+            bool(previous.student_response_evidence.get("transfer_success"))
+            for previous in turns[: max(0, turn.sequence - 1)]
+        )
+    )
 
 
 def summarize_metrics(

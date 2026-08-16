@@ -210,6 +210,239 @@ def test_generic_unknown_does_not_expose_misconception() -> None:
     assert metric.passed is False
 
 
+@pytest.mark.parametrize(
+    "response",
+    [
+        "线性代数没学过，仿射变换是什么？",
+        "微分方程没学过，可能跟变化率有关吧？",
+        "矩阵我没学过，我只知道 y=kx+b。",
+    ],
+)
+def test_boundary_allows_unknown_or_known_scope_speculation(response: str) -> None:
+    case = load_validation_cases(case_ids={"off_topic_01"})[0]
+    turn = ValidationTurnResult(
+        sequence=1,
+        teacher_input=case.teacher_inputs[0],
+        student_response=response,
+        state_before={},
+        state_after={},
+        behavior="neutral",
+    )
+
+    metric = evaluate_run(case, [turn])["Knowledge Boundary Compliance"]
+
+    assert metric.passed is True
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        "线性代数没学过，不过仿射变换可以写成 Ax+b。",
+        "微分方程没学过，不过 y'+y=0 的解是 Ce^-x。",
+        "导数我们还没学，不过导数在一点就是差商极限。",
+    ],
+)
+def test_boundary_rejects_advanced_knowledge_propositions(response: str) -> None:
+    case = load_validation_cases(case_ids={"off_topic_01"})[0]
+    turn = ValidationTurnResult(
+        sequence=1,
+        teacher_input=case.teacher_inputs[0],
+        student_response=response,
+        state_before={},
+        state_after={},
+        behavior="neutral",
+    )
+
+    metric = evaluate_run(case, [turn])["Knowledge Boundary Compliance"]
+
+    assert metric.passed is False
+
+
+def test_surface_correct_recall_does_not_fail_persistence() -> None:
+    case = load_validation_cases(case_ids={"trajectory_no_correction"})[0]
+    turns = [
+        ValidationTurnResult(
+            sequence=1,
+            teacher_input=case.teacher_inputs[0],
+            student_response="我觉得 b 越大越陡。",
+            state_before={"misconceptions": [{"status": "active", "corrected": False}]},
+            state_after={
+                "misconceptions": [
+                    {"status": "active", "corrected": False, "triggered": True,
+                     "strength": 0.8, "stable_correct_evidence_count": 0,
+                     "transfer_evidence": 0}
+                ]
+            },
+            behavior="neutral",
+            student_response_evidence={"shows_residual_misconception": True},
+        ),
+        ValidationTurnResult(
+            sequence=2,
+            teacher_input=case.teacher_inputs[1],
+            student_response="一次函数的图像是一条直线。",
+            state_before={"misconceptions": [{"status": "active", "corrected": False}]},
+            state_after={
+                "misconceptions": [
+                    {"status": "active", "corrected": False, "triggered": True,
+                     "strength": 0.8, "stable_correct_evidence_count": 0,
+                     "transfer_evidence": 0}
+                ]
+            },
+            behavior="neutral",
+            student_response_evidence={"shows_residual_misconception": True},
+        ),
+        ValidationTurnResult(
+            sequence=4,
+            teacher_input=case.teacher_inputs[2],
+            student_response="哦……所以陡不陡其实是看 k，b 只是让直线上下移动？",
+            state_before={"misconceptions": [{"status": "active", "corrected": False}]},
+            state_after={
+                "misconceptions": [
+                    {"status": "active", "corrected": False, "triggered": False,
+                     "strength": 0.8, "stable_correct_evidence_count": 0,
+                     "transfer_evidence": 0}
+                ]
+            },
+            behavior="direct_answer",
+            student_response_evidence={
+                "states_correct_conclusion": True,
+                "shows_residual_misconception": False,
+                "evidence_insufficient": True,
+            },
+        ),
+    ]
+
+    metric = evaluate_run(case, turns)["Misconception Persistence"]
+
+    assert metric.passed is True
+
+
+def test_correctability_uses_cumulative_evidence_when_final_field_is_incomplete() -> None:
+    case = load_validation_cases(case_ids={"trajectory_effective_correction"})[0]
+    strong = {
+        "states_correct_conclusion": True,
+        "explains_reason_correctly": True,
+        "knowledge_precision": "correct",
+        "shows_residual_misconception": False,
+        "conceptual_uncertainty": False,
+        "parrots_teacher": False,
+        "transfer_success": True,
+    }
+    turns = [
+        ValidationTurnResult(
+            sequence=1,
+            teacher_input="在 y=2x+3 中，b 越大是不是越陡？",
+            student_response="b 越大越陡。",
+            state_before={"misconceptions": [{"strength": 0.8, "status": "active"}]},
+            state_after={
+                "misconceptions": [{"strength": 0.8, "status": "active", "triggered": True,
+                                     "corrected": False, "stable_correct_evidence_count": 0,
+                                     "transfer_evidence": 0}]
+            },
+            behavior="effective_question",
+            student_response_evidence={"shows_residual_misconception": True},
+        ),
+        ValidationTurnResult(
+            sequence=2,
+            teacher_input="比较两条 k 相同的直线。",
+            student_response="k 相同所以一样陡，b 只让它们上下移动。",
+            state_before={"misconceptions": [{"strength": 0.8, "status": "active"}]},
+            state_after={
+                "misconceptions": [{"strength": 0.6, "status": "provisional", "triggered": False,
+                                     "corrected": False, "stable_correct_evidence_count": 1,
+                                     "transfer_evidence": 1}]
+            },
+            behavior="effective_question",
+            student_response_evidence={**strong},
+        ),
+        ValidationTurnResult(
+            sequence=4,
+            teacher_input="请再解释一次。",
+            student_response="答案正确，但末轮证据字段不完整。",
+            state_before={"misconceptions": [{"strength": 0.6, "status": "provisional"}]},
+            state_after={
+                "misconceptions": [{"strength": 0.4, "status": "corrected", "triggered": False,
+                                     "corrected": True, "stable_correct_evidence_count": 2,
+                                     "transfer_evidence": 1}]
+            },
+            behavior="effective_question",
+            student_response_evidence={
+                "states_correct_conclusion": True,
+                "explains_reason_correctly": True,
+                "knowledge_precision": "correct",
+                "shows_residual_misconception": False,
+                "conceptual_uncertainty": False,
+                "parrots_teacher": False,
+                "transfer_success": False,
+                "evidence_insufficient": True,
+            },
+        ),
+    ]
+
+    metric = evaluate_run(case, turns)["Correctability"]
+
+    assert metric.passed is True
+
+
+def test_correctability_rejects_corrected_state_with_final_residual_error() -> None:
+    case = load_validation_cases(case_ids={"trajectory_effective_correction"})[0]
+    turns = [
+        ValidationTurnResult(
+            sequence=1,
+            teacher_input="先观察图像。",
+            student_response="b 越大越陡。",
+            state_before={"misconceptions": [{"strength": 0.8, "status": "active"}]},
+            state_after={"misconceptions": [{"strength": 0.8, "status": "active", "triggered": True}]},
+            behavior="effective_question",
+            student_response_evidence={"shows_residual_misconception": True},
+        ),
+        ValidationTurnResult(
+            sequence=2,
+            teacher_input="比较固定 k 的图像。",
+            student_response="k 相同所以一样陡，b 只改变上下位置。",
+            state_before={"misconceptions": [{"strength": 0.8, "status": "active"}]},
+            state_after={"misconceptions": [{"strength": 0.6, "status": "provisional",
+                                               "stable_correct_evidence_count": 1,
+                                               "transfer_evidence": 1}]},
+            behavior="effective_question",
+            student_response_evidence={
+                "states_correct_conclusion": True,
+                "explains_reason_correctly": True,
+                "knowledge_precision": "correct",
+                "shows_residual_misconception": False,
+                "conceptual_uncertainty": False,
+                "parrots_teacher": False,
+                "transfer_success": True,
+            },
+        ),
+        ValidationTurnResult(
+            sequence=3,
+            teacher_input="再判断一次。",
+            student_response="但我还是觉得 b 越大越陡。",
+            state_before={"misconceptions": [{"strength": 0.6, "status": "provisional"}]},
+            state_after={"misconceptions": [{"strength": 0.4, "status": "corrected",
+                                               "corrected": True,
+                                               "stable_correct_evidence_count": 2,
+                                               "transfer_evidence": 1}]},
+            behavior="effective_question",
+            student_response_evidence={
+                "states_correct_conclusion": True,
+                "explains_reason_correctly": True,
+                "knowledge_precision": "correct",
+                "shows_residual_misconception": True,
+                "conceptual_uncertainty": True,
+                "parrots_teacher": False,
+                "transfer_success": False,
+            },
+        ),
+    ]
+
+    metrics = evaluate_run(case, turns)
+
+    assert metrics["Correctability"].passed is False
+    assert metrics["State Consistency"].passed is False
+
+
 def test_real_provider_requires_explicit_safety_switch() -> None:
     config = ValidationConfig(
         provider="real",

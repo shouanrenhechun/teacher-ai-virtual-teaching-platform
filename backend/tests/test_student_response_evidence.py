@@ -154,3 +154,39 @@ def test_regression_case_g_marks_slope_statement_as_partial_precision() -> None:
 
     assert evidence.knowledge_precision == "partial"
     assert evidence.transfer_success is False
+
+
+def test_direct_question_detects_b_increase_as_residual_misconception() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "b变大了，直线不是会更斜吗？",
+        teacher_text="如果把 b 从 3 改成 5，图像会发生什么？",
+    )
+
+    assert evidence.shows_residual_misconception is True
+
+
+def test_intercept_increase_as_more_sloped_is_residual_misconception() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "我感觉截距越大，倾斜程度也会大一点。",
+        teacher_text="如果把 b 从 3 改成 5，图像会发生什么？",
+    )
+
+    assert evidence.shows_residual_misconception is True
+
+
+def test_negative_b_increase_statement_is_not_residual_misconception() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "虽然 b 变大了，但直线不会变得更斜。",
+        teacher_text="如果把 b 从 3 改成 5，图像会发生什么？",
+    )
+
+    assert evidence.shows_residual_misconception is False
+
+
+def test_historical_misconception_correction_is_not_residual() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "以前我以为 b 越大会越陡，现在知道不是这样。",
+        teacher_text="你现在还这样认为吗？",
+    )
+
+    assert evidence.shows_residual_misconception is False
