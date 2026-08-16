@@ -1,0 +1,23 @@
+{
+  "name": "学生 A",
+  "grade": "初二",
+  "base_level": 0.68,
+  "personality_description": "偏谨慎，不太主动提问。",
+  "initiative": 0.3,
+  "confidence": 0.55,
+  "knowledge_states": [
+    {"knowledge_point": "整式基本运算", "mastery": 0.82},
+    {"knowledge_point": "括号乘法展开", "mastery": 0.58},
+    {"knowledge_point": "完全平方公式", "mastery": 0.32}
+  ],
+  "misconceptions": [
+    {
+      "name": "括号平方遗漏中间项",
+      "concept": "完全平方公式",
+      "description": "认为括号整体平方时只需分别平方每一项，容易遗漏两个交叉乘积形成的中间项 2ab。",
+      "strength": 0.8,
+      "correction_condition": "先把平方写成两个相同括号相乘，再观察两个交叉项如何合并为中间项。",
+      "semantic_type": "binomial_square"
+    }
+  ]
+}

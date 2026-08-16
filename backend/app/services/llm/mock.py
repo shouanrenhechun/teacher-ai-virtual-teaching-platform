@@ -19,6 +19,9 @@ class MockLLMClient(LLMClient):
         normalized = text.lower().replace(" ", "")
         branch = len(text) % 3
 
+        if any(marker in context.topic for marker in ("完全平方", "平方公式")):
+            return self._respond_binomial_square(normalized, branch)
+
         if "2和3" in normalized or "2和3".replace("和", "") in normalized:
             return "2应该影响倾斜程度吧，3的话……我总觉得它越大，直线好像也会越陡？"
 
@@ -73,6 +76,35 @@ class MockLLMClient(LLMClient):
             "我可以先做代入计算，不过如果要解释图像变化，我需要一点提示。",
             "我有一个答案，但不确定能不能说明理由。您可以让我比较两条具体的直线吗？",
         ][branch]
+
+    @staticmethod
+    def _respond_binomial_square(normalized: str, branch: int) -> str:
+        """Small offline responses for the second misconception only."""
+        if "x+4" in normalized:
+            return "(x+4)^2=x²+8x+16，因为展开会有 4x+4x 两个交叉项。"
+        if "2x+3" in normalized:
+            return "(2x+3)^2=4x²+12x+9，中间的 12x 来自两个 6x。"
+        if "x-5" in normalized or "负号" in normalized:
+            return "(x-5)^2=x²-10x+25，两个交叉项是 -5x 和 -5x。"
+        if "答案是" in normalized or "a²+2ab+b²" in normalized or "a^2+2ab+b^2" in normalized:
+            return "对，(a+b)^2=a²+2ab+b²，我先记住这个公式。"
+        if "平方就是分别平方" in normalized or "没有中间项" in normalized:
+            return "对，我原来也觉得括号里的两项分别平方就行，好像没有中间项。"
+        if "ab" in normalized and any(marker in normalized for marker in ("几次", "出现", "为什么")):
+            return "ab 会从两个交叉相乘中各出现一次，所以合起来是 2ab。"
+        if any(marker in normalized for marker in ("两个相同", "相乘", "展开")):
+            return "写成两个相同括号相乘后，我好像看到了两个交叉项，但还要再确认一下。"
+        if "2x+1" in normalized:
+            return "我先算成 4x²+1，括号里的两项分别平方就可以了吧？"
+        if "x+3" in normalized:
+            return "我觉得 (x+3)^2=x²+9，先把 x 和 3 分别平方。"
+        if "x+2" in normalized:
+            return "我先猜是 x²+4，不过写成两个括号相乘后好像还有别的项。"
+        return (
+            "括号平方我有点容易漏掉中间项，可能需要把两个括号真正乘开。"
+            if branch == 0
+            else "我记得每一项平方，但还不太确定交叉相乘要不要算进去。"
+        )
 
     def analyze_behavior(
         self, teacher_text: str, context: LLMContext | None = None

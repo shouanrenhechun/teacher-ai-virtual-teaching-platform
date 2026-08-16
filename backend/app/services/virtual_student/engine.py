@@ -6,6 +6,11 @@ from typing import Any
 
 from .behavior import TeachingBehavior, detect_teacher_behavior
 from .evidence import StudentResponseEvidence, StudentResponseEvidenceAnalyzer, correction_opportunity
+from .semantic import (
+    infer_semantic_type,
+    knowledge_keywords,
+    matches_misconception_text,
+)
 from .state_rules import is_strong_correct_evidence
 
 
@@ -33,6 +38,7 @@ class MisconceptionState:
     correction_started: bool = False
     corrected: bool = False
     status: str = "active"
+    semantic_type: str = "linear_kb"
     clean_evidence_streak: int = 0
     transfer_evidence: int = 0
     stable_correct_evidence_count: int = 0
@@ -95,6 +101,7 @@ class StudentProfile:
                     description=item.description,
                     strength=item.strength,
                     correction_condition=item.correction_condition,
+                    semantic_type=infer_semantic_type(item),
                 )
                 for item in record.misconceptions
             ],
@@ -219,14 +226,19 @@ class VirtualStudentEngine:
         previous_teacher_text: str = "",
     ) -> StudentResponseEvidence:
         """Update misconception state only after inspecting the student's answer."""
+        misconception = self._find_misconception(None, include_corrected=True)
+        if misconception is None:
+            return StudentResponseEvidenceAnalyzer().analyze(
+                response,
+                teacher_text=teacher_text,
+                previous_teacher_text=previous_teacher_text,
+            )
         evidence = StudentResponseEvidenceAnalyzer().analyze(
             response,
             teacher_text=teacher_text,
             previous_teacher_text=previous_teacher_text,
+            misconception=misconception,
         )
-        misconception = self._find_misconception(None, include_corrected=True)
-        if misconception is None:
-            return evidence
 
         opportunity_strength = float(
             (opportunity or self.get_correction_opportunity(teacher_text)).get(
@@ -303,13 +315,15 @@ class VirtualStudentEngine:
         )
 
     def _increase_knowledge_if_related(self, amount: float) -> None:
+        misconception = self._find_misconception(include_corrected=True)
+        keywords = knowledge_keywords(misconception) if misconception else ()
         for item in self._knowledge.values():
-            if any(keyword in item.knowledge_point.lower() for keyword in ("k", "b", "图像")):
+            if any(keyword.lower() in item.knowledge_point.lower() for keyword in keywords):
                 item.mastery = _clamp(item.mastery + amount)
 
     def _find_misconception(
         self,
-        name: str | None,
+        name: str | None = None,
         *,
         include_corrected: bool = False,
     ) -> MisconceptionState | None:
@@ -339,9 +353,7 @@ class VirtualStudentEngine:
             TeachingBehavior.EFFECTIVE_QUESTION,
         }:
             return None
-        text = teacher_text.lower()
-        if "b" in text:
-            for item in self._misconceptions:
-                if "b" in item.name.lower() or "b" in item.concept.lower():
-                    return item.name
+        for item in self._misconceptions:
+            if matches_misconception_text(item, teacher_text):
+                return item.name
         return next((item.name for item in self._misconceptions if not item.corrected), None)

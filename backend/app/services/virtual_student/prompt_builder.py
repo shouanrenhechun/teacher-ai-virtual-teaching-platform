@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .engine import VirtualStudentEngine
+from .semantic import infer_semantic_type, prompt_guidance
 
 
 def misconception_prompt_mode(status: str, corrected: bool = False) -> str:
@@ -32,7 +33,7 @@ def _misconception_prompt_text(item: object) -> str:
     name = str(getattr(item, "name", "当前认知错误"))
     strength = float(getattr(item, "strength", 0.0))
     mode = misconception_prompt_mode(status, corrected)
-    relation = "k 决定倾斜程度，b 主要改变直线的上下位置。"
+    guidance = prompt_guidance(item)
 
     if mode == "strong_misconception":
         wording = (
@@ -46,7 +47,7 @@ def _misconception_prompt_text(item: object) -> str:
         )
     elif mode == "mostly_correct_unstable":
         wording = (
-            f"你目前倾向于认为{relation}原先“{name}”的想法已经明显减弱。"
+            f"你目前倾向于认为“{guidance}”原先“{name}”的想法已经明显减弱。"
             "除非当前问题暴露出你仍未真正理解，否则不要主动为了维持角色而重新加入旧错误；"
             "如果理解还不稳定，可以自然地犹豫或保留疑问。"
         )
@@ -54,7 +55,7 @@ def _misconception_prompt_text(item: object) -> str:
         wording = f"你以前曾有过“{name}”的错误理解，但经过前面的教学，你现在已经纠正了这一理解。"
 
     return (
-        f"{name}（强度={strength:.2f}，状态={status}，Prompt模式={mode}）\n"
+        f"{name}（类型={infer_semantic_type(item)}，强度={strength:.2f}，状态={status}，Prompt模式={mode}）\n"
         f"{wording}"
     )
 

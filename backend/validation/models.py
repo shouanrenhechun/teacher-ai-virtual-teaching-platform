@@ -12,6 +12,7 @@ class ValidationCase:
     title: str
     teacher_inputs: tuple[str, ...]
     expectations: dict[str, bool]
+    misconception_type: str = "linear_kb"
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ValidationCase:
@@ -31,6 +32,7 @@ class ValidationCase:
                 str(key): bool(value)
                 for key, value in dict(data.get("expectations", {})).items()
             },
+            misconception_type=str(data.get("misconception_type", "linear_kb")),
         )
 
 

@@ -20,7 +20,8 @@ from validation.models import ValidationTurnResult
 
 def test_validation_cases_cover_required_categories() -> None:
     cases = load_validation_cases()
-    assert len(cases) == 19
+    assert len(cases) == 30
+    assert sum(case.misconception_type == "binomial_square" for case in cases) == 11
     categories = {case.category for case in cases}
     assert {
         "普通开场",
@@ -51,11 +52,11 @@ def test_mock_validation_runs_and_exports_report(tmp_path: Path) -> None:
     payload = json.loads(path.read_text(encoding="utf-8"))
 
     assert payload["provider"] == "mock"
-    assert payload["basic"]["total_cases"] == 19
-    assert payload["basic"]["total_runs"] == 19
-    assert payload["basic"]["total_calls"] == 31
+    assert payload["basic"]["total_cases"] == 30
+    assert payload["basic"]["total_runs"] == 30
+    assert payload["basic"]["total_calls"] == 49
     assert payload["basic"]["api_failures"] == 0
-    assert payload["overall_metrics"]["Role Consistency"]["total"] == 19
+    assert payload["overall_metrics"]["Role Consistency"]["total"] == 30
     assert payload["category_metrics"]["多轮：有效纠正"]
     assert payload["failure_cases"]
     assert "LLM_API_KEY" not in path.read_text(encoding="utf-8")
@@ -77,6 +78,21 @@ def test_mock_effective_correction_reduces_misconception() -> None:
     first_strength = run["turns"][0]["state_before"]["misconceptions"][0]["strength"]
     final_strength = run["turns"][-1]["state_after"]["misconceptions"][0]["strength"]
     assert final_strength < first_strength
+
+
+def test_mock_binomial_square_trajectory_reaches_corrected_state() -> None:
+    case = load_validation_cases(case_ids={"binomial_trajectory_effective_correction"})[0]
+    report = run_validation(
+        ValidationConfig(provider="mock", model="mock", runs_per_case=1),
+        [case],
+        client=MockLLMClient(),
+    )
+    run = report.runs[0]
+    assert run["successful_calls"] == 8
+    assert run["metrics"]["Correctability"]["passed"] is True
+    final = run["turns"][-1]["state_after"]["misconceptions"][0]
+    assert final["semantic_type"] == "binomial_square"
+    assert final["status"] == "corrected"
 
 
 def test_boundary_rule_accepts_common_spoken_refusal() -> None:

@@ -1,4 +1,15 @@
-from app.services.virtual_student import StudentResponseEvidenceAnalyzer
+from app.services.virtual_student import MisconceptionState, StudentResponseEvidenceAnalyzer
+
+
+def binomial_misconception() -> MisconceptionState:
+    return MisconceptionState(
+        name="括号平方遗漏中间项",
+        concept="完全平方公式",
+        description="认为括号平方只需分别平方每一项。",
+        strength=0.8,
+        correction_condition="先写成两个相同括号相乘。",
+        semantic_type="binomial_square",
+    )
 
 
 def test_evidence_detects_persistent_misconception() -> None:
@@ -190,3 +201,82 @@ def test_historical_misconception_correction_is_not_residual() -> None:
     )
 
     assert evidence.shows_residual_misconception is False
+
+
+def test_binomial_residual_shortcut_is_detected() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "(x+3)^2=x²+9。",
+        teacher_text="(x+3)^2 等于什么？",
+        misconception=binomial_misconception(),
+    )
+
+    assert evidence.shows_residual_misconception is True
+    assert evidence.knowledge_precision == "incorrect"
+
+
+def test_binomial_residual_separate_square_statement_is_detected() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "括号平方就是每一项分别平方，不需要中间项。",
+        misconception=binomial_misconception(),
+    )
+
+    assert evidence.shows_residual_misconception is True
+
+
+def test_binomial_historical_correction_is_not_residual() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "我以前以为要分别平方，现在知道还会有交叉项。",
+        misconception=binomial_misconception(),
+    )
+
+    assert evidence.shows_residual_misconception is False
+
+
+def test_binomial_cross_term_explanation_is_correct() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "(x+3)(x+3) 展开有 3x+3x，所以中间是 6x。",
+        teacher_text="你能解释中间项从哪里来吗？",
+        misconception=binomial_misconception(),
+    )
+
+    assert evidence.states_correct_conclusion is True
+    assert evidence.explains_reason_correctly is True
+    assert evidence.shows_residual_misconception is False
+    assert evidence.knowledge_precision == "correct"
+
+
+def test_binomial_surface_formula_recall_is_not_transfer() -> None:
+    formula = "(a+b)^2=a²+2ab+b²"
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        formula,
+        teacher_text=formula,
+        previous_teacher_text=formula,
+        misconception=binomial_misconception(),
+    )
+
+    assert evidence.parrots_teacher is True
+    assert evidence.transfer_success is False
+    assert evidence.evidence_insufficient is True
+
+
+def test_binomial_transfer_with_coefficients_is_correct() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "(2x+3)^2=4x²+12x+9，中间的 12x 来自两个 6x。",
+        teacher_text="再做一个变式：(2x+3)^2。",
+        misconception=binomial_misconception(),
+    )
+
+    assert evidence.explains_reason_correctly is True
+    assert evidence.transfer_success is True
+    assert evidence.shows_residual_misconception is False
+
+
+def test_binomial_negative_transfer_without_middle_term_fails() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "(x-5)^2=x²+25。",
+        teacher_text="验证变式：(x-5)^2。",
+        misconception=binomial_misconception(),
+    )
+
+    assert evidence.transfer_success is False
+    assert evidence.shows_residual_misconception is True

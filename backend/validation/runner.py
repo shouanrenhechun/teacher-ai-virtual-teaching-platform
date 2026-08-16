@@ -163,12 +163,18 @@ def _run_case(
         provider=config.provider,
         started_at=_now(),
     )
-    engine = VirtualStudentEngine(load_student_a_profile())
+    engine = VirtualStudentEngine(
+        load_student_a_profile(misconception_type=case.misconception_type)
+    )
     conversation_history: list[tuple[str, str]] = []
     context_base = LLMContext(
         student_name=engine.profile.name,
         student_grade=engine.profile.grade,
-        topic="一次函数 k 与 b 的意义",
+        topic=(
+            "完全平方公式"
+            if case.misconception_type == "binomial_square"
+            else "一次函数 k 与 b 的意义"
+        ),
     )
 
     try:
@@ -313,6 +319,7 @@ def _snapshot_dict(snapshot: Any) -> dict[str, Any]:
                 "name": item.name,
                 "concept": item.concept,
                 "description": item.description,
+                "semantic_type": item.semantic_type,
                 "strength": item.strength,
                 "correction_condition": item.correction_condition,
                 "triggered": item.triggered,

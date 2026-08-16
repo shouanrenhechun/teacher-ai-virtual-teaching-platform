@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .models import MetricResult, ValidationCase, ValidationTurnResult
+from app.services.virtual_student.semantic import get_semantic_evaluator, has_correction_evidence
 from app.services.virtual_student.state_rules import is_strong_correct_evidence
 
 
@@ -217,6 +218,9 @@ def extract_turn_indicators(
     boundary = analyze_boundary_evidence(response)
     classroom = state_after.get("classroom_state", {})
     misconception = _first_misconception(state_after) or {}
+    semantic_evidence = get_semantic_evaluator(
+        str(misconception.get("semantic_type", "linear_kb"))
+    ).analyze(response, "")
     return {
         "role_consistent": not _contains_any(
             response.lower().replace(" ", ""), _AI_ROLE_MARKERS
@@ -233,10 +237,11 @@ def extract_turn_indicators(
         "boundary_retreated_to_known_scope": boundary.retreats_to_known_scope,
         "boundary_speculates_from_known_scope": boundary.speculates_from_known_scope,
         "boundary_demonstrates_out_of_scope_knowledge": boundary.demonstrates_out_of_scope_knowledge,
-        "correctness": _contains_any(response, _CORRECT_CONCEPT_MARKERS),
-        "misconception_observed": _contains_any_pattern(
-            response, _MISCONCEPTION_MARKERS
+        "correctness": (
+            semantic_evidence.states_correct_conclusion
+            and not semantic_evidence.shows_residual_misconception
         ),
+        "misconception_observed": semantic_evidence.shows_residual_misconception,
         "state_marked_corrected": bool(misconception.get("corrected", False)),
         "low_confidence_or_confused": float(classroom.get("confusion", 0.0)) >= 0.45
         or float(classroom.get("understanding", 1.0)) <= 0.65,
@@ -304,8 +309,11 @@ def _misconception_persistence(
         if observed_in_turn:
             observed = True
         if _is_surface_correct_recall(turn, turns):
+            # A direct-answer echo is evidence that mastery is still unproven,
+            # even when the student does not verbalize the old error again.
+            observed = True
             continue
-        if _contains_any(response, _CORRECT_CONCEPT_MARKERS) and not _contains_any(
+        if _is_correct_response(case.misconception_type, response, turn.teacher_input) and not _contains_any(
             response, _UNCERTAINTY_MARKERS
         ):
             failures.append(f"第{turn.sequence}轮在未纠正时自信给出正确结论")
@@ -351,8 +359,8 @@ def _correctability(
     correction_markers = sum(
         1
         for turn in turns
-        if _contains_any(turn.teacher_input, _CORRECT_CONCEPT_MARKERS)
-        or _contains_any(turn.student_response, _CORRECT_CONCEPT_MARKERS)
+        if has_correction_evidence(case.misconception_type, turn.teacher_input)
+        or _is_correct_response(case.misconception_type, turn.student_response, turn.teacher_input)
     )
     observed_initial_error = any(
         bool(turn.student_response_evidence.get("shows_residual_misconception"))
@@ -468,7 +476,11 @@ def _state_consistency(turns: Sequence[ValidationTurnResult]) -> MetricResult:
             float(misconception.get("strength", 0.0)) >= 0.6
             and not misconception.get("corrected", False)
             and not misconception.get("correction_started", False)
-            and _contains_any(response, _CORRECT_CONCEPT_MARKERS)
+            and _is_correct_response(
+                str(misconception.get("semantic_type", "linear_kb")),
+                response,
+                turn.teacher_input,
+            )
             and not _contains_any(response, _UNCERTAINTY_MARKERS)
         ):
             failures.append(f"第{turn.sequence}轮未纠正错误认知却自信表达正确结论")
@@ -548,6 +560,11 @@ def _contains_any(text: str, markers: Sequence[str]) -> bool:
 
 def _contains_any_pattern(text: str, patterns: Sequence[str]) -> bool:
     return any(re.search(pattern, text, flags=re.IGNORECASE) for pattern in patterns)
+
+
+def _is_correct_response(semantic_type: str, response: str, teacher_text: str = "") -> bool:
+    evidence = get_semantic_evaluator(semantic_type).analyze(response, teacher_text)
+    return evidence.states_correct_conclusion and not evidence.shows_residual_misconception
 
 
 def _fallback_misconception_observed(response: str) -> bool:

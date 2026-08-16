@@ -16,8 +16,17 @@ from .models import ValidationCase
 CASE_DIR = Path(__file__).resolve().parent / "cases"
 
 
-def load_student_a_profile(path: Path | None = None) -> StudentProfile:
-    data = _read_json(path or CASE_DIR / "student_a.json")
+def load_student_a_profile(
+    path: Path | None = None,
+    *,
+    misconception_type: str = "linear_kb",
+) -> StudentProfile:
+    profile_path = path or (
+        CASE_DIR / "student_a_binomial_square.json"
+        if misconception_type == "binomial_square"
+        else CASE_DIR / "student_a.json"
+    )
+    data = _read_json(profile_path)
     return StudentProfile(
         name=str(data["name"]),
         grade=str(data["grade"]),
@@ -39,6 +48,7 @@ def load_student_a_profile(path: Path | None = None) -> StudentProfile:
                 description=str(item["description"]),
                 strength=float(item["strength"]),
                 correction_condition=str(item["correction_condition"]),
+                semantic_type=str(item.get("semantic_type", misconception_type)),
             )
             for item in data["misconceptions"]
         ],

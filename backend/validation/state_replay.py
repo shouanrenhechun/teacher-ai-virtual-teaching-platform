@@ -21,7 +21,9 @@ def replay_report(input_path: Path, output_path: Path | None = None) -> Path:
 
     for old_run in data.get("runs", []):
         case = load_validation_cases(case_ids={str(old_run["case_id"])})[0]
-        engine = VirtualStudentEngine(load_student_a_profile())
+        engine = VirtualStudentEngine(
+            load_student_a_profile(misconception_type=case.misconception_type)
+        )
         history: list[tuple[str, str]] = []
         replay_turns: list[ValidationTurnResult] = []
 

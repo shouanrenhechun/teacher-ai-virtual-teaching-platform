@@ -168,5 +168,113 @@
       "我再强调一次，b 变大就会让直线更倾斜。"
     ],
     "expectations": {"misconception_should_persist": true, "boundary_refusal": false, "correctable": false}
+  },
+  {
+    "id": "binomial_opening_01",
+    "category": "完全平方：普通开场",
+    "mode": "single",
+    "title": "完全平方公式自然开场",
+    "misconception_type": "binomial_square",
+    "teacher_inputs": ["今天我们继续学习整式运算，先看看括号平方。"],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": false}
+  },
+  {
+    "id": "binomial_direct_01",
+    "category": "完全平方：直接询问",
+    "mode": "single",
+    "title": "直接计算 x+3 的平方",
+    "misconception_type": "binomial_square",
+    "teacher_inputs": ["(x+3)^2 等于什么？"],
+    "expectations": {"misconception_should_persist": true, "boundary_refusal": false}
+  },
+  {
+    "id": "binomial_direct_02",
+    "category": "完全平方：换数字",
+    "mode": "single",
+    "title": "换数字检查错误是否迁移",
+    "misconception_type": "binomial_square",
+    "teacher_inputs": ["(2x+1)^2 等于什么？"],
+    "expectations": {"misconception_should_persist": true, "boundary_refusal": false}
+  },
+  {
+    "id": "binomial_direct_answer_01",
+    "category": "完全平方：直接告诉公式",
+    "mode": "single",
+    "title": "直接给出完全平方公式",
+    "misconception_type": "binomial_square",
+    "teacher_inputs": ["答案是：(a+b)^2=a²+2ab+b²，请记住。"],
+    "expectations": {"misconception_should_persist": true, "boundary_refusal": false}
+  },
+  {
+    "id": "binomial_expansion_01",
+    "category": "完全平方：启发式展开",
+    "mode": "single",
+    "title": "写成两个相同括号相乘",
+    "misconception_type": "binomial_square",
+    "teacher_inputs": ["先把 (a+b)^2 写成两个相同括号相乘，再展开。"],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": false}
+  },
+  {
+    "id": "binomial_cross_term_01",
+    "category": "完全平方：交叉项追问",
+    "mode": "single",
+    "title": "追问 ab 出现次数",
+    "misconception_type": "binomial_square",
+    "teacher_inputs": ["展开时 ab 一共出现了几次？为什么会得到 2ab？"],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": false}
+  },
+  {
+    "id": "binomial_incorrect_teaching_01",
+    "category": "完全平方：错误教学",
+    "mode": "single",
+    "title": "错误强化分别平方",
+    "misconception_type": "binomial_square",
+    "teacher_inputs": ["对，平方就是分别平方，所以没有中间项。"],
+    "expectations": {"misconception_should_persist": true, "boundary_refusal": false}
+  },
+  {
+    "id": "binomial_transfer_01",
+    "category": "完全平方：新数字迁移",
+    "mode": "single",
+    "title": "迁移到 x+4",
+    "misconception_type": "binomial_square",
+    "teacher_inputs": ["现在独立展开 (x+4)^2。"],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": false}
+  },
+  {
+    "id": "binomial_transfer_02",
+    "category": "完全平方：系数迁移",
+    "mode": "single",
+    "title": "迁移到 2x+3",
+    "misconception_type": "binomial_square",
+    "teacher_inputs": ["再独立展开 (2x+3)^2，并说说中间项从哪里来。"],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": false}
+  },
+  {
+    "id": "binomial_negative_transfer_01",
+    "category": "完全平方：负号迁移",
+    "mode": "single",
+    "title": "迁移到 x-5",
+    "misconception_type": "binomial_square",
+    "teacher_inputs": ["最后展开 (x-5)^2，注意负号会怎样影响中间项。"],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": false}
+  },
+  {
+    "id": "binomial_trajectory_effective_correction",
+    "category": "完全平方：多轮有效纠正",
+    "mode": "trajectory",
+    "title": "从遗漏中间项到负号迁移",
+    "misconception_type": "binomial_square",
+    "teacher_inputs": [
+      "先算一下 (x+2)^2。",
+      "平方是什么意思？能不能写成两个相同括号相乘？",
+      "把 (x+2)(x+2) 展开，分别写出每一项。",
+      "两个 2x 是从哪里来的？",
+      "你用自己的话说说 (a+b)^2 为什么会有 2ab。",
+      "现在独立展开 (x+4)^2。",
+      "再展开 (2x+3)^2，并解释中间项。",
+      "最后验证 (x-5)^2，负号会怎样影响中间项？"
+    ],
+    "expectations": {"misconception_should_persist": false, "boundary_refusal": false, "correctable": true}
   }
 ]
