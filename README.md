@@ -46,6 +46,8 @@ cd backend
 
 ## 从全新终端启动并演示
 
+比赛演示可直接双击仓库根目录的 `start-demo.cmd`。脚本会打开两个终端，固定使用 `DEMO MODE / MOCK`，启动本地 Mock 后端和前端，不调用真实 LLM。
+
 终端 1：启动后端 Mock 演示模式。
 
 ```powershell
