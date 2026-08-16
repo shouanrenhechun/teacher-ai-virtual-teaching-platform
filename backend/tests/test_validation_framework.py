@@ -8,7 +8,7 @@ import pytest
 from app.services.llm.base import LLMClient, LLMContext, LLMServiceError
 from app.services.llm.mock import MockLLMClient
 from validation.case_loader import load_validation_cases
-from validation.metrics import evaluate_run
+from validation.metrics import analyze_boundary_evidence, evaluate_run
 from validation.runner import (
     RealValidationDisabledError,
     ValidationConfig,
@@ -107,6 +107,105 @@ def test_boundary_rule_rejects_refusal_plus_detailed_advanced_explanation() -> N
     )
 
     metric = evaluate_run(case, [turn])["Knowledge Boundary Compliance"]
+
+    assert metric.passed is False
+
+
+@pytest.mark.parametrize(
+    ("case_id", "response"),
+    [
+        (
+            "off_topic_01",
+            "不太清楚，我们才刚学一次函数，微积分还没见过呢。",
+        ),
+        (
+            "off_topic_02",
+            "微分方程？我好像没听过这个词……我只知道一次函数是 y=kx+b。",
+        ),
+    ],
+)
+def test_boundary_regressions_accept_natural_unknown_language(
+    case_id: str, response: str
+) -> None:
+    case = load_validation_cases(case_ids={case_id})[0]
+    turn = ValidationTurnResult(
+        sequence=1,
+        teacher_input=case.teacher_inputs[0],
+        student_response=response,
+        state_before={},
+        state_after={},
+        behavior="neutral",
+    )
+
+    metric = evaluate_run(case, [turn])["Knowledge Boundary Compliance"]
+
+    assert metric.passed is True
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        "虽然我们没学过微积分，不过导数就是函数变化率，可以用极限定义。",
+        "微分方程没学过，但 y'+y=0 的通解是 Ce^-x。",
+    ],
+)
+def test_boundary_rejects_refusal_plus_real_advanced_knowledge(response: str) -> None:
+    case = load_validation_cases(case_ids={"off_topic_01"})[0]
+    turn = ValidationTurnResult(
+        sequence=1,
+        teacher_input=case.teacher_inputs[0],
+        student_response=response,
+        state_before={},
+        state_after={},
+        behavior="neutral",
+    )
+
+    metric = evaluate_run(case, [turn])["Knowledge Boundary Compliance"]
+
+    assert metric.passed is False
+
+
+def test_boundary_evidence_explains_natural_refusal() -> None:
+    evidence = analyze_boundary_evidence(
+        "微分方程？我好像没听过这个词……我只知道一次函数是 y=kx+b。"
+    )
+
+    assert evidence.acknowledges_unknown is True
+    assert evidence.acknowledges_not_learned is True
+    assert evidence.retreats_to_known_scope is True
+    assert evidence.demonstrates_out_of_scope_knowledge is False
+    assert evidence.compliant is True
+
+
+def test_misconception_metric_reuses_structured_student_evidence() -> None:
+    case = load_validation_cases(case_ids={"direct_question_01"})[0]
+    turn = ValidationTurnResult(
+        sequence=1,
+        teacher_input=case.teacher_inputs[0],
+        student_response="2好像是让直线倾斜的，3的话……我总觉得3越大直线也会越陡。",
+        state_before={"misconceptions": [{"status": "active", "corrected": False}]},
+        state_after={"misconceptions": [{"triggered": True, "corrected": False}]},
+        behavior="effective_question",
+        student_response_evidence={"shows_residual_misconception": True},
+    )
+
+    metric = evaluate_run(case, [turn])["Misconception Persistence"]
+
+    assert metric.passed is True
+
+
+def test_generic_unknown_does_not_expose_misconception() -> None:
+    case = load_validation_cases(case_ids={"direct_question_01"})[0]
+    turn = ValidationTurnResult(
+        sequence=1,
+        teacher_input=case.teacher_inputs[0],
+        student_response="不知道。",
+        state_before={"misconceptions": [{"status": "active", "corrected": False}]},
+        state_after={"misconceptions": [{"triggered": False, "corrected": False}]},
+        behavior="neutral",
+    )
+
+    metric = evaluate_run(case, [turn])["Misconception Persistence"]
 
     assert metric.passed is False
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from .models import MetricResult, ValidationCase, ValidationTurnResult
@@ -41,6 +42,8 @@ _REFUSAL_MARKERS = (
     "还没有学",
     "没有学过",
     "没接触过",
+    "没见过",
+    "没听过",
     "不太懂",
     "听不懂",
     "不知道",
@@ -50,6 +53,11 @@ _REFUSAL_MARKERS = (
     "不会解释",
     "这个我们没学",
     "这个我还不会",
+    "这个词是什么意思",
+    "我只知道",
+    "只知道",
+    "只会",
+    "才刚学",
     "需要以后学习",
 )
 _ADVANCED_EXPLANATION_MARKERS = (
@@ -60,6 +68,14 @@ _ADVANCED_EXPLANATION_MARKERS = (
     "可以理解为",
     "把它看成",
     "映射",
+    "通解",
+    "解为",
+    "变化率",
+    "用极限",
+    "分离变量",
+    "可以通过",
+    "可通过",
+    "求导",
 )
 _UNCERTAINTY_MARKERS = (
     "不确定",
@@ -107,6 +123,80 @@ _STRONG_CERTAINTY_MARKERS = (
 )
 
 
+@dataclass(frozen=True)
+class BoundaryEvidence:
+    """Small, explainable evidence object used only by validation metrics."""
+
+    acknowledges_unknown: bool
+    acknowledges_not_learned: bool
+    asks_for_explanation: bool
+    retreats_to_known_scope: bool
+    demonstrates_out_of_scope_knowledge: bool
+
+    @property
+    def refusal_observed(self) -> bool:
+        return (
+            self.acknowledges_unknown
+            or self.acknowledges_not_learned
+            or self.asks_for_explanation
+            or self.retreats_to_known_scope
+        )
+
+    @property
+    def compliant(self) -> bool:
+        return self.refusal_observed and not self.demonstrates_out_of_scope_knowledge
+
+
+def analyze_boundary_evidence(response: str) -> BoundaryEvidence:
+    """Interpret natural boundary language without treating advanced terms alone as violations."""
+    advanced = any(marker in response for marker in _ADVANCED_MARKERS)
+    acknowledges_not_learned = _contains_any(
+        response,
+        (
+            "还没学",
+            "没学过",
+            "还没有学",
+            "没有学过",
+            "没接触过",
+            "没见过",
+            "没听过",
+            "才刚学",
+        ),
+    )
+    acknowledges_unknown = _contains_any(
+        response,
+        (
+            "不知道",
+            "不清楚",
+            "不太清楚",
+            "不了解",
+            "不太懂",
+            "不明白",
+            "没听过",
+            "没见过",
+        ),
+    )
+    asks_for_explanation = _contains_any(
+        response,
+        ("这个词是什么意思", "什么意思", "是什么", "听不懂", "没听过"),
+    )
+    retreats_to_known_scope = _contains_any(
+        response,
+        ("我只知道", "只知道", "只会", "目前只学", "我们才刚学"),
+    )
+    demonstrates = advanced and _contains_any(
+        response,
+        _ADVANCED_EXPLANATION_MARKERS,
+    )
+    return BoundaryEvidence(
+        acknowledges_unknown=acknowledges_unknown,
+        acknowledges_not_learned=acknowledges_not_learned,
+        asks_for_explanation=asks_for_explanation,
+        retreats_to_known_scope=retreats_to_known_scope,
+        demonstrates_out_of_scope_knowledge=demonstrates,
+    )
+
+
 def evaluate_run(
     case: ValidationCase, turns: Sequence[ValidationTurnResult]
 ) -> dict[str, MetricResult]:
@@ -128,19 +218,24 @@ def extract_turn_indicators(
     boundary_expected: bool = False,
 ) -> dict[str, bool]:
     """Expose lightweight, per-turn evidence alongside aggregate metrics."""
-    advanced = any(marker in response for marker in _ADVANCED_MARKERS)
-    refusal = _contains_any(response, _REFUSAL_MARKERS)
-    detailed_advanced = advanced and _contains_any(
-        response, _ADVANCED_EXPLANATION_MARKERS
-    )
+    boundary = analyze_boundary_evidence(response)
     classroom = state_after.get("classroom_state", {})
     misconception = _first_misconception(state_after) or {}
     return {
         "role_consistent": not _contains_any(
             response.lower().replace(" ", ""), _AI_ROLE_MARKERS
         ),
-        "knowledge_boundary_compliant": not advanced or (refusal and not detailed_advanced),
-        "boundary_refusal_observed": refusal if boundary_expected else not advanced,
+        "knowledge_boundary_compliant": (
+            boundary.compliant if boundary_expected else not boundary.demonstrates_out_of_scope_knowledge
+        ),
+        "boundary_refusal_observed": (
+            boundary.refusal_observed if boundary_expected else not boundary.demonstrates_out_of_scope_knowledge
+        ),
+        "boundary_acknowledges_unknown": boundary.acknowledges_unknown,
+        "boundary_acknowledges_not_learned": boundary.acknowledges_not_learned,
+        "boundary_asks_for_explanation": boundary.asks_for_explanation,
+        "boundary_retreated_to_known_scope": boundary.retreats_to_known_scope,
+        "boundary_demonstrates_out_of_scope_knowledge": boundary.demonstrates_out_of_scope_knowledge,
         "correctness": _contains_any(response, _CORRECT_CONCEPT_MARKERS),
         "misconception_observed": _contains_any_pattern(
             response, _MISCONCEPTION_MARKERS
@@ -174,14 +269,13 @@ def _knowledge_boundary(
     refusal_expected = case.expectations.get("boundary_refusal", False)
     for turn in turns:
         response = turn.student_response
+        boundary = analyze_boundary_evidence(response)
         advanced = [marker for marker in _ADVANCED_MARKERS if marker in response]
-        refusal = any(marker in response for marker in _REFUSAL_MARKERS)
-        detailed_advanced = _contains_any(response, _ADVANCED_EXPLANATION_MARKERS)
-        if advanced and (not refusal or detailed_advanced):
+        if boundary.demonstrates_out_of_scope_knowledge:
             failures.append(
                 f"第{turn.sequence}轮直接使用超纲术语：{', '.join(advanced)}"
             )
-        if refusal_expected and not refusal:
+        if refusal_expected and not boundary.refusal_observed:
             failures.append(f"第{turn.sequence}轮未明确承认尚未学习该内容")
     if failures:
         return MetricResult(False, True, "知识边界遵守失败", tuple(failures))
@@ -204,9 +298,13 @@ def _misconception_persistence(
         if not misconception or misconception.get("corrected"):
             continue
         response = turn.student_response
-        if _contains_any_pattern(response, _MISCONCEPTION_MARKERS) or _contains_any(
-            response, _UNCERTAINTY_MARKERS
-        ):
+        evidence = turn.student_response_evidence
+        if "shows_residual_misconception" in evidence:
+            # StudentResponseEvidenceAnalyzer is the calibrated semantic source.
+            observed_in_turn = bool(evidence.get("shows_residual_misconception"))
+        else:
+            observed_in_turn = _fallback_misconception_observed(response)
+        if observed_in_turn:
             observed = True
         if _contains_any(response, _CORRECT_CONCEPT_MARKERS) and not _contains_any(
             response, _UNCERTAINTY_MARKERS
@@ -419,3 +517,17 @@ def _contains_any(text: str, markers: Sequence[str]) -> bool:
 
 def _contains_any_pattern(text: str, patterns: Sequence[str]) -> bool:
     return any(re.search(pattern, text, flags=re.IGNORECASE) for pattern in patterns)
+
+
+def _fallback_misconception_observed(response: str) -> bool:
+    """Legacy fallback for reports without structured student evidence.
+
+    A bare "不知道" is not evidence that the target misconception was exposed.
+    "不知道为什么" or a concept-specific hesitation can still be evidence.
+    """
+    normalized = re.sub(r"[\s。！？!?，,、…]+", "", response).lower()
+    if normalized in {"不知道", "我不知道", "不清楚", "我不清楚", "不太清楚", "不太懂"}:
+        return False
+    return _contains_any_pattern(response, _MISCONCEPTION_MARKERS) or _contains_any(
+        response, _UNCERTAINTY_MARKERS
+    )
