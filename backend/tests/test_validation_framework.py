@@ -190,7 +190,40 @@ def test_boundary_evidence_explains_natural_refusal() -> None:
     assert evidence.acknowledges_not_learned is True
     assert evidence.retreats_to_known_scope is True
     assert evidence.demonstrates_out_of_scope_knowledge is False
+    assert evidence.scope_level == "unknown"
     assert evidence.compliant is True
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        "我没学过导数，是不是和变化率有关？",
+        "微分方程没学过，会不会和函数变化有关？我不确定。",
+    ],
+)
+def test_boundary_classifies_cautious_guess_as_speculative_bridge(response: str) -> None:
+    evidence = analyze_boundary_evidence(response)
+
+    assert evidence.scope_level == "speculative_bridge"
+    assert evidence.speculates_from_known_scope is True
+    assert evidence.demonstrates_out_of_scope_knowledge is False
+    assert evidence.compliant is True
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        "我没学过导数，不过导数就是函数在一点的瞬时变化率，可以用差商极限定义。",
+        "微分方程没学过，不过 y'+y=0 的通解是 Ce^-x。",
+        "线性代数没学过，但特征值满足 Av=λv。",
+    ],
+)
+def test_boundary_classifies_detailed_advanced_claim_as_demonstrated(response: str) -> None:
+    evidence = analyze_boundary_evidence(response)
+
+    assert evidence.scope_level == "demonstrated_knowledge"
+    assert evidence.demonstrates_out_of_scope_knowledge is True
+    assert evidence.compliant is False
 
 
 def test_misconception_metric_reuses_structured_student_evidence() -> None:
@@ -208,6 +241,88 @@ def test_misconception_metric_reuses_structured_student_evidence() -> None:
     metric = evaluate_run(case, [turn])["Misconception Persistence"]
 
     assert metric.passed is True
+
+
+@pytest.mark.parametrize(
+    "response,evidence",
+    [
+        (
+            "对，b 越大就是越陡。",
+            {"shows_residual_misconception": True},
+        ),
+        (
+            "我还是觉得 b 越大越陡，不过 k 好像也和倾斜有关。",
+            {
+                "states_correct_conclusion": True,
+                "explains_reason_correctly": False,
+                "shows_residual_misconception": True,
+                "conceptual_uncertainty": True,
+            },
+        ),
+    ],
+)
+def test_incorrect_teaching_persistence_accepts_error_with_correct_fragments(
+    response: str, evidence: dict[str, object]
+) -> None:
+    case = load_validation_cases(case_ids={"incorrect_teaching_01"})[0]
+    turn = ValidationTurnResult(
+        sequence=1,
+        teacher_input=case.teacher_inputs[0],
+        student_response=response,
+        state_before={"misconceptions": [{"status": "active", "corrected": False}]},
+        state_after={
+            "misconceptions": [
+                {"status": "active", "corrected": False, "triggered": True}
+            ]
+        },
+        behavior="neutral",
+        student_response_evidence=evidence,
+    )
+
+    metric = evaluate_run(case, [turn])["Misconception Persistence"]
+
+    assert metric.passed is True
+
+
+def test_incorrect_teaching_persistence_rejects_accidental_correction() -> None:
+    case = load_validation_cases(case_ids={"incorrect_teaching_01"})[0]
+    turn = ValidationTurnResult(
+        sequence=1,
+        teacher_input=case.teacher_inputs[0],
+        student_response="不对，我现在确定了，陡不陡只看 k，b 完全不影响倾斜。",
+        state_before={"misconceptions": [{"status": "active", "corrected": False}]},
+        state_after={
+            "misconceptions": [{"status": "active", "corrected": False}]
+        },
+        behavior="neutral",
+        student_response_evidence={
+            "states_correct_conclusion": True,
+            "explains_reason_correctly": True,
+            "shows_residual_misconception": False,
+            "conceptual_uncertainty": False,
+        },
+    )
+
+    metric = evaluate_run(case, [turn])["Misconception Persistence"]
+
+    assert metric.passed is False
+
+
+def test_incorrect_teaching_persistence_rejects_historical_correction() -> None:
+    case = load_validation_cases(case_ids={"incorrect_teaching_01"})[0]
+    turn = ValidationTurnResult(
+        sequence=1,
+        teacher_input=case.teacher_inputs[0],
+        student_response="我刚才以为 b 越大越陡，不过现在知道不是。",
+        state_before={"misconceptions": [{"status": "active", "corrected": False}]},
+        state_after={"misconceptions": [{"status": "active", "corrected": False}]},
+        behavior="neutral",
+        student_response_evidence={"shows_residual_misconception": False},
+    )
+
+    metric = evaluate_run(case, [turn])["Misconception Persistence"]
+
+    assert metric.passed is False
 
 
 def test_generic_unknown_does_not_expose_misconception() -> None:

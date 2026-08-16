@@ -1,3 +1,5 @@
+import pytest
+
 from app.services.virtual_student import MisconceptionState, StudentResponseEvidenceAnalyzer
 
 
@@ -194,6 +196,27 @@ def test_negative_b_increase_statement_is_not_residual_misconception() -> None:
     assert evidence.shows_residual_misconception is False
 
 
+def test_negative_b_steepness_claim_is_correct_conclusion() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "b 变大不会让直线更陡。",
+        teacher_text="如果把 b 变大，直线会怎样？",
+    )
+
+    assert evidence.states_correct_conclusion is True
+    assert evidence.shows_residual_misconception is False
+    assert evidence.conceptual_uncertainty is False
+
+
+def test_negative_b_steepness_and_position_claim_is_correct_explanation() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "只改变 b 不会改变倾斜程度，只会上下移动。",
+        teacher_text="你能解释 b 的作用吗？",
+    )
+
+    assert evidence.explains_reason_correctly is True
+    assert evidence.shows_residual_misconception is False
+
+
 def test_historical_misconception_correction_is_not_residual() -> None:
     evidence = StudentResponseEvidenceAnalyzer().analyze(
         "以前我以为 b 越大会越陡，现在知道不是这样。",
@@ -201,6 +224,79 @@ def test_historical_misconception_correction_is_not_residual() -> None:
     )
 
     assert evidence.shows_residual_misconception is False
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        "b 越大越陡，不过 k 好像也影响倾斜。",
+        "b 是影响位置的，但我还是觉得 b 大一点会更陡。",
+    ],
+)
+def test_conflicting_linear_claim_prioritizes_explicit_residual_error(response: str) -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        response,
+        teacher_text="你认为 b 和 k 分别影响什么？",
+    )
+
+    assert evidence.shows_residual_misconception is True
+    assert evidence.explains_reason_correctly is False
+    assert evidence.knowledge_precision != "correct"
+
+
+def test_real_student_b_incorrect_teaching_response_keeps_residual_error() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "嗯……我也觉得 b 越大，直线会越陡吧。因为 b 不是影响直线的位置吗？不过陡不陡，好像跟前面那个 k 也有关系？",
+        teacher_text="b 越大，直线当然越陡。",
+    )
+
+    assert evidence.shows_residual_misconception is True
+    assert evidence.explains_reason_correctly is False
+    assert evidence.knowledge_precision != "correct"
+
+
+def test_linear_error_with_fuzzy_correct_fragment_keeps_residual_error() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "b 越大应该越陡，不过 k 好像也有影响。",
+    )
+
+    assert evidence.shows_residual_misconception is True
+
+
+def test_linear_position_fragment_does_not_cancel_current_error() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "b 确实是控制上下位置的，但我还是觉得 b 大一点会更陡。",
+    )
+
+    assert evidence.shows_residual_misconception is True
+
+
+def test_historical_linear_error_followed_by_correction_is_not_residual() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "我之前以为 b 越大会越陡，不过现在知道陡不陡只看 k。",
+        teacher_text="你现在还这样认为吗？",
+    )
+
+    assert evidence.shows_residual_misconception is False
+    assert evidence.explains_reason_correctly is True
+
+
+def test_explicit_linear_self_correction_is_not_residual() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "我之前一直以为 b 越大会越陡，不过现在知道这个想法不对，倾斜程度只由 k 决定。",
+    )
+
+    assert evidence.shows_residual_misconception is False
+    assert evidence.explains_reason_correctly is True
+
+
+def test_vague_linear_hedging_is_insufficient_evidence() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "我不太确定，b 和 k 好像都跟图像有关。",
+    )
+
+    assert evidence.conceptual_uncertainty is True
+    assert evidence.evidence_insufficient is True
 
 
 def test_binomial_residual_shortcut_is_detected() -> None:

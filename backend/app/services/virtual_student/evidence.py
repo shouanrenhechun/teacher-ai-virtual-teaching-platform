@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from .state_rules import is_evidence_insufficient
@@ -123,7 +124,18 @@ class StudentResponseEvidenceAnalyzer:
 
 
 def _has_conceptual_uncertainty(response: str, *, residual: bool) -> bool:
-    if any(marker in response for marker in _CONCEPTUAL_UNCERTAINTY_MARKERS):
+    direct_uncertainty = tuple(
+        marker
+        for marker in _CONCEPTUAL_UNCERTAINTY_MARKERS
+        if marker not in {"不会", "会不会"}
+    )
+    if any(marker in response for marker in direct_uncertainty):
+        return True
+    if "会不会" in response and any(
+        marker in response for marker in ("b", "截距", "陡", "倾斜", "斜率")
+    ):
+        return True
+    if re.search(r"(?:我|自己|还).{0,6}不会(?:判断|计算|算|解释|做|答|弄)", response):
         return True
     if residual and any(marker in response for marker in ("可能", "也许", "有点", "担心")):
         return True

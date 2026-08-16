@@ -50,22 +50,36 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
             marker in normalized
             for marker in (
                 "截距", "位置", "上下", "上移", "向上", "下移", "平移",
-                "上面", "下面", "上方", "下方", "移动", "挪",
+                "上面", "下面", "上方", "下方", "移动", "挪", "陡", "倾斜", "斜率",
             )
         )
         residual = _linear_residual(normalized, teacher_normalized)
+        negative_claim = _linear_negative_claim(normalized)
         explains = (
-            has_k
-            and has_b
-            and any(
-                marker in normalized
-                for marker in (
-                    "因为", "k相同", "k都", "斜率相同", "只改变b", "只会让直线",
-                    "所以倾斜", "由k决定", "由k控制",
+            not residual
+            and (
+                (
+                    has_k
+                    and has_b
+                    and any(
+                        marker in normalized
+                        for marker in (
+                            "因为", "k相同", "k都", "斜率相同", "只改变b", "只会让直线",
+                            "所以倾斜", "由k决定", "由k控制", "只看k",
+                        )
+                    )
+                )
+                or (
+                    negative_claim
+                    and has_b
+                    and any(
+                        marker in normalized
+                        for marker in ("位置", "上下", "上移", "下移", "平移", "移动", "挪")
+                    )
                 )
             )
         )
-        states_correct = has_k and (has_b or residual)
+        states_correct = (has_k and (has_b or residual)) or (negative_claim and has_b)
         if states_correct and not residual:
             conclusion_level = "correct"
         elif has_k or has_b:
@@ -217,41 +231,79 @@ def _compact(text: str) -> str:
 
 
 def _linear_residual(response: str, teacher_text: str) -> bool:
+    if _has_explicit_linear_self_correction(response):
+        correction_tail = re.split(r"(?:现在|后来|如今)", response, maxsplit=1)[-1]
+        return _linear_positive_error(correction_tail)
+    if any(_linear_positive_error(clause) for clause in _linear_clauses(response)):
+        return True
+    if "2和3" in teacher_text or "y=2x+3" in teacher_text:
+        return bool(re.search(r"(?:3|它).{0,16}(越陡|更陡|变陡|会陡)", response))
+    return False
+
+
+def _linear_clauses(response: str) -> list[str]:
+    """Keep contrastive clauses separate so negation cannot cross a turn."""
+    return [clause for clause in re.split(r"(?:不过|但是|然而|可是|但)", response) if clause]
+
+
+def _linear_positive_error(response: str) -> bool:
     rhetorical_positive = re.search(
         r"(?:b|截距).{0,18}不是会.{0,12}(?:更陡|更斜|倾斜|斜率).{0,4}吗",
         response,
     )
-    negative_claim = re.search(
-        r"(?:b|截距|往上移).{0,8}(?:不|不会|没有|并不).{0,10}(?:影响|更陡|越陡|变陡|更斜|变斜|倾斜|斜率)",
-        response,
-    )
     if rhetorical_positive:
-        negative_claim = None
-    historical_correction = re.search(
-        r"(?:以前|原来|曾经).{0,20}(?:b|截距).{0,18}(?:越大|变大|更大|增加).{0,18}(?:陡|倾斜|斜率|更斜).{0,20}(?:现在|后来).{0,12}(?:不是|不对|不会|知道)",
-        response,
-    )
-    if historical_correction and not any(
-        marker in response for marker in ("不过", "但是", "还是觉得", "仍然觉得")
-    ):
+        return True
+    if _linear_negative_claim_match(response):
         return False
     patterns = (
         r"b.{0,18}(越大|变大|更大|增加).{0,18}(陡|倾斜|斜率)",
         r"(?:b|截距|[+＋]\d+).{0,20}(?:更陡|越陡|变陡|会陡|更斜|越斜|变斜|有点(?:更)?陡)",
         r"(?:b|[+＋]\d+).{0,20}影响.{0,12}(?:陡|倾斜|斜率)",
         r"截距.{0,18}(越大|变大|更大|增加).{0,18}(陡|倾斜|斜率|更斜)",
-        r"(觉得|感觉|认为|不过|但是|还是|仍然|可能|也许).{0,18}(?:b|往上移|[+＋]\d+).{0,20}(?:陡|倾斜|斜率|影响)",
+        r"(觉得|感觉|认为|还是|仍然|可能|也许).{0,18}(?:b|往上移|[+＋]\d+).{0,20}(?:陡|倾斜|斜率|影响)",
         r"往上移.{0,12}(会|有点|看起来).{0,12}(陡|倾斜)",
     )
-    if negative_claim:
-        tail = response[negative_claim.end() :]
-        if not any(re.search(pattern, tail) for pattern in patterns):
-            return False
-    if any(re.search(pattern, response) for pattern in patterns):
-        return True
-    if "2和3" in teacher_text or "y=2x+3" in teacher_text:
-        return bool(re.search(r"(?:3|它).{0,16}(越陡|更陡|变陡|会陡)", response))
-    return False
+    return any(re.search(pattern, response) for pattern in patterns)
+
+
+def _has_explicit_linear_self_correction(response: str) -> bool:
+    past_belief = re.search(
+        r"(?:以前|之前|刚才|原来|曾经).{0,18}(?:以为|觉得|认为).{0,24}"
+        r"(?:b|截距).{0,18}(?:越大|变大|更大|增加).{0,18}(陡|倾斜|斜率|更斜)",
+        response,
+    )
+    if not past_belief or not re.search(r"(?:现在|后来|如今)", response):
+        return False
+    return bool(
+        re.search(
+            r"(?:现在|后来|如今).{0,30}(?:知道|明白|想明白|意识到)?.{0,18}"
+            r"(?:不是(?:这样)?|不对|想错|不会更陡|不影响(?:倾斜|斜率)|只由k|只看k)",
+            response,
+        )
+    )
+
+
+def _linear_negative_claim(response: str) -> bool:
+    """Detect a negated b-to-steepness claim, not generic uses of “不会”."""
+    return _linear_negative_claim_match(response) is not None
+
+
+def _linear_negative_claim_match(response: str) -> re.Match[str] | None:
+    """Return the local negated b/steepness clause when one is present."""
+    target = r"(?:b|截距|改变b|b变大|b增大|上下移动|整体上下移动|平移)"
+    negation = r"(?:不会|没有|并不|不(?!过))"
+    steepness = r"(?:更陡|越陡|变陡|更斜|越斜|变斜|倾斜程度|斜率)"
+    for clause in _linear_clauses(response):
+        match = re.search(
+            rf"{target}.{{0,18}}{negation}.{{0,8}}(?:改变|影响|让|使|变)?.{{0,8}}{steepness}",
+            clause,
+        ) or re.search(
+            rf"{target}(?:(?!b|截距).){{0,22}}{steepness}(?:(?!b|截距).){{0,8}}{negation}.{{0,8}}(?:改变|影响|让|使|变)",
+            clause,
+        )
+        if match:
+            return match
+    return None
 
 
 def _binomial_residual(response: str) -> bool:

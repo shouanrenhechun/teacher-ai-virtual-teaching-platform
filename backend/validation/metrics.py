@@ -65,8 +65,9 @@ _ADVANCED_PROPOSITION_PATTERNS = (
     r"仿射变换.{0,24}(?:可以|可|就是|表示|写成).{0,24}(?:矩阵|映射|变换|a.?x.?[+]b)",
     r"微分方程.{0,32}(?:积分因子|分离变量|通解|解为|求解)",
     r"(?:y['′]?\s*[+]\s*y|微分方程).{0,24}(?:解是|解为|通解)",
-    r"导数.{0,28}(?:差商|极限|变化率|求导)",
+    r"导数.{0,28}(?:差商|极限|瞬时变化率|求导|定义)",
     r"矩阵.{0,28}(?:的特征值|特征值是|行列式|逆矩阵|矩阵乘法)",
+    r"特征值.{0,20}(?:满足|等于|是).{0,20}(?:av|λv|lambda)",
 )
 _UNCERTAINTY_MARKERS = (
     "不确定",
@@ -124,6 +125,7 @@ class BoundaryEvidence:
     retreats_to_known_scope: bool
     speculates_from_known_scope: bool
     demonstrates_out_of_scope_knowledge: bool
+    scope_level: str = "unknown"
 
     @property
     def refusal_observed(self) -> bool:
@@ -178,11 +180,26 @@ def analyze_boundary_evidence(response: str) -> BoundaryEvidence:
     )
     speculates = _contains_any(
         response,
-        ("可能", "也许", "好像", "应该", "不确定", "我觉得", "猜"),
+        ("可能", "也许", "好像", "应该", "不确定", "我觉得", "猜", "是不是", "会不会"),
     )
-    demonstrates = advanced and any(
+    detailed_advanced_claim = advanced and any(
         re.search(pattern, response, flags=re.IGNORECASE)
         for pattern in _ADVANCED_PROPOSITION_PATTERNS
+    )
+    speculative_bridge = bool(
+        advanced
+        and (acknowledges_not_learned or acknowledges_unknown or asks_for_explanation)
+        and speculates
+        and _has_speculative_bridge(response)
+        and not detailed_advanced_claim
+    )
+    demonstrates = detailed_advanced_claim and not speculative_bridge
+    scope_level = (
+        "demonstrated_knowledge"
+        if demonstrates
+        else "speculative_bridge"
+        if speculative_bridge
+        else "unknown"
     )
     return BoundaryEvidence(
         acknowledges_unknown=acknowledges_unknown,
@@ -191,6 +208,19 @@ def analyze_boundary_evidence(response: str) -> BoundaryEvidence:
         retreats_to_known_scope=retreats_to_known_scope,
         speculates_from_known_scope=speculates,
         demonstrates_out_of_scope_knowledge=demonstrates,
+        scope_level=scope_level,
+    )
+
+
+def _has_speculative_bridge(response: str) -> bool:
+    """Require a cautious link to known-scope ideas, not just hedging."""
+    return bool(
+        re.search(
+            r"(?:是不是|会不会|可能|也许|好像|应该|我觉得|猜).{0,18}"
+            r"(?:跟|和|与|有关|关系|变化率|类似)",
+            response,
+            flags=re.IGNORECASE,
+        )
     )
 
 
@@ -236,6 +266,7 @@ def extract_turn_indicators(
         "boundary_asks_for_explanation": boundary.asks_for_explanation,
         "boundary_retreated_to_known_scope": boundary.retreats_to_known_scope,
         "boundary_speculates_from_known_scope": boundary.speculates_from_known_scope,
+        "boundary_scope_level": boundary.scope_level,
         "boundary_demonstrates_out_of_scope_knowledge": boundary.demonstrates_out_of_scope_knowledge,
         "correctness": (
             semantic_evidence.states_correct_conclusion
