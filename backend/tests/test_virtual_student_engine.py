@@ -113,7 +113,7 @@ def test_student_evidence_reduces_strength_and_can_correct_error() -> None:
     )
     assert engine.snapshot().misconceptions[0].strength == initial_strength
     engine.apply_student_response_evidence(
-        "k 决定倾斜程度，b 只改变上下位置。",
+        "k 决定倾斜程度，b 只改变上下位置，因为 k 控制陡峭程度，b 改变截距位置。",
         "固定 k 改变 b。",
     )
     engine.apply_student_response_evidence(

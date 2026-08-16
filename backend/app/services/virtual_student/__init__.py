@@ -15,6 +15,7 @@ from .evidence import (
     StudentResponseEvidenceAnalyzer,
     correction_opportunity,
 )
+from .state_rules import is_evidence_insufficient, is_strong_correct_evidence
 
 __all__ = [
     "DynamicState",
@@ -29,4 +30,6 @@ __all__ = [
     "StudentResponseEvidence",
     "StudentResponseEvidenceAnalyzer",
     "correction_opportunity",
+    "is_evidence_insufficient",
+    "is_strong_correct_evidence",
 ]

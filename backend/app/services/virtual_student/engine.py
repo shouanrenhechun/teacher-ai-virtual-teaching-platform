@@ -6,6 +6,7 @@ from typing import Any
 
 from .behavior import TeachingBehavior, detect_teacher_behavior
 from .evidence import StudentResponseEvidence, StudentResponseEvidenceAnalyzer, correction_opportunity
+from .state_rules import is_strong_correct_evidence
 
 
 def _clamp(value: float) -> float:
@@ -34,6 +35,7 @@ class MisconceptionState:
     status: str = "active"
     clean_evidence_streak: int = 0
     transfer_evidence: int = 0
+    stable_correct_evidence_count: int = 0
 
     def __post_init__(self) -> None:
         self.strength = _clamp(self.strength)
@@ -222,7 +224,7 @@ class VirtualStudentEngine:
             teacher_text=teacher_text,
             previous_teacher_text=previous_teacher_text,
         )
-        misconception = self._find_misconception(None)
+        misconception = self._find_misconception(None, include_corrected=True)
         if misconception is None:
             return evidence
 
@@ -238,42 +240,44 @@ class VirtualStudentEngine:
         if evidence.shows_residual_misconception:
             misconception.corrected = False
             misconception.clean_evidence_streak = 0
+            misconception.stable_correct_evidence_count = 0
             if evidence.states_correct_conclusion and evidence.explains_reason_correctly:
                 reduction = 0.12 * max(opportunity_strength, 0.5)
-                misconception.status = "provisional"
+                misconception.status = "weakening"
             elif evidence.states_correct_conclusion:
                 reduction = 0.08 * max(opportunity_strength, 0.5)
-                misconception.status = "provisional"
+                misconception.status = "weakening"
             elif evidence.shows_uncertainty and has_opportunity:
                 reduction = 0.04 * max(opportunity_strength, 0.5)
+                misconception.status = "weakening"
+            elif misconception.status in {"provisional", "corrected"}:
+                reduction = 0.0
                 misconception.status = "weakening"
             else:
                 reduction = -0.03 if not has_opportunity else 0.0
                 misconception.status = "active"
             misconception.strength = _clamp(misconception.strength - reduction)
+        elif evidence.evidence_insufficient:
+            # Lack of mastery evidence is not new misconception evidence.
+            pass
         else:
             if evidence.states_correct_conclusion:
                 misconception.clean_evidence_streak += 1
             if evidence.transfer_success:
                 misconception.transfer_evidence += 1
-            if evidence.states_correct_conclusion and evidence.explains_reason_correctly:
+            strong_evidence = is_strong_correct_evidence(evidence.to_dict())
+            if strong_evidence:
+                misconception.stable_correct_evidence_count += 1
+            if strong_evidence:
                 reduction = 0.15 if evidence.transfer_success else 0.1
                 misconception.strength = _clamp(misconception.strength - reduction)
                 misconception.status = "provisional"
-            elif evidence.states_correct_conclusion:
-                misconception.strength = _clamp(misconception.strength - 0.05)
-                misconception.status = "provisional"
-            elif has_opportunity:
-                misconception.status = "weakening"
 
             if (
-                (evidence.transfer_success or misconception.transfer_evidence > 0)
-                and evidence.explains_reason_correctly
-                and not evidence.shows_uncertainty
-                and not evidence.parrots_teacher
-                and misconception.clean_evidence_streak >= 2
+                misconception.stable_correct_evidence_count >= 2
+                and misconception.transfer_evidence >= 1
+                and strong_evidence
             ):
-                misconception.strength = min(misconception.strength, 0.05)
                 misconception.status = "corrected"
                 misconception.corrected = True
                 misconception.triggered = False
@@ -303,13 +307,25 @@ class VirtualStudentEngine:
             if any(keyword in item.knowledge_point.lower() for keyword in ("k", "b", "图像")):
                 item.mastery = _clamp(item.mastery + amount)
 
-    def _find_misconception(self, name: str | None) -> MisconceptionState | None:
+    def _find_misconception(
+        self,
+        name: str | None,
+        *,
+        include_corrected: bool = False,
+    ) -> MisconceptionState | None:
         if name:
             for item in self._misconceptions:
                 if item.name == name:
                     return item
             return None
-        return next((item for item in self._misconceptions if not item.corrected), None)
+        return next(
+            (
+                item
+                for item in self._misconceptions
+                if include_corrected or not item.corrected
+            ),
+            None,
+        )
 
     def _infer_target_misconception(
         self,

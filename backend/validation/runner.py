@@ -321,6 +321,7 @@ def _snapshot_dict(snapshot: Any) -> dict[str, Any]:
                 "status": item.status,
                 "clean_evidence_streak": item.clean_evidence_streak,
                 "transfer_evidence": item.transfer_evidence,
+                "stable_correct_evidence_count": item.stable_correct_evidence_count,
             }
             for item in snapshot.misconceptions
         ],

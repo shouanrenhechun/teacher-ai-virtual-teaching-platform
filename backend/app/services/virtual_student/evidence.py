@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from .state_rules import is_evidence_insufficient
+
 
 _LINGUISTIC_HEDGING_MARKERS = (
     "吧", "应该", "我觉得", "觉得", "好像", "嗯", "可能是", "似乎",
@@ -50,9 +52,24 @@ class StudentResponseEvidence:
             "linguistic_hedging": self.linguistic_hedging,
             "conceptual_uncertainty": self.conceptual_uncertainty,
             "knowledge_precision": self.knowledge_precision,
+            "evidence_insufficient": self.evidence_insufficient,
             "parrots_teacher": self.parrots_teacher,
             "transfer_success": self.transfer_success,
             "evidence_level": self.evidence_level,
+        }
+
+    @property
+    def evidence_insufficient(self) -> bool:
+        return is_evidence_insufficient(self.to_dict_without_derived())
+
+    def to_dict_without_derived(self) -> dict[str, object]:
+        return {
+            "states_correct_conclusion": self.states_correct_conclusion,
+            "explains_reason_correctly": self.explains_reason_correctly,
+            "shows_residual_misconception": self.shows_residual_misconception,
+            "conceptual_uncertainty": self.conceptual_uncertainty,
+            "knowledge_precision": self.knowledge_precision,
+            "parrots_teacher": self.parrots_teacher,
         }
 
 

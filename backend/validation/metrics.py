@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from .models import MetricResult, ValidationCase, ValidationTurnResult
+from app.services.virtual_student.state_rules import is_strong_correct_evidence
 
 
 METRIC_NAMES = (
@@ -245,10 +246,6 @@ def _correctability(
         1 for previous, current in zip([initial_strength, *strength_series], strength_series)
         if current < previous
     )
-    largest_drop = max(
-        (previous - current for previous, current in zip([initial_strength, *strength_series], strength_series)),
-        default=0.0,
-    )
     effective_behaviors = sum(
         1
         for turn in turns
@@ -275,21 +272,21 @@ def _correctability(
             (f"strength {initial_strength:.2f} -> {final_strength:.2f}",),
             level="fail",
         )
-    if largest_drop >= initial_strength * 0.75:
-        return MetricResult(False, True, "认知错误一次性下降过大，不符合渐进式纠正", level="fail")
     if correction_markers == 0:
         return MetricResult(False, True, "状态降低但未观察到对应的纠正证据", level="fail")
+    if _premature_correction(turns):
+        return MetricResult(False, True, "在稳定纠正证据不足前过早标记为 corrected", level="fail")
     final_evidence = turns[-1].student_response_evidence
     transfer_observed = any(
         bool(turn.student_response_evidence.get("transfer_success")) for turn in turns
     )
     if final_status == "corrected":
         if not (
-            final_evidence.get("states_correct_conclusion")
-            and final_evidence.get("explains_reason_correctly")
+            is_strong_correct_evidence(final_evidence)
             and transfer_observed
-            and not final_evidence.get("shows_residual_misconception")
-            and not final_evidence.get("parrots_teacher")
+            and int((_first_misconception(turns[-1].state_after) or {}).get(
+                "stable_correct_evidence_count", 0
+            )) >= 2
         ):
             return MetricResult(
                 False,
@@ -313,6 +310,27 @@ def _correctability(
             level="partial",
         )
     return MetricResult(False, True, "认知错误仍处于 active，缺少有效修正证据", level="fail")
+
+
+def _premature_correction(turns: Sequence[ValidationTurnResult]) -> bool:
+    """Reject corrected only when its evidence prerequisites are absent."""
+    for turn in turns:
+        misconception = _first_misconception(turn.state_after) or {}
+        if misconception.get("status") != "corrected":
+            continue
+        had_provisional = any(
+            (_first_misconception(previous.state_after) or {}).get("status")
+            == "provisional"
+            for previous in turns[: turn.sequence - 1]
+        )
+        if (
+            turn.sequence <= 3
+            or not had_provisional
+            or int(misconception.get("stable_correct_evidence_count", 0)) < 2
+            or int(misconception.get("transfer_evidence", 0)) < 1
+        ):
+            return True
+    return False
 
 
 def _language_naturalness(turns: Sequence[ValidationTurnResult]) -> MetricResult:
