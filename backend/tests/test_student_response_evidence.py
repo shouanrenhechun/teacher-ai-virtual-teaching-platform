@@ -223,6 +223,66 @@ def test_binomial_residual_separate_square_statement_is_detected() -> None:
     assert evidence.shows_residual_misconception is True
 
 
+def test_binomial_residual_cross_terms_can_be_omitted_is_detected() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "确实有两个 ab，不过这两项最后应该可以省掉吧。",
+        misconception=binomial_misconception(),
+    )
+
+    assert evidence.shows_residual_misconception is True
+    assert evidence.knowledge_precision != "correct"
+
+
+def test_binomial_residual_cross_terms_need_not_be_written_is_detected() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "会出现 3x 和 3x，但是平方的时候中间项不用写吧。",
+        misconception=binomial_misconception(),
+    )
+
+    assert evidence.shows_residual_misconception is True
+
+
+def test_binomial_residual_cross_terms_can_be_ignored_is_detected() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "我知道会乘出交叉项，但感觉它们可以忽略。",
+        misconception=binomial_misconception(),
+    )
+
+    assert evidence.shows_residual_misconception is True
+
+
+def test_binomial_residual_real_r4_response_is_detected() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "就是 x·2 和 2·x 这两项吧……可它们应该能省略掉吧？",
+        misconception=binomial_misconception(),
+    )
+
+    assert evidence.shows_residual_misconception is True
+    assert evidence.knowledge_precision != "correct"
+
+
+def test_binomial_correct_cross_terms_must_be_kept_are_not_residual() -> None:
+    for response in (
+        "中间项不能省，因为 ab 和 ba 都真实存在。",
+        "原来我刚才把两个 2x 忽略了，这是不对的。",
+    ):
+        evidence = StudentResponseEvidenceAnalyzer().analyze(
+            response,
+            misconception=binomial_misconception(),
+        )
+
+        assert evidence.shows_residual_misconception is False
+
+
+def test_binomial_historical_omission_correction_is_not_residual() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "我以前以为中间项可以省掉，现在知道两个 ab 必须合并成 2ab。",
+        misconception=binomial_misconception(),
+    )
+
+    assert evidence.shows_residual_misconception is False
+
+
 def test_binomial_historical_correction_is_not_residual() -> None:
     evidence = StudentResponseEvidenceAnalyzer().analyze(
         "我以前以为要分别平方，现在知道还会有交叉项。",

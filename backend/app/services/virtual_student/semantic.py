@@ -262,6 +262,14 @@ def _binomial_residual(response: str) -> bool:
     )
     if correction and not any(marker in response for marker in ("但是", "不过", "还是")):
         return False
+    omission_correction = (
+        any(marker in response for marker in ("以前", "原来", "曾经", "刚才"))
+        and _has_positive_omission_claim(response)
+        and _has_negative_omission_claim(response)
+        and any(marker in response for marker in ("现在", "后来", "知道", "不对"))
+    )
+    if omission_correction and not any(marker in response for marker in ("但是", "不过", "还是")):
+        return False
     shortcut = re.search(
         r"(?:x|a|b)(?:²|\^2)[+＋](?:\d+|(?:x|a|b)(?:²|\^2))(?=$|[^a-z0-9])",
         response,
@@ -270,7 +278,36 @@ def _binomial_residual(response: str) -> bool:
         (any(marker in response for marker in ("分别平方", "各自平方", "每一项平方"))
          and not any(marker in response for marker in ("不是", "不该", "还会", "交叉项", "中间项")))
         or any(marker in response for marker in ("没有中间项", "不需要中间项", "不需要2ab"))
+        or _has_positive_omission_claim(response)
         or shortcut
+    )
+
+
+def _has_positive_omission_claim(response: str) -> bool:
+    """Detect omitting cross terms while protecting explicit negation."""
+    has_cross_term_reference = bool(
+        any(marker in response for marker in ("交叉项", "中间项", "2ab", "ab"))
+        or re.search(r"\d+(?:[·*])?[a-z]", response)
+    )
+    if not has_cross_term_reference or _has_negative_omission_claim(response):
+        return False
+    return bool(
+        re.search(
+            r"(?<!不)(?<!没)(?<!未)(?:可以|能够|能|应该能|应该可以|可)"
+            r"(?:省略?|省掉|忽略|去掉)",
+            response,
+        )
+        or any(marker in response for marker in ("不用写", "不用管", "不需要写"))
+    )
+
+
+def _has_negative_omission_claim(response: str) -> bool:
+    return bool(
+        re.search(
+            r"(?:不能|不可以|不可|不该|不应|不应该|不必)(?:省略?|省掉|忽略|去掉)",
+            response,
+        )
+        or any(marker in response for marker in ("必须保留", "要保留", "不能去掉", "不应该忽略"))
     )
 
 
