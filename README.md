@@ -2,9 +2,9 @@
 
 面向师范生教学实训的 MVP 项目，采用 React + Vite + TypeScript 前端、FastAPI 后端和 SQLite 数据库。
 
-## 当前模块
+## 当前状态
 
-当前已完成模块 0～10：
+核心 MVP 功能已完成至模块 17；模块 18 的第二真实模型跨模型验证暂缓。当前产品演示仍以“初中数学·一次函数 k 与 b 的意义”为主场景。
 
 - 前端 React/Vite/TypeScript 首页
 - 后端 FastAPI `/api/health` 健康检查
@@ -26,18 +26,20 @@
 - 会话详情返回逐轮行为分析和教学行为统计
 - 前端模拟课堂页面和有限训练状态展示
 - 仅允许本地前端开发地址的 CORS
-- 独立的虚拟学生一致性验证框架：案例、规则指标、Mock 验证和 JSON 报告
+- 认知过程可视化：当前状态、误解演化、状态轨迹和教学行为时间线
+- 比赛 Demo 启动脚本：`start-demo.cmd`，固定使用本地 Mock 模式
+- 独立的虚拟学生一致性验证框架：案例、规则指标、Mock/Real 验证和 JSON 报告
+- 支持一次函数 `linear_kb` 与完全平方公式 `binomial_square` 两类认知错误验证，并提供 Student A / Student B 验证画像
 
 ## 启动后端
 
 Windows 环境统一使用 Python 3.12：
 
 ```powershell
-# 在仓库根目录执行
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
 cd backend
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 ```
 
 后端地址：<http://127.0.0.1:8000>
@@ -53,11 +55,11 @@ cd backend
 ```powershell
 # 将 <repo-path> 替换为本地仓库路径
 cd "<repo-path>"
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
-$env:LLM_PROVIDER = "mock"
 cd backend
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+$env:LLM_PROVIDER = "mock"
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 ```
 
 终端 2：启动前端。
@@ -76,7 +78,7 @@ npm run dev
 
 ```powershell
 cd backend
-..\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m pytest -q
 cd ..\frontend
 npm run build
 ```
@@ -85,7 +87,7 @@ npm run build
 
 ## 虚拟学生一致性验证
 
-验证对象为“初二数学·一次函数 k 与 b 的意义·学生 A”，覆盖角色一致性、知识边界、错误认知保持性、可纠正性、语言自然度和状态一致性。验证默认不调用真实 API，报告写入 `backend/validation/reports/`，该目录中的生成文件不会提交 Git。
+验证框架当前包含一次函数 `linear_kb` 和完全平方公式 `binomial_square` 两类认知错误，并支持 Student A / Student B 画像。验证覆盖角色一致性、知识边界、错误认知保持性、可纠正性、语言自然度和状态一致性。默认 Mock 验证不调用真实 API，报告写入 `backend/validation/reports/`，该目录中的生成文件不会提交 Git。
 
 运行 Mock 验证：
 
@@ -93,7 +95,7 @@ npm run build
 cd backend
 $env:LLM_PROVIDER = "mock"
 $env:RUNS_PER_CASE = "3"
-..\.venv\Scripts\python.exe -m validation.runner
+.\.venv\Scripts\python.exe -m validation.runner
 ```
 
 运行真实 LLM 验证前，必须同时显式设置以下开关；程序会先输出 provider、模型、重复次数和预计调用数，不会输出 API Key：
@@ -103,7 +105,7 @@ cd backend
 $env:LLM_PROVIDER = "real"
 $env:RUN_REAL_LLM_VALIDATION = "true"
 $env:RUNS_PER_CASE = "3"
-..\.venv\Scripts\python.exe -m validation.runner --case-id trajectory_effective_correction
+.\.venv\Scripts\python.exe -m validation.runner --case-id trajectory_effective_correction
 ```
 
 真实验证失败会保存为报告中的失败案例，不会影响正式业务测试。验证指标是虚拟学生模拟一致性检查，不代表真实教育效果或专业教师评价。
