@@ -112,6 +112,8 @@ class ValidationRunResult:
     finished_at: str = ""
     successful_calls: int = 0
     error: str | None = None
+    student_profile_id: str = "student_a"
+    student_profile_name: str = "学生 A"
     turns: list[ValidationTurnResult] = field(default_factory=list)
     metrics: dict[str, MetricResult] = field(default_factory=dict)
 
@@ -127,6 +129,8 @@ class ValidationRunResult:
             "finished_at": self.finished_at,
             "successful_calls": self.successful_calls,
             "error": self.error,
+            "student_profile_id": self.student_profile_id,
+            "student_profile_name": self.student_profile_name,
             "turns": [turn.to_dict() for turn in self.turns],
             "metrics": {name: result.to_dict() for name, result in self.metrics.items()},
         }
@@ -151,6 +155,8 @@ class ValidationReport:
     category_metrics: dict[str, dict[str, Any]]
     failure_cases: tuple[dict[str, Any], ...]
     runs: tuple[dict[str, Any], ...]
+    student_profile_id: str = "student_a"
+    student_profile_name: str = "学生 A"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -169,6 +175,8 @@ class ValidationReport:
                 "successful_calls": self.successful_calls,
                 "api_failures": self.api_failures,
             },
+            "student_profile_id": self.student_profile_id,
+            "student_profile_name": self.student_profile_name,
             "overall_metrics": self.overall_metrics,
             "category_metrics": self.category_metrics,
             "failure_cases": list(self.failure_cases),

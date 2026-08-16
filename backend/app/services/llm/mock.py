@@ -22,6 +22,9 @@ class MockLLMClient(LLMClient):
         if any(marker in context.topic for marker in ("完全平方", "平方公式")):
             return self._respond_binomial_square(normalized, branch)
 
+        if context.student_profile_id == "student_b":
+            return self._respond_linear_kb_student_b(normalized, branch, context)
+
         if "2和3" in normalized or "2和3".replace("和", "") in normalized:
             return "2应该影响倾斜程度吧，3的话……我总觉得它越大，直线好像也会越陡？"
 
@@ -76,6 +79,46 @@ class MockLLMClient(LLMClient):
             "我可以先做代入计算，不过如果要解释图像变化，我需要一点提示。",
             "我有一个答案，但不确定能不能说明理由。您可以让我比较两条具体的直线吗？",
         ][branch]
+
+    @staticmethod
+    def _respond_linear_kb_student_b(
+        normalized: str,
+        branch: int,
+        context: LLMContext,
+    ) -> str:
+        """Keep Student B cautious without changing the state engine rules."""
+        if any(
+            marker in normalized
+            for marker in ("线性代数", "微积分", "微分方程", "矩阵", "特征值", "导数")
+        ):
+            return "这个内容我还没学过，不太懂，可能需要先学完初二范围的内容。"
+        if "2和3" in normalized or "2和3".replace("和", "") in normalized:
+            return "我不太确定，2 可能影响倾斜程度；但 3 变大时，我又感觉直线也会更陡一点。"
+        if "先不看我刚才" in normalized or "y=kx+b" in normalized:
+            return "我觉得应该是 k 决定倾斜，b 只改变上下位置，因为 b 不会改变斜率。"
+        if "y=4x-2" in normalized or "y=4x+7" in normalized:
+            return "应该一样陡吧，因为 k 都是 4；b 只是让两条线的上下位置不同。"
+        if "y=-3x+1" in normalized or "只改变b" in normalized:
+            return "我觉得两条线一样陡，因为 k 都是 -3，b 应该只会让位置上下移动。"
+        if "b越大" in normalized or "b更大" in normalized:
+            return "我不太敢确定……我感觉 b 大一点可能也会让直线更斜，但也许是和 k 混在一起了。"
+        if "k" in normalized and any(word in normalized for word in ("陡", "倾斜", "斜率")):
+            return [
+                "我觉得 k 应该和倾斜有关，但 b 改变什么我还不太确定。",
+                "如果只改变 k，应该会影响倾斜；b 是不是让直线上下移动，我想先确认一下。",
+                "我猜 k 控制方向，b 可能控制位置，不过我还需要一个例子。",
+            ][branch]
+        if "b" in normalized and any(word in normalized for word in ("截距", "平移", "上下", "位置")):
+            return [
+                "我觉得 b 应该和 y 轴交点有关，可能会让直线整体上下移动。",
+                "如果 k 不变，b 变了应该还是一样陡吧，只是位置不同。",
+                "我先猜 b 改变的是位置，但还不太敢完全确定。",
+            ][branch]
+        if any(word in normalized for word in ("图像", "画图", "比较", "例子")):
+            return "我愿意先画图比较一下；这样可能更容易确认 k 和 b 各自改变了什么。"
+        if any(word in normalized for word in ("为什么", "解释", "理由")):
+            return "我可以先说自己的猜测：k 可能影响倾斜，b 可能影响位置，但我还不能把理由说得很确定。"
+        return f"老师，我觉得{context.topic}里 k 和 b 的作用不太一样，但我想先确认一下自己的理解。"
 
     @staticmethod
     def _respond_binomial_square(normalized: str, branch: int) -> str:

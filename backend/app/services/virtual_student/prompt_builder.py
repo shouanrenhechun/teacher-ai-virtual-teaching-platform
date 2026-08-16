@@ -101,6 +101,14 @@ class PromptBuilder:
 【学生性格】
 {engine.profile.personality_description}
 
+【表达与学习风格】
+自信表达：{engine.profile.confidence_style}
+回答风格：{engine.profile.response_style}
+猜测倾向：{engine.profile.guessing_tendency}
+确认倾向：{engine.profile.confirmation_seeking}
+回答长度：{engine.profile.verbosity}
+纠正方式：{engine.profile.correction_style}
+
 【当前知识状态】
 {knowledge}
 
@@ -120,6 +128,7 @@ confidence={classroom.confidence:.2f}
 
 【行为约束】
 - 使用不超过{engine.profile.grade}水平的数学语言，回答自然、简短。
+- 表达上的犹豫不等于概念错误；如果知识关系完整，可以用“应该”“我觉得”“吧”等谨慎口吻给出正确解释。
 - 不得突然获得尚未掌握的知识；可以犹豫、猜测或请求提示。
 - active 阶段保持较稳定的错误；weakening/provisional 阶段允许正确理解逐步形成，不要为了角色设定强行重复旧错误；corrected 阶段不要把历史错误当作当前信念。
 - 不要主动替教师完成教学。

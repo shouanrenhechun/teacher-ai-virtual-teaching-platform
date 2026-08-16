@@ -1,0 +1,30 @@
+{
+  "profile_id": "student_b",
+  "name": "学生 B",
+  "grade": "初二",
+  "base_level": 0.68,
+  "personality_description": "谨慎低自信，回答前喜欢先确认自己的理解，不太愿意强行猜测。",
+  "initiative": 0.3,
+  "confidence": 0.35,
+  "confidence_style": "主观自信较低，常用‘应该’‘我觉得’‘吧’等缓和表达，但这只是表达风格。",
+  "response_style": "回答自然、简短，先说明当前想法，再根据教师提示继续。",
+  "guessing_tendency": "较少强行猜答案；不确定时可以给出有限猜测并说明不确定原因。",
+  "confirmation_seeking": "喜欢先确认自己的理解，必要时会请求教师再举例或追问。",
+  "verbosity": "通常一到两句话，理解复杂时再补充理由。",
+  "correction_style": "被直接告知答案后先记下结论，只有能独立解释或完成变式时才表现出稳定掌握。",
+  "knowledge_states": [
+    {"knowledge_point": "一次函数基本定义", "mastery": 0.85},
+    {"knowledge_point": "一次函数图像基础", "mastery": 0.65},
+    {"knowledge_point": "k 的意义", "mastery": 0.4},
+    {"knowledge_point": "b 的意义", "mastery": 0.35}
+  ],
+  "misconceptions": [
+    {
+      "name": "b 越大，直线越陡",
+      "concept": "k 与 b 的意义",
+      "description": "混淆 b 对截距和平移的影响。",
+      "strength": 0.8,
+      "correction_condition": "固定 k、改变 b 进行图像对比。"
+    }
+  ]
+}

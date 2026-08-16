@@ -340,3 +340,35 @@ def test_binomial_negative_transfer_without_middle_term_fails() -> None:
 
     assert evidence.transfer_success is False
     assert evidence.shows_residual_misconception is True
+
+
+def test_linguistic_hedging_does_not_block_correct_kb_explanation() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "应该一样陡吧，因为 k 都是 4，b 只是让它上下移动。",
+        teacher_text="比较 y=4x-2 和 y=4x+7。",
+    )
+
+    assert evidence.linguistic_hedging is True
+    assert evidence.conceptual_uncertainty is False
+    assert evidence.explains_reason_correctly is True
+    assert evidence.shows_residual_misconception is False
+
+
+def test_conceptual_uncertainty_with_hedging_remains_residual() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "应该一样陡吧，但我还是觉得 b 大一点可能也会更斜。",
+        teacher_text="比较 y=4x-2 和 y=4x+7。",
+    )
+
+    assert evidence.linguistic_hedging is True
+    assert evidence.conceptual_uncertainty is True
+    assert evidence.shows_residual_misconception is True
+
+
+def test_correct_guess_without_reason_is_insufficient_evidence() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "我不太敢确定，我先猜是一样陡。",
+        teacher_text="哪一条直线更陡？",
+    )
+
+    assert evidence.evidence_insufficient is True

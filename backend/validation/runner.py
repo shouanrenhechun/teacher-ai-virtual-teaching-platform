@@ -20,7 +20,7 @@ from app.services.virtual_student.prompt_builder import (
     prompt_recent_history_count,
 )
 
-from .case_loader import load_student_a_profile, load_validation_cases
+from .case_loader import load_student_profile, load_validation_cases
 from .metrics import evaluate_run, extract_turn_indicators, summarize_metrics
 from .models import (
     ValidationCase,
@@ -42,6 +42,7 @@ class ValidationConfig:
     real_validation_enabled: bool = False
     prompt_debug_enabled: bool = False
     report_dir: Path = Path(__file__).resolve().parent / "reports"
+    student_profile_id: str = "student_a"
 
     @classmethod
     def from_environment(cls) -> ValidationConfig:
@@ -68,6 +69,8 @@ class ValidationConfig:
                     str(Path(__file__).resolve().parent / "reports"),
                 )
             ),
+            student_profile_id=os.getenv("VALIDATION_STUDENT_PROFILE", "student_a").strip()
+            or "student_a",
         )
 
 
@@ -86,6 +89,11 @@ def run_validation(
     if client is None:
         settings = get_settings()
         client = build_llm_client(settings)
+
+    report_profile = load_student_profile(
+        profile_id=config.student_profile_id,
+        misconception_type="linear_kb",
+    )
 
     all_runs: list[ValidationRunResult] = []
     for case in cases:
@@ -131,6 +139,8 @@ def run_validation(
         },
         failure_cases=failure_cases,
         runs=tuple(run_dicts),
+        student_profile_id=config.student_profile_id,
+        student_profile_name=report_profile.name,
     )
 
 
@@ -161,10 +171,17 @@ def _run_case(
         mode=case.mode,
         run_index=run_index,
         provider=config.provider,
+        student_profile_id=config.student_profile_id,
+        student_profile_name="",
         started_at=_now(),
     )
+    profile = load_student_profile(
+        profile_id=config.student_profile_id,
+        misconception_type=case.misconception_type,
+    )
+    result.student_profile_name = profile.name
     engine = VirtualStudentEngine(
-        load_student_a_profile(misconception_type=case.misconception_type)
+        profile
     )
     conversation_history: list[tuple[str, str]] = []
     context_base = LLMContext(
@@ -175,6 +192,7 @@ def _run_case(
             if case.misconception_type == "binomial_square"
             else "一次函数 k 与 b 的意义"
         ),
+        student_profile_id=engine.profile.profile_id,
     )
 
     try:
@@ -377,6 +395,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="只运行指定案例，可重复传入",
     )
     parser.add_argument("--report-dir", type=Path, help="覆盖报告输出目录")
+    parser.add_argument(
+        "--student-profile",
+        dest="student_profile_id",
+        help="选择验证学生画像，默认读取 VALIDATION_STUDENT_PROFILE",
+    )
     args = parser.parse_args(argv)
 
     config = ValidationConfig.from_environment()
@@ -386,6 +409,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         config = replace(config, runs_per_case=args.runs)
     if args.report_dir is not None:
         config = replace(config, report_dir=args.report_dir)
+    if args.student_profile_id is not None:
+        config = replace(config, student_profile_id=args.student_profile_id)
 
     cases = load_validation_cases(case_ids=set(args.case_ids or []))
     if config.provider == "real":
@@ -398,6 +423,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("Real LLM validation enabled")
         print(f"Provider: {config.provider}")
         print(f"Model: {config.model}")
+        print(f"Student profile: {config.student_profile_id}")
         print(f"Runs per case: {config.runs_per_case}")
         print(f"Estimated calls: {estimate_calls(cases, config.runs_per_case)}")
     else:
