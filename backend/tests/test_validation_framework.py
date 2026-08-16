@@ -124,6 +124,34 @@ def test_real_provider_requires_explicit_safety_switch() -> None:
         run_validation(config, [case], client=MockLLMClient())
 
 
+def test_prompt_debug_is_off_by_default_and_opt_in(tmp_path: Path) -> None:
+    case = load_validation_cases(case_ids={"opening_01"})[0]
+    disabled = run_validation(
+        ValidationConfig(provider="mock", model="mock", runs_per_case=1),
+        [case],
+        client=MockLLMClient(),
+    )
+    enabled = run_validation(
+        ValidationConfig(
+            provider="mock",
+            model="mock",
+            runs_per_case=1,
+            prompt_debug_enabled=True,
+            report_dir=tmp_path,
+        ),
+        [case],
+        client=MockLLMClient(),
+    )
+
+    disabled_turn = disabled.runs[0]["turns"][0]
+    enabled_turn = enabled.runs[0]["turns"][0]
+    assert "sanitized_system_prompt" not in disabled_turn
+    assert enabled_turn["prompt_misconception_mode"] == "strong_misconception"
+    assert enabled_turn["prompt_misconception_status"] == "active"
+    assert enabled_turn["prompt_recent_history_count"] == 0
+    assert "LLM_API_KEY" not in enabled_turn["sanitized_system_prompt"]
+
+
 class FailingValidationClient(LLMClient):
     provider = "real"
 

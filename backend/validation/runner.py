@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -13,6 +14,10 @@ from app.services.llm import LLMClient, LLMContext, build_llm_client
 from app.services.virtual_student import (
     VirtualStudentEngine,
     detect_teacher_behavior,
+)
+from app.services.virtual_student.prompt_builder import (
+    misconception_prompt_mode,
+    prompt_recent_history_count,
 )
 
 from .case_loader import load_student_a_profile, load_validation_cases
@@ -35,6 +40,7 @@ class ValidationConfig:
     model: str
     runs_per_case: int = 3
     real_validation_enabled: bool = False
+    prompt_debug_enabled: bool = False
     report_dir: Path = Path(__file__).resolve().parent / "reports"
 
     @classmethod
@@ -52,6 +58,9 @@ class ValidationConfig:
             runs_per_case=runs,
             real_validation_enabled=_is_true(
                 os.getenv("RUN_REAL_LLM_VALIDATION", "false")
+            ),
+            prompt_debug_enabled=_is_true(
+                os.getenv("VALIDATION_PROMPT_DEBUG", "false")
             ),
             report_dir=Path(
                 os.getenv(
@@ -173,6 +182,10 @@ def _run_case(
             )
             engine.update_from_teacher_text(teacher_input)
             prompt = engine.build_prompt(teacher_input, conversation_history)
+            prompt_snapshot = engine.snapshot()
+            prompt_misconception = next(
+                iter(prompt_snapshot.misconceptions), None
+            )
             response = client.respond(
                 teacher_input,
                 replace(context_base, system_prompt=prompt),
@@ -206,6 +219,33 @@ def _run_case(
                     misconception_status_before=status_before,
                     misconception_status_after=status_after,
                     correction_opportunity=opportunity,
+                    **(
+                        {
+                            "prompt_misconception_mode": misconception_prompt_mode(
+                                prompt_misconception.status,
+                                prompt_misconception.corrected,
+                            )
+                            if prompt_misconception
+                            else "corrected_history",
+                            "prompt_misconception_status": (
+                                prompt_misconception.status
+                                if prompt_misconception
+                                else "corrected"
+                            ),
+                            "prompt_misconception_strength": (
+                                prompt_misconception.strength
+                                if prompt_misconception
+                                else 0.0
+                            ),
+                            "prompt_recent_history_count": prompt_recent_history_count(
+                                conversation_history,
+                                teacher_input,
+                            ),
+                            "sanitized_system_prompt": _sanitize_prompt(prompt),
+                        }
+                        if config.prompt_debug_enabled
+                        else {}
+                    ),
                 )
             )
             conversation_history.extend(
@@ -300,6 +340,15 @@ def _safe_error(exc: Exception) -> str:
         if secret_marker.lower() in message.lower():
             return f"{type(exc).__name__}（敏感信息已隐藏）"
     return message[:300] or type(exc).__name__
+
+
+def _sanitize_prompt(prompt: str) -> str:
+    """Remove common token formats before a prompt is written to a report."""
+    sanitized = prompt
+    sanitized = re.sub(r"(?i)bearer\s+[A-Za-z0-9._~+/=-]+", "Bearer [REDACTED]", sanitized)
+    sanitized = re.sub(r"gho_[A-Za-z0-9_]+", "[REDACTED_GITHUB_TOKEN]", sanitized)
+    sanitized = re.sub(r"sk-[A-Za-z0-9_-]+", "[REDACTED_API_KEY]", sanitized)
+    return sanitized
 
 
 def _is_true(value: str) -> bool:

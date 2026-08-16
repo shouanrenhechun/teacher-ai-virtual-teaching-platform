@@ -65,9 +65,14 @@ class ValidationTurnResult:
     misconception_status_before: str = "active"
     misconception_status_after: str = "active"
     correction_opportunity: dict[str, object] = field(default_factory=dict)
+    prompt_misconception_mode: str | None = None
+    prompt_misconception_status: str | None = None
+    prompt_misconception_strength: float | None = None
+    prompt_recent_history_count: int | None = None
+    sanitized_system_prompt: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "sequence": self.sequence,
             "teacher_input": self.teacher_input,
             "student_response": self.student_response,
@@ -80,6 +85,17 @@ class ValidationTurnResult:
             "misconception_status_after": self.misconception_status_after,
             "correction_opportunity": self.correction_opportunity,
         }
+        if self.prompt_misconception_mode is not None:
+            payload.update(
+                {
+                    "prompt_misconception_mode": self.prompt_misconception_mode,
+                    "prompt_misconception_status": self.prompt_misconception_status,
+                    "prompt_misconception_strength": self.prompt_misconception_strength,
+                    "prompt_recent_history_count": self.prompt_recent_history_count,
+                    "sanitized_system_prompt": self.sanitized_system_prompt,
+                }
+            )
+        return payload
 
 
 @dataclass

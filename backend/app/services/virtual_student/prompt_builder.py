@@ -3,6 +3,62 @@ from __future__ import annotations
 from .engine import VirtualStudentEngine
 
 
+def misconception_prompt_mode(status: str, corrected: bool = False) -> str:
+    if corrected or status == "corrected":
+        return "corrected_history"
+    return {
+        "active": "strong_misconception",
+        "weakening": "conflicted",
+        "provisional": "mostly_correct_unstable",
+    }.get(status, "strong_misconception")
+
+
+def prompt_recent_history_count(
+    conversation_history: list[tuple[str, str]] | None,
+    teacher_text: str,
+) -> int:
+    return sum(
+        1
+        for speaker, content in (conversation_history or [])[-8:]
+        if speaker in {"teacher", "student"}
+        and content.strip()
+        and content.strip() != teacher_text.strip()
+    )
+
+
+def _misconception_prompt_text(item: object) -> str:
+    status = str(getattr(item, "status", "active"))
+    corrected = bool(getattr(item, "corrected", False))
+    name = str(getattr(item, "name", "当前认知错误"))
+    strength = float(getattr(item, "strength", 0.0))
+    mode = misconception_prompt_mode(status, corrected)
+    relation = "k 决定倾斜程度，b 主要改变直线的上下位置。"
+
+    if mode == "strong_misconception":
+        wording = (
+            f"你目前比较确信：{name}。除非教师提供有意义的解释或证据，"
+            "否则不要无缘无故放弃这一看法。"
+        )
+    elif mode == "conflicted":
+        wording = (
+            f"你开始怀疑原先“{name}”的想法，但还没有完全接受正确关系。"
+            "回答时可以表现出犹豫或认知冲突，但不要为了维持旧设定而强行重复错误。"
+        )
+    elif mode == "mostly_correct_unstable":
+        wording = (
+            f"你目前倾向于认为{relation}原先“{name}”的想法已经明显减弱。"
+            "除非当前问题暴露出你仍未真正理解，否则不要主动为了维持角色而重新加入旧错误；"
+            "如果理解还不稳定，可以自然地犹豫或保留疑问。"
+        )
+    else:
+        wording = f"你以前曾有过“{name}”的错误理解，但经过前面的教学，你现在已经纠正了这一理解。"
+
+    return (
+        f"{name}（强度={strength:.2f}，状态={status}，Prompt模式={mode}）\n"
+        f"{wording}"
+    )
+
+
 class PromptBuilder:
     """Build a complete, inspectable prompt from the current engine state."""
 
@@ -18,12 +74,19 @@ class PromptBuilder:
             f"{item.knowledge_point}={item.mastery:.2f}"
             for item in snapshot.knowledge_states
         ) or "暂无知识状态记录"
-        misconceptions = "；".join(
-            f"{item.name}（强度={item.strength:.2f}，已触发={item.triggered}，"
-            f"已开始修正={item.correction_started}，状态={item.status}，已纠正={item.corrected}）"
-            for item in snapshot.misconceptions
-            if not item.corrected
+        current_misconceptions = [
+            item for item in snapshot.misconceptions if not item.corrected
+        ]
+        historical_misconceptions = [
+            item for item in snapshot.misconceptions if item.corrected
+        ]
+        misconceptions = "\n".join(
+            _misconception_prompt_text(item) for item in current_misconceptions
         ) or "当前没有未纠正的固定认知错误"
+        if historical_misconceptions:
+            misconceptions += "\n历史错误（不可作为当前信念）：\n" + "\n".join(
+                _misconception_prompt_text(item) for item in historical_misconceptions
+            )
         classroom = snapshot.classroom_state
         recent_history = (conversation_history or [])[-8:]
         history_text = "\n".join(
@@ -57,7 +120,8 @@ confidence={classroom.confidence:.2f}
 【行为约束】
 - 使用不超过{engine.profile.grade}水平的数学语言，回答自然、简短。
 - 不得突然获得尚未掌握的知识；可以犹豫、猜测或请求提示。
-- 未被有效纠正前，保持未纠正的固定认知错误，不要主动替教师完成教学。
+- active 阶段保持较稳定的错误；weakening/provisional 阶段允许正确理解逐步形成，不要为了角色设定强行重复旧错误；corrected 阶段不要把历史错误当作当前信念。
+- 不要主动替教师完成教学。
 - 只回应教师刚才的内容，不要直接设计完整课程或替教师总结全部答案。
 
 【最近对话】

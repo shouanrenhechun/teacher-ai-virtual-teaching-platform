@@ -183,3 +183,54 @@ def test_prompt_builder_includes_bounded_prior_dialogue() -> None:
     assert "【最近对话】" in prompt
     assert "Teacher: 先比较两条直线。" in prompt
     assert "Student: 我好像把 b 和 k 弄反了。" in prompt
+
+
+def _prompt_for_misconception_status(status: str, *, corrected: bool = False) -> str:
+    engine = make_student_a_engine()
+    misconception = engine._misconceptions[0]
+    misconception.status = status
+    misconception.corrected = corrected
+    return PromptBuilder().build(engine, "请说说你的想法。")
+
+
+def test_prompt_active_keeps_strong_misconception() -> None:
+    prompt = _prompt_for_misconception_status("active")
+
+    assert "Prompt模式=strong_misconception" in prompt
+    assert "你目前比较确信" in prompt
+    assert "不要无缘无故放弃" in prompt
+
+
+def test_prompt_weakening_allows_conflict_without_forcing_old_error() -> None:
+    prompt = _prompt_for_misconception_status("weakening")
+
+    assert "Prompt模式=conflicted" in prompt
+    assert "开始怀疑" in prompt
+    assert "不要为了维持旧设定而强行重复错误" in prompt
+
+
+def test_prompt_provisional_prefers_correct_understanding_without_persona_pressure() -> None:
+    prompt = _prompt_for_misconception_status("provisional")
+
+    assert "Prompt模式=mostly_correct_unstable" in prompt
+    assert "目前倾向于认为" in prompt
+    assert "不要主动为了维持角色而重新加入旧错误" in prompt
+    assert "你目前比较确信" not in prompt
+
+
+def test_prompt_corrected_keeps_old_error_as_history_only() -> None:
+    prompt = _prompt_for_misconception_status("corrected", corrected=True)
+
+    assert "历史错误（不可作为当前信念）" in prompt
+    assert "Prompt模式=corrected_history" in prompt
+    assert "你以前曾有过" in prompt
+    assert "你目前比较确信" not in prompt
+
+
+def test_prompt_status_rollback_returns_to_conflicted_mode() -> None:
+    provisional = _prompt_for_misconception_status("provisional")
+    weakening = _prompt_for_misconception_status("weakening")
+
+    assert "Prompt模式=mostly_correct_unstable" in provisional
+    assert "Prompt模式=conflicted" in weakening
+    assert "开始怀疑" in weakening
