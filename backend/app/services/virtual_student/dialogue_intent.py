@@ -45,6 +45,8 @@ class LinearDialogueIntent:
     changes_intercept: bool
     denies_slope_change: bool
     asks_reason: bool
+    asks_understanding: bool
+    contextual_follow_up: bool
     is_question: bool
     equations: tuple[tuple[str, str], ...]
     same_slope_equations: bool
@@ -75,6 +77,20 @@ class LinearDialogueIntent:
 
 def analyze_linear_dialogue_intent(text: str) -> LinearDialogueIntent:
     normalized = compact_dialogue_text(text)
+    asks_understanding = any(
+        marker in normalized
+        for marker in (
+            "听懂了吗", "听明白了吗", "明白了吗", "懂了吗", "理解了吗",
+            "能复述吗", "能说一遍吗",
+        )
+    )
+    asks_reason = any(
+        marker in normalized
+        for marker in ("为什么", "理由", "解释", "再说说", "说具体", "说明一下")
+    )
+    contextual_follow_up = bool(
+        re.fullmatch(r"(?:那|这个|它|然后|接着).{0,12}(?:呢|怎么样|如何)?\??", normalized)
+    )
     mentions_slope = any(
         marker in normalized for marker in ("k", "斜率", "倾斜", "陡")
     )
@@ -105,7 +121,10 @@ def analyze_linear_dialogue_intent(text: str) -> LinearDialogueIntent:
     )
     changes_intercept = mentions_intercept and any(
         marker in normalized
-        for marker in ("改变", "变化", "变大", "增大", "增加", "不同", "从", "只改变")
+        for marker in (
+            "改变", "变化", "变大", "越大", "增大", "增加", "改成", "变成",
+            "不同", "从", "只改变",
+        )
     )
     denies_slope_change = any(
         marker in normalized
@@ -133,8 +152,12 @@ def analyze_linear_dialogue_intent(text: str) -> LinearDialogueIntent:
         fixed_slope = True
         changes_intercept = len({item[1] for item in equations}) > 1
     out_of_scope = any(marker in normalized for marker in _OUT_OF_SCOPE_MARKERS)
-    off_topic = bool(normalized) and not out_of_scope and not any(
-        marker in normalized for marker in _MATH_TOPIC_MARKERS
+    classroom_follow_up = asks_understanding or asks_reason or contextual_follow_up
+    off_topic = (
+        bool(normalized)
+        and not out_of_scope
+        and not classroom_follow_up
+        and not any(marker in normalized for marker in _MATH_TOPIC_MARKERS)
     )
     is_question = "?" in text or "？" in text or any(
         marker in normalized for marker in ("吗", "什么", "为什么", "如何", "怎么", "哪个", "能否")
@@ -148,7 +171,9 @@ def analyze_linear_dialogue_intent(text: str) -> LinearDialogueIntent:
         fixed_slope=fixed_slope,
         changes_intercept=changes_intercept,
         denies_slope_change=denies_slope_change,
-        asks_reason="为什么" in normalized or "理由" in normalized or "解释" in normalized,
+        asks_reason=asks_reason,
+        asks_understanding=asks_understanding,
+        contextual_follow_up=contextual_follow_up,
         is_question=is_question,
         equations=equations,
         same_slope_equations=same_slope_equations,

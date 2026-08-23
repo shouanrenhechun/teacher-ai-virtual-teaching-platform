@@ -448,6 +448,7 @@ def send_teacher_message(
         student_name=engine.profile.name,
         student_grade=engine.profile.grade,
         topic=session.scenario.topic,
+        conversation_history=tuple(conversation_history),
         student_profile_id=engine.profile.profile_id,
         misconception_status=(current_misconception.status if current_misconception else "corrected"),
         misconception_semantic_type=(
@@ -472,6 +473,7 @@ def send_teacher_message(
             student_grade=engine.profile.grade,
             topic=session.scenario.topic,
             system_prompt=prompt,
+            conversation_history=tuple(conversation_history),
             student_profile_id=engine.profile.profile_id,
             misconception_status=(
                 prompt_misconception.status if prompt_misconception else "corrected"

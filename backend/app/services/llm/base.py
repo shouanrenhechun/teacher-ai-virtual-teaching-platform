@@ -13,6 +13,7 @@ class LLMContext:
     student_grade: str = "初二"
     topic: str = "一次函数 k 与 b 的意义"
     system_prompt: str | None = None
+    conversation_history: tuple[tuple[str, str], ...] = ()
     student_profile_id: str = "student_a"
     misconception_status: str = "active"
     misconception_semantic_type: str = "linear_kb"

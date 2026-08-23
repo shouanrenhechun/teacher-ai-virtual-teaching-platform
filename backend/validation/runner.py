@@ -215,6 +215,7 @@ def _run_case(
                 replace(
                     context_base,
                     system_prompt=prompt,
+                    conversation_history=tuple(conversation_history),
                     misconception_status=(
                         prompt_misconception.status if prompt_misconception else "corrected"
                     ),

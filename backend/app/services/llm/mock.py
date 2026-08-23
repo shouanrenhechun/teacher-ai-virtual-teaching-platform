@@ -26,19 +26,49 @@ class MockLLMClient(LLMClient):
 
     @classmethod
     def _respond_linear_kb(cls, text: str, context: LLMContext) -> str:
-        intent = analyze_linear_dialogue_intent(text)
+        current_intent = analyze_linear_dialogue_intent(text)
+        intent_text = text
+        if current_intent.contextual_follow_up:
+            previous_teacher_text = cls._previous_teacher_text(context)
+            if previous_teacher_text:
+                intent_text = f"{previous_teacher_text} {text}"
+        intent = analyze_linear_dialogue_intent(intent_text)
         normalized = intent.normalized
+        current_normalized = current_intent.normalized
         status = context.misconception_status
-        direct_answer = any(marker in normalized for marker in ("答案是", "结论是", "记住"))
+        direct_answer = any(
+            marker in current_normalized for marker in ("答案是", "结论是", "记住")
+        )
 
         if intent.out_of_scope:
             return cls._profile_variant(
                 context,
                 "这部分我还没学过，暂时只能用初二学过的一次函数知识回答。",
                 "这个内容我还没学过，不太懂，我想先按初二范围来理解。",
-                "这超出我们现在学的范围了，我暂时不能用这些知识解释。",
+                "这个我还没学过，超出现在的范围了，我暂时不能用这些知识解释。",
             )
-        if intent.off_topic and normalized not in {"为什么", "为什么呢", "再说说", "继续"}:
+        if current_intent.asks_understanding:
+            if status == "corrected":
+                return cls._profile_variant(
+                    context,
+                    "听懂了：k 决定倾斜程度，b 只改变截距和上下位置。",
+                    "我觉得现在听懂了，k 管倾斜，b 管截距和上下位置。",
+                    "懂了，k 管倾斜，b 管位置；我可以再做一道题验证。",
+                )
+            if status in {"weakening", "provisional"}:
+                return cls._profile_variant(
+                    context,
+                    "大部分听懂了，我开始觉得 b 改变的是位置，不过还想再确认理由。",
+                    "我懂了一部分，b 应该主要改变位置，但还想再看一个例子。",
+                    "基本懂了，b 应该改位置；再问我一道题吧。",
+                )
+            return cls._profile_variant(
+                context,
+                "还没有完全听懂，我还是容易把 b 变大和直线变陡混在一起。",
+                "我还不太明白，总觉得 b 变大后直线也可能更斜。",
+                "还没完全懂，我仍觉得 b 越大直线可能越陡。",
+            )
+        if intent.off_topic:
             return cls._profile_variant(
                 context,
                 "这个好像和现在的一次函数问题无关，我们还是先看 k 和 b 吧。",
@@ -86,8 +116,8 @@ class MockLLMClient(LLMClient):
             return cls._profile_variant(
                 context,
                 "我先记住 k 决定倾斜、b 决定截距，但还需要自己比较图像才能确认。",
-                "我先按这个结论记下来，不过还不敢说自己已经理解了。",
-                "我记住了，但最好再给我一道新题，让我自己判断一次。",
+                "我先记下 k 决定倾斜、b 决定截距，不过还不敢说自己已经理解了。",
+                "我记住 k 管倾斜、b 管截距了，但最好再给我一道新题判断一次。",
             )
 
         if intent.compares_intercept_change:
@@ -107,15 +137,29 @@ class MockLLMClient(LLMClient):
 
         if (
             intent.mentions_intercept
-            and intent.mentions_position
             and intent.changes_intercept
+            and not intent.mentions_slope
             and not intent.mentions_steepness
         ):
+            if status == "corrected":
+                return cls._profile_variant(
+                    context,
+                    "b 从 3 增大到 5 时，直线会整体向上移动，斜率和倾斜程度不变。",
+                    "我觉得直线会整体上移，因为改变的是 b，斜率并没有变。",
+                    "直线整体上移；b 改位置，不改变斜率。",
+                )
+            if status in {"weakening", "provisional"}:
+                return cls._profile_variant(
+                    context,
+                    "我现在倾向于认为直线只是向上移动，但还想确认倾斜程度是否真的不变。",
+                    "我觉得应该是整体上移，不过对斜率会不会受影响还不太确定。",
+                    "应该会向上移；至于会不会更陡，我还要再确认。",
+                )
             return cls._profile_variant(
                 context,
-                "截距增大时，直线会整体向上移动；斜率不变，所以倾斜程度不变。",
-                "我觉得截距变大应该让直线向上移动，倾斜程度不会跟着变。",
-                "截距增大就整体上移，不会改变斜率。",
+                "b 从 3 变成 5 后，我觉得直线会更陡，也会向上移动。",
+                "我不太确定，我觉得 b 变大后直线会上移，而且可能也会更斜一点。",
+                "b 变大了，直线会上移，也会更陡。",
             )
 
         if intent.correction_statement:
@@ -158,8 +202,8 @@ class MockLLMClient(LLMClient):
                 )
             return cls._profile_variant(
                 context,
-                "k 应该影响倾斜程度，但 b 改变什么我还容易混淆。",
-                "我觉得 k 和倾斜有关，b 可能和位置有关，不过我还不太确定。",
+                "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+                "我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。",
                 "k 控制倾斜；b 我觉得也可能影响陡峭程度。",
             )
 
@@ -207,6 +251,17 @@ class MockLLMClient(LLMClient):
             "student_b": student_b,
             "student_c": student_c,
         }.get(context.student_profile_id, student_a)
+
+    @staticmethod
+    def _previous_teacher_text(context: LLMContext) -> str:
+        return next(
+            (
+                content
+                for speaker, content in reversed(context.conversation_history)
+                if speaker == "teacher" and content.strip()
+            ),
+            "",
+        )
 
     @staticmethod
     def _respond_binomial_square(normalized: str, branch: int) -> str:

@@ -17,6 +17,7 @@ CASE_DIR = Path(__file__).resolve().parent / "cases"
 PROFILE_FILES = {
     "student_a": CASE_DIR / "student_a.json",
     "student_b": CASE_DIR / "student_b.json",
+    "student_c": CASE_DIR / "student_c.json",
 }
 
 
@@ -34,8 +35,8 @@ def load_student_profile(
     else:
         profile_path = path
 
-    if misconception_type != "linear_kb" and profile_id == "student_b":
-        raise ValueError("Student B 当前只支持 linear_kb 验证")
+    if misconception_type != "linear_kb" and profile_id != "student_a":
+        raise ValueError(f"{profile_id} 当前只支持 linear_kb 验证")
 
     data = _read_json(profile_path)
     return StudentProfile(

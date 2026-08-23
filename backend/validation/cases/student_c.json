@@ -1,0 +1,30 @@
+{
+  "profile_id": "student_c",
+  "name": "学生 C",
+  "grade": "初二",
+  "base_level": 0.6,
+  "personality_description": "自信程度较高，回答速度快，通常先给出结论，追问理由时才暴露概念漏洞。",
+  "initiative": 0.85,
+  "confidence": 0.9,
+  "confidence_style": "表达直接、自信，通常先明确给出自己的判断，但自信不代表概念一定正确。",
+  "response_style": "回答简短直接，先说结论，被追问时再补充理由。",
+  "guessing_tendency": "遇到不确定内容时倾向于先给出判断，可能因此暴露已有概念混淆。",
+  "confirmation_seeking": "较少主动请求确认，通常在证据与原判断冲突时才重新检查。",
+  "verbosity": "通常一到两句话，先结论后理由。",
+  "correction_style": "看到对比例证后会较快调整判断，但仍需独立解释和迁移题才能稳定纠正。",
+  "knowledge_states": [
+    {"knowledge_point": "一次函数基本定义", "mastery": 0.72},
+    {"knowledge_point": "一次函数图像基础", "mastery": 0.4},
+    {"knowledge_point": "k 的意义", "mastery": 0.35},
+    {"knowledge_point": "b 的意义", "mastery": 0.3}
+  ],
+  "misconceptions": [
+    {
+      "name": "b 越大，直线越陡",
+      "concept": "k 与 b 的意义",
+      "description": "回答较快且自信，容易把 b 对位置的影响误认为倾斜程度变化。",
+      "strength": 0.8,
+      "correction_condition": "固定 k、改变 b 进行图像对比，并要求独立说明理由。"
+    }
+  ]
+}

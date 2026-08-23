@@ -4,9 +4,6 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from .dialogue_intent import analyze_linear_dialogue_intent
-
-
 LINEAR_KB = "linear_kb"
 BINOMIAL_SQUARE = "binomial_square"
 
@@ -45,28 +42,11 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
     def analyze(self, response: str, teacher_text: str) -> DomainEvidence:
         normalized = _compact(response)
         teacher_normalized = _compact(teacher_text)
-        response_intent = analyze_linear_dialogue_intent(response)
-        has_k = (
-            "k" in normalized
-            and response_intent.mentions_slope
-            and any(marker in normalized for marker in ("斜率", "倾斜", "陡", "方向"))
-        ) or any(
-            marker in normalized
-            for marker in (
-                "斜率不变", "斜率保持不变", "斜率相同", "斜率都是",
-                "斜率由k", "斜率看k",
-            )
-        )
-        has_b = response_intent.mentions_intercept and any(
-            marker in normalized
-            for marker in (
-                "截距", "位置", "上下", "上移", "向上", "下移", "平移",
-                "上面", "下面", "上方", "下方", "移动", "挪", "交点", "常数项",
-                "陡", "倾斜", "斜率",
-            )
-        )
+        has_k = _linear_k_role(normalized)
+        has_b = _linear_b_role(normalized)
         residual = _linear_residual(normalized, teacher_normalized)
         negative_claim = _linear_negative_claim(normalized)
+        self_correction = _has_explicit_linear_self_correction(normalized)
         explains = (
             not residual
             and (
@@ -90,11 +70,16 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
                         for marker in ("位置", "上下", "上移", "下移", "平移", "移动", "挪")
                     )
                 )
+                or (self_correction and has_k)
             )
         )
         # A mixed answer can contain a correct conclusion and a residual error;
         # pure error vocabulary alone must not count as a correct conclusion.
-        states_correct = (has_k and (has_b or residual)) or (negative_claim and has_b)
+        states_correct = (
+            (has_k and (has_b or residual))
+            or negative_claim
+            or (self_correction and has_k)
+        )
         if states_correct and not residual:
             conclusion_level = "correct"
         elif states_correct:
@@ -263,6 +248,27 @@ def _linear_residual(response: str, teacher_text: str) -> bool:
     if "2和3" in teacher_text or "y=2x+3" in teacher_text:
         return bool(re.search(r"(?:3|它).{0,16}(越陡|更陡|变陡|会陡)", response))
     return False
+
+
+def _linear_k_role(response: str) -> bool:
+    """Require a local relation between k/slope and steepness, not loose vocabulary."""
+    patterns = (
+        r"k.{0,18}(?:斜率|倾斜|陡|方向)",
+        r"(?:斜率|倾斜程度|陡峭程度|陡不陡).{0,18}(?:由|看|取决于|决定于|受)?.{0,8}k",
+        r"(?:k|斜率).{0,10}(?:不变|没变|相同|一样|都(?:是)?|保持不变)",
+    )
+    return any(re.search(pattern, response) for pattern in patterns)
+
+
+def _linear_b_role(response: str) -> bool:
+    """Require b/intercept to be locally tied to position, movement, or y-axis intercept."""
+    position = r"(?:截距|纵截距|位置|上下|上移|向上|下移|上面|下面|上方|下方|平移|移动|挪|交点|y轴交点)"
+    target = r"(?:b|截距|纵截距|常数项)"
+    patterns = (
+        rf"{target}.{{0,22}}{position}",
+        rf"{position}.{{0,14}}(?:由|看|取决于|决定于|受).{{0,8}}b",
+    )
+    return any(re.search(pattern, response) for pattern in patterns)
 
 
 def _linear_clauses(response: str) -> list[str]:

@@ -58,7 +58,7 @@ def test_mock_validation_runs_and_exports_report(tmp_path: Path) -> None:
     assert payload["basic"]["api_failures"] == 0
     assert payload["overall_metrics"]["Role Consistency"]["total"] == 30
     assert payload["category_metrics"]["多轮：有效纠正"]
-    assert payload["failure_cases"]
+    assert payload["failure_cases"] == []
     assert "LLM_API_KEY" not in path.read_text(encoding="utf-8")
 
 

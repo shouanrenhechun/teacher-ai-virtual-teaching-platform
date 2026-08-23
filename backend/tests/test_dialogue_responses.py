@@ -55,6 +55,55 @@ def test_mock_intercept_change_uses_question_values_without_inventing_slope() ->
     assert "-3" not in concrete
 
 
+def test_mock_handles_short_classroom_follow_ups_before_off_topic_detection() -> None:
+    client = MockLLMClient()
+    context = LLMContext(student_profile_id="student_a", misconception_status="active")
+
+    understanding = client.respond("听懂了吗？", context)
+    elaboration = client.respond("你能再解释一下吗？", context)
+
+    assert "无关" not in understanding
+    assert "不是这节课" not in understanding
+    assert "b" in understanding
+    assert "b" in elaboration or "k" in elaboration
+
+
+def test_mock_answers_intercept_only_change_according_to_cognitive_state() -> None:
+    client = MockLLMClient()
+    teacher_text = "如果把 b 从 3 改成 5，图像会发生什么？"
+
+    active = client.respond(
+        teacher_text,
+        LLMContext(student_profile_id="student_a", misconception_status="active"),
+    )
+    corrected = client.respond(
+        teacher_text,
+        LLMContext(student_profile_id="student_a", misconception_status="corrected"),
+    )
+
+    assert "更陡" in active
+    assert "向上" in corrected
+    assert "斜率" in corrected
+    assert "不变" in corrected
+
+
+def test_mock_resolves_abbreviated_follow_up_from_conversation_history() -> None:
+    client = MockLLMClient()
+    context = LLMContext(
+        student_profile_id="student_c",
+        misconception_status="corrected",
+        conversation_history=(
+            ("teacher", "如果把 b 从 3 改成 5，图像会发生什么？"),
+            ("student", "我还不确定。"),
+        ),
+    )
+
+    response = client.respond("那 5 呢？", context)
+
+    assert "无关" not in response
+    assert "上移" in response or "位置" in response
+
+
 def test_mock_profiles_produce_distinct_boundary_responses_through_session_api(
     monkeypatch,
 ) -> None:
@@ -118,3 +167,14 @@ def test_synonymous_correction_is_detected_by_behavior_and_evidence() -> None:
     assert evidence.states_correct_conclusion is True
     assert evidence.explains_reason_correctly is True
     assert evidence.shows_residual_misconception is False
+
+
+def test_incomplete_b_role_is_not_misread_as_a_correct_conclusion() -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        "k 应该影响倾斜程度，但 b 改变什么我还容易混淆。",
+        teacher_text="请解释 k 和 b 分别有什么作用。",
+    )
+
+    assert evidence.states_correct_conclusion is False
+    assert evidence.explains_reason_correctly is False
+    assert evidence.evidence_insufficient is True

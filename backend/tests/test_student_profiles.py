@@ -65,3 +65,27 @@ def test_student_b_mock_keeps_boundary_separate_from_low_confidence() -> None:
 
     assert "还没学过" in response
     assert "仿射变换" not in response
+
+
+def test_student_c_profile_runs_the_linear_correction_trajectory() -> None:
+    profile = load_student_profile("student_c")
+    assert profile.profile_id == "student_c"
+    assert profile.name == "学生 C"
+    assert profile.confidence > load_student_profile("student_b").confidence
+
+    case = load_validation_cases(case_ids={"trajectory_effective_correction"})[0]
+    report = run_validation(
+        ValidationConfig(
+            provider="mock",
+            model="mock",
+            runs_per_case=1,
+            student_profile_id="student_c",
+        ),
+        [case],
+        client=MockLLMClient(),
+    )
+
+    run = report.runs[0]
+    assert run["successful_calls"] == 8
+    assert run["metrics"]["Correctability"]["passed"] is True
+    assert run["turns"][-1]["state_after"]["misconceptions"][0]["status"] == "corrected"
