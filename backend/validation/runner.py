@@ -212,7 +212,18 @@ def _run_case(
             )
             response = client.respond(
                 teacher_input,
-                replace(context_base, system_prompt=prompt),
+                replace(
+                    context_base,
+                    system_prompt=prompt,
+                    misconception_status=(
+                        prompt_misconception.status if prompt_misconception else "corrected"
+                    ),
+                    misconception_semantic_type=(
+                        prompt_misconception.semantic_type
+                        if prompt_misconception
+                        else case.misconception_type
+                    ),
+                ),
             )
             if not response or not response.strip():
                 raise RuntimeError("LLM 返回了空学生回答")

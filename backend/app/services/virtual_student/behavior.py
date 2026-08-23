@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from .dialogue_intent import analyze_linear_dialogue_intent
+
 
 class TeachingBehavior(StrEnum):
     EFFECTIVE_EXAMPLE = "effective_example"
@@ -15,12 +17,16 @@ class TeachingBehavior(StrEnum):
 def detect_teacher_behavior(teacher_text: str) -> TeachingBehavior:
     """Use small transparent heuristics until a richer behavior tagger exists."""
     text = teacher_text.lower().replace(" ", "")
+    intent = analyze_linear_dialogue_intent(teacher_text)
 
     if any(
         phrase in text
         for phrase in ("用自己的话", "复述一下", "说说", "分别控制什么", "为什么", "是什么意思", "从哪里来", "解释")
     ):
         return TeachingBehavior.EFFECTIVE_QUESTION
+
+    if intent.correction_statement:
+        return TeachingBehavior.TARGETED_CORRECTION
 
     if any(
         phrase in text
@@ -50,6 +56,8 @@ def detect_teacher_behavior(teacher_text: str) -> TeachingBehavior:
             "展开", "相乘", "两个相同括号",
         )
     ):
+        return TeachingBehavior.EFFECTIVE_EXAMPLE
+    if intent.compares_intercept_change:
         return TeachingBehavior.EFFECTIVE_EXAMPLE
     if "?" in text or "？" in text:
         return TeachingBehavior.EFFECTIVE_QUESTION

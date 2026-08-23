@@ -4,6 +4,8 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from .dialogue_intent import analyze_linear_dialogue_intent
+
 
 LINEAR_KB = "linear_kb"
 BINOMIAL_SQUARE = "binomial_square"
@@ -43,14 +45,24 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
     def analyze(self, response: str, teacher_text: str) -> DomainEvidence:
         normalized = _compact(response)
         teacher_normalized = _compact(teacher_text)
-        has_k = "k" in normalized and any(
-            marker in normalized for marker in ("斜率", "倾斜", "陡", "方向")
+        response_intent = analyze_linear_dialogue_intent(response)
+        has_k = (
+            "k" in normalized
+            and response_intent.mentions_slope
+            and any(marker in normalized for marker in ("斜率", "倾斜", "陡", "方向"))
+        ) or any(
+            marker in normalized
+            for marker in (
+                "斜率不变", "斜率保持不变", "斜率相同", "斜率都是",
+                "斜率由k", "斜率看k",
+            )
         )
-        has_b = "b" in normalized and any(
+        has_b = response_intent.mentions_intercept and any(
             marker in normalized
             for marker in (
                 "截距", "位置", "上下", "上移", "向上", "下移", "平移",
-                "上面", "下面", "上方", "下方", "移动", "挪", "陡", "倾斜", "斜率",
+                "上面", "下面", "上方", "下方", "移动", "挪", "交点", "常数项",
+                "陡", "倾斜", "斜率",
             )
         )
         residual = _linear_residual(normalized, teacher_normalized)
@@ -65,7 +77,8 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
                         marker in normalized
                         for marker in (
                             "因为", "k相同", "k都", "斜率相同", "只改变b", "只会让直线",
-                            "所以倾斜", "由k决定", "由k控制", "只看k",
+                            "所以倾斜", "由k决定", "由k控制", "只看k", "k不变",
+                            "斜率不变", "斜率保持不变", "倾斜程度不变", "一样陡", "同样陡",
                         )
                     )
                 )
@@ -79,9 +92,13 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
                 )
             )
         )
+        # A mixed answer can contain a correct conclusion and a residual error;
+        # pure error vocabulary alone must not count as a correct conclusion.
         states_correct = (has_k and (has_b or residual)) or (negative_claim and has_b)
         if states_correct and not residual:
             conclusion_level = "correct"
+        elif states_correct:
+            conclusion_level = "partial"
         elif has_k or has_b:
             conclusion_level = "partial"
         else:
@@ -112,13 +129,20 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
 
     def matches_text(self, text: str) -> bool:
         normalized = _compact(text)
-        return any(marker in normalized for marker in ("k", "b", "斜率", "截距", "倾斜"))
+        return any(
+            marker in normalized
+            for marker in ("k", "b", "斜率", "截距", "纵截距", "常数项", "倾斜")
+        )
 
     def is_correction_evidence(self, text: str) -> bool:
         normalized = _compact(text)
         return any(
             marker in normalized
-            for marker in ("b不影响斜率", "b只影响截距", "b改变的是位置", "k影响倾斜", "固定k改变b")
+            for marker in (
+                "b不影响斜率", "b只影响截距", "b改变的是位置", "k影响倾斜",
+                "固定k改变b", "截距不影响斜率", "截距只决定上下位置",
+                "常数项改变的是交点位置", "斜率不变", "倾斜程度不变",
+            )
         )
 
 
@@ -290,7 +314,7 @@ def _linear_negative_claim(response: str) -> bool:
 
 def _linear_negative_claim_match(response: str) -> re.Match[str] | None:
     """Return the local negated b/steepness clause when one is present."""
-    target = r"(?:b|截距|改变b|b变大|b增大|上下移动|整体上下移动|平移)"
+    target = r"(?:b|截距|纵截距|常数项|改变b|b变大|b增大|上下移动|整体上下移动|平移)"
     negation = r"(?:不会|没有|并不|不(?!过))"
     steepness = r"(?:更陡|越陡|变陡|更斜|越斜|变斜|倾斜程度|斜率)"
     for clause in _linear_clauses(response):

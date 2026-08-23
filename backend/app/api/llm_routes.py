@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from ..schemas.llm import LLMRespondRequest, LLMRespondResponse
 from ..services.llm import LLMClient, LLMContext, build_llm_client
 from ..services.llm.base import LLMConfigurationError, LLMServiceError
+from ..services.virtual_student import stable_profile_id
 
 
 router = APIRouter(prefix="/api/llm", tags=["llm"])
@@ -29,6 +30,7 @@ def respond_to_teacher(
             LLMContext(
                 student_name=request.student_name,
                 topic=request.scenario_topic,
+                student_profile_id=stable_profile_id(request.student_name),
             ),
         )
     except LLMConfigurationError as exc:

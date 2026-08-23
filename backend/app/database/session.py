@@ -31,9 +31,11 @@ def init_db() -> None:
     Base.metadata.create_all(bind=engine)
 
     from .seed import seed_initial_data
+    from ..services.session_service import backfill_session_snapshots
 
     with SessionLocal() as db:
         seed_initial_data(db)
+        backfill_session_snapshots(db)
 
 
 def get_db():

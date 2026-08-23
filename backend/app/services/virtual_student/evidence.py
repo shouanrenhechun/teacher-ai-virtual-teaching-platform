@@ -87,7 +87,9 @@ class StudentResponseEvidenceAnalyzer:
         # Compatibility field: old callers used this as a knowledge-state gate.
         # Purely linguistic hedging must not block transfer or correction.
         uncertainty = conceptual_uncertainty
-        parrots = _is_parroting(text, previous_teacher_text)
+        parrots = _is_parroting(text, teacher_text) or _is_parroting(
+            text, previous_teacher_text
+        )
         explains_reason = domain_evidence.explains_reason_correctly and not parrots
         states_correct = domain_evidence.states_correct_conclusion
         transfer = (

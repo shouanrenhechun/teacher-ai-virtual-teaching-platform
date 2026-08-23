@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import dataclass, field, replace
+from dataclasses import asdict, dataclass, field, replace
 from typing import Any
 
 from .behavior import TeachingBehavior, detect_teacher_behavior
@@ -16,6 +16,18 @@ from .state_rules import is_strong_correct_evidence
 
 def _clamp(value: float) -> float:
     return round(max(0.0, min(1.0, value)), 4)
+
+
+def stable_profile_id(name: str, fallback: object = "record") -> str:
+    profile_ids = {
+        "学生 A": "student_a",
+        "学生 B": "student_b",
+        "学生 C": "student_c",
+    }
+    if name in profile_ids:
+        return profile_ids[name]
+    fallback_text = str(fallback).strip() or "record"
+    return fallback_text if fallback_text.startswith("student_") else f"student_{fallback_text}"
 
 
 @dataclass
@@ -112,7 +124,7 @@ class StudentProfile:
                 )
                 for item in record.misconceptions
             ],
-            profile_id=f"student_{getattr(record, 'id', 'record')}",
+            profile_id=stable_profile_id(record.name, getattr(record, "id", "record")),
         )
 
 
@@ -149,6 +161,36 @@ class VirtualStudentEngine:
             misconceptions=tuple(deepcopy(self._misconceptions)),
             classroom_state=self._classroom_state,
         )
+
+    def export_state(self) -> dict[str, object]:
+        """Return all mutable engine state needed to continue without replaying history."""
+        return {
+            "knowledge_states": [asdict(item) for item in self._knowledge.values()],
+            "misconceptions": [asdict(item) for item in self._misconceptions],
+            "classroom_state": asdict(self._classroom_state),
+        }
+
+    @classmethod
+    def from_exported_state(
+        cls, profile: StudentProfile, payload: dict[str, object]
+    ) -> VirtualStudentEngine:
+        """Restore a previously persisted engine state."""
+        engine = cls(profile)
+        knowledge_items = payload.get("knowledge_states")
+        misconception_items = payload.get("misconceptions")
+        classroom_state = payload.get("classroom_state")
+        if not isinstance(knowledge_items, list):
+            raise ValueError("知识状态快照格式无效")
+        if not isinstance(misconception_items, list):
+            raise ValueError("错误认知快照格式无效")
+        if not isinstance(classroom_state, dict):
+            raise ValueError("课堂状态快照格式无效")
+
+        restored_knowledge = [KnowledgeStateValue(**item) for item in knowledge_items]
+        engine._knowledge = {item.knowledge_point: item for item in restored_knowledge}
+        engine._misconceptions = [MisconceptionState(**item) for item in misconception_items]
+        engine._classroom_state = DynamicState(**classroom_state)
+        return engine
 
     def knowledge_boundary(self) -> dict[str, list[str]]:
         mastered = []

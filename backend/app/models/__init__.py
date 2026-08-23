@@ -7,6 +7,7 @@ from .knowledge import KnowledgeState
 from .misconception import Misconception
 from .scenario import TrainingScenario
 from .session import TeachingSession
+from .session_snapshot import TeachingSessionSnapshot
 from .student import VirtualStudent
 from .teaching_behavior import TeachingBehaviorRecord
 
@@ -17,6 +18,7 @@ __all__ = [
     "KnowledgeState",
     "Misconception",
     "TeachingSession",
+    "TeachingSessionSnapshot",
     "TrainingScenario",
     "VirtualStudent",
     "TeachingBehaviorRecord",

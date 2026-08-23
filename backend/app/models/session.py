@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from .scenario import TrainingScenario
     from .student import VirtualStudent
     from .teaching_behavior import TeachingBehaviorRecord
+    from .session_snapshot import TeachingSessionSnapshot
 
 
 class TeachingSession(Base):
@@ -41,6 +42,11 @@ class TeachingSession(Base):
         order_by="TeachingBehaviorRecord.id",
     )
     evaluation: Mapped[Evaluation | None] = relationship(
+        back_populates="session",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    snapshot: Mapped[TeachingSessionSnapshot | None] = relationship(
         back_populates="session",
         cascade="all, delete-orphan",
         uselist=False,

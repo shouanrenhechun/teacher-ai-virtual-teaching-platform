@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import asdict
 from datetime import UTC, datetime
+import json
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
@@ -8,13 +10,20 @@ from sqlalchemy.orm import Session, selectinload
 from .evaluation_engine import EvaluationEngine
 from .llm import LLMClient, LLMContext
 from .teaching_behavior import TeachingBehaviorAnalyzer
-from .virtual_student import StudentProfile, VirtualStudentEngine
+from .virtual_student import (
+    KnowledgeStateValue,
+    MisconceptionState,
+    StudentProfile,
+    VirtualStudentEngine,
+    stable_profile_id,
+)
 from .virtual_student.prompt_builder import misconception_prompt_mode
 from ..models import (
     DialogueRecord,
     Evaluation,
     TeachingBehaviorRecord,
     TeachingSession,
+    TeachingSessionSnapshot,
     TrainingScenario,
     VirtualStudent,
 )
@@ -49,13 +58,41 @@ def load_session(db: Session, session_id: int) -> TeachingSession | None:
             selectinload(TeachingSession.dialogue_records),
             selectinload(TeachingSession.behavior_records),
             selectinload(TeachingSession.evaluation).selectinload(Evaluation.narrative),
+            selectinload(TeachingSession.snapshot),
         )
     )
     return db.scalar(statement)
 
 
-def load_engine(session: TeachingSession) -> VirtualStudentEngine:
-    profile = StudentProfile.from_record(session.virtual_student)
+def _profile_to_json(profile: StudentProfile) -> str:
+    return json.dumps(asdict(profile), ensure_ascii=False)
+
+
+def _profile_from_json(raw_profile: str) -> StudentProfile:
+    payload = json.loads(raw_profile)
+    if not isinstance(payload, dict):
+        raise ValueError("学生画像快照格式无效")
+    knowledge_states = payload.pop("knowledge_states", [])
+    misconceptions = payload.pop("misconceptions", [])
+    if not isinstance(knowledge_states, list) or not isinstance(misconceptions, list):
+        raise ValueError("学生画像快照格式无效")
+    payload["profile_id"] = stable_profile_id(
+        str(payload.get("name", "")), payload.get("profile_id", "snapshot")
+    )
+    return StudentProfile(
+        **payload,
+        knowledge_states=[KnowledgeStateValue(**item) for item in knowledge_states],
+        misconceptions=[MisconceptionState(**item) for item in misconceptions],
+    )
+
+
+def _snapshot_profile(session: TeachingSession) -> StudentProfile:
+    if session.snapshot is not None:
+        return _profile_from_json(session.snapshot.profile_json)
+    return StudentProfile.from_record(session.virtual_student)
+
+
+def _replay_engine(session: TeachingSession, profile: StudentProfile) -> VirtualStudentEngine:
     engine = VirtualStudentEngine(profile)
     previous_teacher_text = ""
     pending_teacher_text = ""
@@ -76,6 +113,16 @@ def load_engine(session: TeachingSession) -> VirtualStudentEngine:
             pending_teacher_text = ""
             pending_opportunity = None
     return engine
+
+
+def load_engine(session: TeachingSession) -> VirtualStudentEngine:
+    profile = _snapshot_profile(session)
+    if session.snapshot is not None:
+        state = json.loads(session.snapshot.engine_state_json)
+        if not isinstance(state, dict):
+            raise ValueError("引擎状态快照格式无效")
+        return VirtualStudentEngine.from_exported_state(profile, state)
+    return _replay_engine(session, profile)
 
 
 def build_session_detail(
@@ -157,10 +204,11 @@ def _misconception_read(misconception: object | None) -> MisconceptionStateRead 
     )
 
 
-def build_cognitive_trace(session: TeachingSession) -> CognitiveTraceRead:
-    """Replay persisted dialogue through the existing engine for read-only UI data."""
-    # Rebuild from the profile so this function can capture each transition.
-    engine = VirtualStudentEngine(StudentProfile.from_record(session.virtual_student))
+def _replay_cognitive_trace(
+    session: TeachingSession, profile: StudentProfile | None = None
+) -> CognitiveTraceRead:
+    """Create the one-time trace used when backfilling legacy sessions."""
+    engine = VirtualStudentEngine(profile or StudentProfile.from_record(session.virtual_student))
     ordered_dialogue = sorted(session.dialogue_records, key=lambda item: item.sequence)
     behavior_by_dialogue_id = {
         record.dialogue_record_id: record.action_type for record in session.behavior_records
@@ -235,6 +283,73 @@ def build_cognitive_trace(session: TeachingSession) -> CognitiveTraceRead:
     )
 
 
+def build_cognitive_trace(session: TeachingSession) -> CognitiveTraceRead:
+    """Return persisted evidence so rule or seed changes cannot rewrite history."""
+    if session.snapshot is not None:
+        return CognitiveTraceRead.model_validate_json(session.snapshot.cognitive_trace_json)
+    return _replay_cognitive_trace(session)
+
+
+def _empty_cognitive_trace(engine: VirtualStudentEngine) -> CognitiveTraceRead:
+    initial = engine.snapshot()
+    initial_misconception = initial.misconceptions[0] if initial.misconceptions else None
+    return CognitiveTraceRead(
+        initial_state=_state_read(initial),
+        initial_misconception=_misconception_read(initial_misconception),
+        current_state=_state_read(initial),
+        current_misconception=_misconception_read(initial_misconception),
+        rounds=[],
+    )
+
+
+def _save_snapshot(
+    db: Session,
+    session: TeachingSession,
+    profile: StudentProfile,
+    engine: VirtualStudentEngine,
+    trace: CognitiveTraceRead,
+) -> TeachingSessionSnapshot:
+    now = datetime.now(UTC).replace(tzinfo=None)
+    snapshot = session.snapshot
+    if snapshot is None:
+        snapshot = TeachingSessionSnapshot(
+            session_id=session.id,
+            snapshot_version=1,
+            profile_json=_profile_to_json(profile),
+            engine_state_json="{}",
+            cognitive_trace_json="{}",
+            created_at=now,
+            updated_at=now,
+        )
+        session.snapshot = snapshot
+        db.add(snapshot)
+    snapshot.engine_state_json = json.dumps(engine.export_state(), ensure_ascii=False)
+    snapshot.cognitive_trace_json = trace.model_dump_json()
+    snapshot.updated_at = now
+    return snapshot
+
+
+def backfill_session_snapshots(db: Session) -> int:
+    """Freeze the best recoverable state for sessions created before snapshot support."""
+    session_ids = db.scalars(
+        select(TeachingSession.id)
+        .outerjoin(TeachingSessionSnapshot)
+        .where(TeachingSessionSnapshot.session_id.is_(None))
+        .order_by(TeachingSession.id)
+    ).all()
+    for session_id in session_ids:
+        session = load_session(db, session_id)
+        if session is None or session.snapshot is not None:
+            continue
+        profile = StudentProfile.from_record(session.virtual_student)
+        engine = _replay_engine(session, profile)
+        trace = _replay_cognitive_trace(session, profile)
+        _save_snapshot(db, session, profile, engine, trace)
+    if session_ids:
+        db.commit()
+    return len(session_ids)
+
+
 def create_or_reuse_session(
     db: Session, scenario_id: int, virtual_student_id: int
 ) -> TeachingSession:
@@ -261,6 +376,10 @@ def create_or_reuse_session(
         status="active",
     )
     db.add(session)
+    db.flush()
+    profile = StudentProfile.from_record(student)
+    engine = VirtualStudentEngine(profile)
+    _save_snapshot(db, session, profile, engine, _empty_cognitive_trace(engine))
     db.commit()
     return load_session(db, session.id) or session
 
@@ -302,6 +421,7 @@ def send_teacher_message(
         raise RuntimeError("实训已结束，不能继续发送消息")
 
     engine = load_engine(session)
+    trace = build_cognitive_trace(session)
     conversation_history = [
         (record.speaker, record.content)
         for record in sorted(session.dialogue_records, key=lambda item: item.sequence)[-8:]
@@ -322,10 +442,17 @@ def send_teacher_message(
     db.add(teacher_record)
     db.flush()
 
+    before = engine.snapshot()
+    current_misconception = before.misconceptions[0] if before.misconceptions else None
     context = LLMContext(
-        student_name=session.virtual_student.name,
-        student_grade=session.virtual_student.grade,
+        student_name=engine.profile.name,
+        student_grade=engine.profile.grade,
         topic=session.scenario.topic,
+        student_profile_id=engine.profile.profile_id,
+        misconception_status=(current_misconception.status if current_misconception else "corrected"),
+        misconception_semantic_type=(
+            current_misconception.semantic_type if current_misconception else "linear_kb"
+        ),
     )
     behavior_analysis = TeachingBehaviorAnalyzer().analyze(
         teacher_text,
@@ -334,20 +461,31 @@ def send_teacher_message(
     )
     engine.update_from_teacher_text(teacher_text)
     prompt = engine.build_prompt(teacher_text, conversation_history)
+    prompt_snapshot = engine.snapshot()
+    prompt_misconception = (
+        prompt_snapshot.misconceptions[0] if prompt_snapshot.misconceptions else None
+    )
     student_text = client.respond(
         teacher_text,
         LLMContext(
-            student_name=session.virtual_student.name,
-            student_grade=session.virtual_student.grade,
+            student_name=engine.profile.name,
+            student_grade=engine.profile.grade,
             topic=session.scenario.topic,
             system_prompt=prompt,
+            student_profile_id=engine.profile.profile_id,
+            misconception_status=(
+                prompt_misconception.status if prompt_misconception else "corrected"
+            ),
+            misconception_semantic_type=(
+                prompt_misconception.semantic_type if prompt_misconception else "linear_kb"
+            ),
         ),
     )
     if not student_text.strip():
         db.rollback()
         raise RuntimeError("学生回答为空，请重试")
 
-    engine.apply_student_response_evidence(
+    evidence = engine.apply_student_response_evidence(
         student_text.strip(),
         teacher_text,
         opportunity,
@@ -369,15 +507,47 @@ def send_teacher_message(
             created_at=datetime.now(UTC).replace(tzinfo=None),
         )
     )
-    db.add(
-        DialogueRecord(
-            session_id=session.id,
-            speaker="student",
-            content=student_text.strip(),
-            sequence=next_sequence + 1,
-            timestamp=datetime.now(UTC).replace(tzinfo=None),
-        )
+    student_record = DialogueRecord(
+        session_id=session.id,
+        speaker="student",
+        content=student_text.strip(),
+        sequence=next_sequence + 1,
+        timestamp=datetime.now(UTC).replace(tzinfo=None),
     )
+    db.add(student_record)
+    db.flush()
+
+    after = engine.snapshot()
+    before_misconception = before.misconceptions[0] if before.misconceptions else None
+    after_misconception = after.misconceptions[0] if after.misconceptions else None
+    round_trace = CognitiveTraceRoundRead(
+        round=len(trace.rounds) + 1,
+        teacher_text=teacher_record.content,
+        student_text=student_record.content,
+        action_type=behavior_analysis.action_type.value,
+        state_before=_state_read(before),
+        state_after=_state_read(after),
+        misconception_before=_misconception_read(before_misconception),
+        misconception_after=_misconception_read(after_misconception),
+        evidence=StudentResponseEvidenceRead(**evidence.to_dict()),
+        correction_opportunity=CorrectionOpportunityRead(
+            correction_opportunity=bool(opportunity.get("correction_opportunity", False)),
+            opportunity_strength=float(opportunity.get("opportunity_strength", 0.0)),
+        ),
+        prompt_mode=(
+            misconception_prompt_mode(after_misconception.status, after_misconception.corrected)
+            if after_misconception is not None
+            else None
+        ),
+    )
+    updated_trace = trace.model_copy(
+        update={
+            "current_state": _state_read(after),
+            "current_misconception": _misconception_read(after_misconception),
+            "rounds": [*trace.rounds, round_trace],
+        }
+    )
+    _save_snapshot(db, session, _snapshot_profile(session), engine, updated_trace)
     db.commit()
     refreshed = load_session(db, session.id)
     if refreshed is None:

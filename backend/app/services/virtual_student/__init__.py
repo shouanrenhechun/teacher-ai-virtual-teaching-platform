@@ -8,6 +8,7 @@ from .engine import (
     MisconceptionState,
     StudentProfile,
     VirtualStudentEngine,
+    stable_profile_id,
 )
 from .prompt_builder import PromptBuilder
 from .semantic import (
@@ -40,6 +41,7 @@ __all__ = [
     "StudentProfile",
     "TeachingBehavior",
     "VirtualStudentEngine",
+    "stable_profile_id",
     "detect_teacher_behavior",
     "StudentResponseEvidence",
     "StudentResponseEvidenceAnalyzer",
