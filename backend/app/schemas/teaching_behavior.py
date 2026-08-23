@@ -17,6 +17,7 @@ class TeachingActionType(StrEnum):
     UNDERSTANDING_CHECK = "understanding_check"
     DIRECT_ANSWER = "direct_answer"
     CLASSROOM_INTERACTION = "classroom_interaction"
+    OFF_TOPIC = "off_topic"
 
 
 class TeachingBehaviorAnalysis(BaseModel):
@@ -53,3 +54,4 @@ class TeachingBehaviorSummaryRead(BaseModel):
     understanding_check_count: int = Field(ge=0)
     direct_answer_count: int = Field(ge=0)
     classroom_interaction_count: int = Field(ge=0)
+    off_topic_count: int = Field(ge=0)

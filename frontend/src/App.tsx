@@ -76,6 +76,7 @@ type BehaviorSummary = {
   understanding_check_count: number;
   direct_answer_count: number;
   classroom_interaction_count: number;
+  off_topic_count: number;
 };
 
 type KeyTeachingSnippet = {
@@ -916,6 +917,7 @@ function BehaviorStats({ summary }: { summary: BehaviorSummary }) {
     ["反馈", summary.feedback_count],
     ["讲解", summary.explanation_count],
     ["课堂互动", summary.classroom_interaction_count],
+    ["非教学话题", summary.off_topic_count],
   ] as const;
   return (
     <div className="behavior-stats">

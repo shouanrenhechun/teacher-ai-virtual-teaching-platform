@@ -3,7 +3,11 @@ from __future__ import annotations
 import re
 
 from .base import LLMClient, LLMContext, LLMServiceError
-from ..virtual_student.classroom_intent import ClassroomAct, analyze_classroom_dialogue
+from ..virtual_student.classroom_intent import (
+    ClassroomAct,
+    ClassroomDialogueIntent,
+    analyze_classroom_dialogue,
+)
 from ..virtual_student.dialogue_intent import analyze_linear_dialogue_intent
 
 
@@ -20,13 +24,28 @@ class MockLLMClient(LLMClient):
         context = context or LLMContext()
         normalized = text.lower().replace(" ", "")
         branch = len(text) % 3
-        classroom_intent = analyze_classroom_dialogue(text)
-        classroom_response = self._respond_classroom_act(classroom_intent.act, context)
-        if classroom_response is not None:
-            return classroom_response
+        classroom_intent = analyze_classroom_dialogue(
+            text, conversation_history=context.conversation_history
+        )
+        instructional_acts = {
+            ClassroomAct.DIRECT_ANSWER,
+            ClassroomAct.ELABORATION_REQUEST,
+            ClassroomAct.UNDERSTANDING_CHECK,
+            ClassroomAct.EXAMPLE,
+            ClassroomAct.CONTEXTUAL_REFERENCE,
+            ClassroomAct.SUBJECT_CONTENT,
+        }
+        needs_subject_response = classroom_intent.primary_act in instructional_acts or (
+            classroom_intent.primary_act is ClassroomAct.CORRECTIVE_FEEDBACK
+            and classroom_intent.has_subject_content
+        )
+        if not needs_subject_response:
+            classroom_response = self._respond_classroom_act(classroom_intent.act, context)
+            if classroom_response is not None:
+                return classroom_response
 
         if any(marker in context.topic for marker in ("完全平方", "平方公式")):
-            if classroom_intent.act is ClassroomAct.UNDERSTANDING_CHECK:
+            if classroom_intent.has(ClassroomAct.UNDERSTANDING_CHECK):
                 return self._profile_variant(
                     context,
                     "还没有完全听懂，我想再展开一道题看看。"
@@ -47,11 +66,20 @@ class MockLLMClient(LLMClient):
                     "这不是当前的问题，我们继续看完全平方公式。",
                 )
             return self._respond_binomial_square(normalized, branch)
-        return self._respond_linear_kb(text, context)
+        return self._respond_linear_kb(text, context, classroom_intent)
 
     @classmethod
-    def _respond_linear_kb(cls, text: str, context: LLMContext) -> str:
-        current_intent = analyze_linear_dialogue_intent(text)
+    def _respond_linear_kb(
+        cls,
+        text: str,
+        context: LLMContext,
+        classroom_intent: ClassroomDialogueIntent | None = None,
+    ) -> str:
+        current_intent = analyze_linear_dialogue_intent(
+            text,
+            classroom_intent=classroom_intent,
+            conversation_history=context.conversation_history,
+        )
         intent_text = text
         if current_intent.contextual_follow_up:
             previous_teacher_text = cls._previous_teacher_text(context)
@@ -61,9 +89,10 @@ class MockLLMClient(LLMClient):
         normalized = intent.normalized
         current_normalized = current_intent.normalized
         status = context.misconception_status
-        direct_answer = any(
-            marker in current_normalized for marker in ("答案是", "结论是", "记住")
+        classroom = classroom_intent or analyze_classroom_dialogue(
+            text, conversation_history=context.conversation_history
         )
+        direct_answer = classroom.has(ClassroomAct.DIRECT_ANSWER)
 
         if intent.out_of_scope:
             return cls._profile_variant(
@@ -138,6 +167,13 @@ class MockLLMClient(LLMClient):
             )
 
         if direct_answer:
+            if not (intent.mentions_slope or intent.mentions_intercept):
+                return cls._profile_variant(
+                    context,
+                    "我先记下这个答案，但还需要自己说明过程或做一道类似题才能确认。",
+                    "我先记住这个结果，不过还不敢说自己已经理解了。",
+                    "我记下答案了，最好再给我一道新题检查一次。",
+                )
             return cls._profile_variant(
                 context,
                 "我先记住 k 决定倾斜、b 决定截距，但还需要自己比较图像才能确认。",
@@ -356,8 +392,12 @@ class MockLLMClient(LLMClient):
             return "(2x+3)^2=4x²+12x+9，中间的 12x 来自两个 6x。"
         if "x-5" in normalized or "负号" in normalized:
             return "(x-5)^2=x²-10x+25，两个交叉项是 -5x 和 -5x。"
-        if "答案是" in normalized or "a²+2ab+b²" in normalized or "a^2+2ab+b^2" in normalized:
+        if "a²+2ab+b²" in normalized or "a^2+2ab+b^2" in normalized:
             return "对，(a+b)^2=a²+2ab+b²，我先记住这个公式。"
+        if re.search(r"(?:答案|结论|结果|正确答案|正确结果)(?:是|为)", normalized) or any(
+            marker in normalized for marker in ("直接写", "直接填", "记住")
+        ):
+            return "我先记下这个答案，但还需要自己展开或做一道类似题才能确认。"
         if "平方就是分别平方" in normalized or "没有中间项" in normalized:
             return "对，我原来也觉得括号里的两项分别平方就行，好像没有中间项。"
         if "ab" in normalized and any(marker in normalized for marker in ("几次", "出现", "为什么")):

@@ -78,6 +78,17 @@ def test_only_classroom_interactions_produce_zero_knowledge_accuracy() -> None:
     assert EvaluationEngine().calculate_scores(session)["knowledge_accuracy"] == 0.0
 
 
+def test_off_topic_dialogue_is_excluded_from_knowledge_accuracy() -> None:
+    session = SimpleNamespace(
+        behavior_records=[
+            behavior("off_topic", accuracy=1.0, concept="非教学话题"),
+            behavior("explanation", accuracy=0.7),
+        ]
+    )
+
+    assert EvaluationEngine().calculate_scores(session)["knowledge_accuracy"] == 70.0
+
+
 def test_invalid_qualitative_llm_uses_rule_report() -> None:
     session = SimpleNamespace(
         virtual_student=SimpleNamespace(name="学生 A"),

@@ -3,7 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 
-from .classroom_intent import ClassroomAct, analyze_classroom_dialogue
+from .classroom_intent import (
+    ClassroomAct,
+    ClassroomDialogueIntent,
+    analyze_classroom_dialogue,
+)
 
 
 _OUT_OF_SCOPE_MARKERS = (
@@ -61,14 +65,21 @@ class LinearDialogueIntent:
         )
 
 
-def analyze_linear_dialogue_intent(text: str) -> LinearDialogueIntent:
+def analyze_linear_dialogue_intent(
+    text: str,
+    *,
+    classroom_intent: ClassroomDialogueIntent | None = None,
+    conversation_history: tuple[tuple[str, str], ...] = (),
+) -> LinearDialogueIntent:
     normalized = compact_dialogue_text(text)
-    classroom = analyze_classroom_dialogue(text)
-    asks_understanding = classroom.act is ClassroomAct.UNDERSTANDING_CHECK
-    asks_reason = classroom.act is ClassroomAct.ELABORATION_REQUEST or any(
+    classroom = classroom_intent or analyze_classroom_dialogue(
+        text, conversation_history=conversation_history
+    )
+    asks_understanding = classroom.has(ClassroomAct.UNDERSTANDING_CHECK)
+    asks_reason = classroom.has(ClassroomAct.ELABORATION_REQUEST) or any(
         marker in normalized for marker in ("为什么", "理由", "解释", "再说说", "说具体", "说明一下")
     )
-    contextual_follow_up = classroom.act is ClassroomAct.CONTEXTUAL_REFERENCE
+    contextual_follow_up = classroom.has(ClassroomAct.CONTEXTUAL_REFERENCE)
     mentions_slope = any(
         marker in normalized for marker in ("k", "斜率", "倾斜", "陡")
     )

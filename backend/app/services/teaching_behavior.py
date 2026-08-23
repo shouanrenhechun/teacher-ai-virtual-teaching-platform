@@ -9,6 +9,7 @@ from pydantic import ValidationError
 from .llm import LLMClient, LLMContext
 from .llm.base import LLMError
 from .virtual_student.classroom_intent import ClassroomAct, analyze_classroom_dialogue
+from .virtual_student.dialogue_intent import analyze_linear_dialogue_intent
 from ..schemas.teaching_behavior import TeachingActionType, TeachingBehaviorAnalysis
 
 
@@ -30,7 +31,7 @@ class TeachingBehaviorAnalyzer:
         llm_client: LLMClient | None = None,
         context: LLMContext | None = None,
     ) -> TeachingBehaviorAnalysis:
-        rule_result = self._analyze_by_rules(teacher_text)
+        rule_result = self._analyze_by_rules(teacher_text, context=context)
         if llm_client is None:
             return rule_result
 
@@ -64,7 +65,7 @@ class TeachingBehaviorAnalyzer:
         concept = rule_result.concept if rule_result.concept != "一次函数" else llm_result.concept
         knowledge_accuracy = (
             rule_result.knowledge_accuracy
-            if concept == "课堂互动"
+            if concept in {"课堂互动", "非教学话题"}
             else llm_result.knowledge_accuracy
         )
         return rule_result.model_copy(
@@ -82,46 +83,69 @@ class TeachingBehaviorAnalyzer:
             }
         )
 
-    def _analyze_by_rules(self, teacher_text: str) -> TeachingBehaviorAnalysis:
+    def _analyze_by_rules(
+        self,
+        teacher_text: str,
+        *,
+        context: LLMContext | None = None,
+    ) -> TeachingBehaviorAnalysis:
         text = teacher_text.strip()
         normalized = re.sub(r"\s+", "", text.lower())
         if not normalized:
             return self._safe_default("教师输入为空")
-        classroom_intent = analyze_classroom_dialogue(text)
+        classroom_intent = analyze_classroom_dialogue(
+            text,
+            conversation_history=context.conversation_history if context else (),
+        )
+        linear_intent = analyze_linear_dialogue_intent(
+            text, classroom_intent=classroom_intent
+        )
 
         is_question = "?" in text or "？" in text or any(
             marker in normalized for marker in ("吗", "什么", "为什么", "如何", "怎么", "哪个", "能否")
         )
-        checked_understanding = classroom_intent.act is ClassroomAct.UNDERSTANDING_CHECK or any(
+        checked_understanding = classroom_intent.has(ClassroomAct.UNDERSTANDING_CHECK) or any(
             marker in normalized
             for marker in ("听懂了吗", "明白了吗", "理解了吗", "能复述", "说说你的理解", "检查一下理解")
         )
-        gave_answer_directly = any(
-            marker in normalized
-            for marker in ("答案是", "结论是", "记住", "直接告诉你", "正确结果是")
+        gave_answer_directly = classroom_intent.has(ClassroomAct.DIRECT_ANSWER)
+
+        is_specific_correction = linear_intent.correction_statement or self._contains_any(
+            normalized,
+            (
+                "不对", "不是", "纠正", "更正", "并不", "不能说",
+                "b不影响斜率", "b只影响截距", "b改变的是位置", "k影响倾斜",
+                "固定k改变b",
+            ),
         )
 
         if gave_answer_directly:
             action_type = TeachingActionType.DIRECT_ANSWER
-        elif classroom_intent.act is ClassroomAct.UNDERSTANDING_CHECK or checked_understanding:
-            action_type = TeachingActionType.UNDERSTANDING_CHECK
-        elif classroom_intent.act in {
-            ClassroomAct.FEEDBACK,
-            ClassroomAct.ENCOURAGEMENT,
-            ClassroomAct.CORRECTIVE_FEEDBACK,
-        }:
-            action_type = TeachingActionType.FEEDBACK
-        elif classroom_intent.act in {
-            ClassroomAct.ELABORATION_REQUEST,
-            ClassroomAct.CONTEXTUAL_REFERENCE,
-        }:
-            action_type = TeachingActionType.QUESTION
-        elif classroom_intent.act is not ClassroomAct.SUBJECT_CONTENT:
-            action_type = TeachingActionType.CLASSROOM_INTERACTION
-        elif self._contains_any(normalized, ("不对", "不是", "纠正", "更正", "并不", "不能说")):
+        elif is_specific_correction:
             action_type = TeachingActionType.CORRECTION
-        elif self._contains_any(normalized, ("例如", "举个例子", "比如", "画两条", "对比一下")):
+        elif classroom_intent.has(ClassroomAct.UNDERSTANDING_CHECK) or checked_understanding:
+            action_type = TeachingActionType.UNDERSTANDING_CHECK
+        elif classroom_intent.has(ClassroomAct.ELABORATION_REQUEST) or classroom_intent.has(
+            ClassroomAct.CONTEXTUAL_REFERENCE
+        ):
+            action_type = TeachingActionType.QUESTION
+        elif classroom_intent.has(ClassroomAct.EXAMPLE) or self._contains_any(
+            normalized, ("例如", "举个例子", "比如", "画两条", "对比一下", "比较")
+        ):
             action_type = TeachingActionType.EXAMPLE
+        elif any(
+            classroom_intent.has(act)
+            for act in (
+                ClassroomAct.FEEDBACK,
+                ClassroomAct.ENCOURAGEMENT,
+                ClassroomAct.CORRECTIVE_FEEDBACK,
+            )
+        ):
+            action_type = TeachingActionType.FEEDBACK
+        elif classroom_intent.off_topic:
+            action_type = TeachingActionType.OFF_TOPIC
+        elif classroom_intent.primary_act is not ClassroomAct.SUBJECT_CONTENT:
+            action_type = TeachingActionType.CLASSROOM_INTERACTION
         elif is_question and self._contains_any(
             normalized,
             ("如果", "假设", "先固定", "观察", "比较", "你觉得", "想一想", "试着"),
@@ -134,14 +158,15 @@ class TeachingBehaviorAnalyzer:
         else:
             action_type = TeachingActionType.EXPLANATION
 
-        concept = (
-            "课堂互动"
-            if classroom_intent.act is not ClassroomAct.SUBJECT_CONTENT
-            else self._detect_concept(normalized)
-        )
+        if classroom_intent.off_topic:
+            concept = "非教学话题"
+        elif not classroom_intent.has_subject_content:
+            concept = "课堂互动"
+        else:
+            concept = self._detect_concept(normalized)
         knowledge_accuracy = (
             0.0
-            if concept == "课堂互动"
+            if concept in {"课堂互动", "非教学话题"}
             else self._estimate_accuracy(normalized, action_type)
         )
         clarity = self._estimate_clarity(text)

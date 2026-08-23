@@ -76,6 +76,7 @@ const ACTION_LABELS: Record<string, string> = {
   understanding_check: "理解确认",
   direct_answer: "直接给出答案",
   classroom_interaction: "课堂互动",
+  off_topic: "非教学话题",
 };
 
 export function statusLabel(status: CognitiveStatus | null | undefined): string {

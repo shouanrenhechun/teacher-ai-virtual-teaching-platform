@@ -100,7 +100,7 @@ class EvaluationEngine:
         knowledge_records = [
             record
             for record in records
-            if record.action_type != "classroom_interaction"
+            if record.action_type not in {"classroom_interaction", "off_topic"}
             and getattr(record, "concept", None) != "课堂互动"
         ]
         knowledge_accuracy = (
