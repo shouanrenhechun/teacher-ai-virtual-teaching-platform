@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 
+from .classroom_intent import ClassroomAct, analyze_classroom_dialogue
+
 
 _OUT_OF_SCOPE_MARKERS = (
     "线性代数",
@@ -13,23 +15,6 @@ _OUT_OF_SCOPE_MARKERS = (
     "导数",
     "微分方程",
 )
-_MATH_TOPIC_MARKERS = (
-    "一次函数",
-    "直线",
-    "图像",
-    "斜率",
-    "倾斜",
-    "陡",
-    "截距",
-    "交点",
-    "平移",
-    "常数项",
-    "k",
-    "b",
-    "y=",
-)
-
-
 def compact_dialogue_text(text: str) -> str:
     return re.sub(r"[\s，。！？、,:：；;]+", "", text.lower())
 
@@ -37,6 +22,7 @@ def compact_dialogue_text(text: str) -> str:
 @dataclass(frozen=True)
 class LinearDialogueIntent:
     normalized: str
+    classroom_act: ClassroomAct
     mentions_slope: bool
     mentions_intercept: bool
     mentions_position: bool
@@ -77,20 +63,12 @@ class LinearDialogueIntent:
 
 def analyze_linear_dialogue_intent(text: str) -> LinearDialogueIntent:
     normalized = compact_dialogue_text(text)
-    asks_understanding = any(
-        marker in normalized
-        for marker in (
-            "听懂了吗", "听明白了吗", "明白了吗", "懂了吗", "理解了吗",
-            "能复述吗", "能说一遍吗",
-        )
+    classroom = analyze_classroom_dialogue(text)
+    asks_understanding = classroom.act is ClassroomAct.UNDERSTANDING_CHECK
+    asks_reason = classroom.act is ClassroomAct.ELABORATION_REQUEST or any(
+        marker in normalized for marker in ("为什么", "理由", "解释", "再说说", "说具体", "说明一下")
     )
-    asks_reason = any(
-        marker in normalized
-        for marker in ("为什么", "理由", "解释", "再说说", "说具体", "说明一下")
-    )
-    contextual_follow_up = bool(
-        re.fullmatch(r"(?:那|这个|它|然后|接着).{0,12}(?:呢|怎么样|如何)?\??", normalized)
-    )
+    contextual_follow_up = classroom.act is ClassroomAct.CONTEXTUAL_REFERENCE
     mentions_slope = any(
         marker in normalized for marker in ("k", "斜率", "倾斜", "陡")
     )
@@ -152,18 +130,13 @@ def analyze_linear_dialogue_intent(text: str) -> LinearDialogueIntent:
         fixed_slope = True
         changes_intercept = len({item[1] for item in equations}) > 1
     out_of_scope = any(marker in normalized for marker in _OUT_OF_SCOPE_MARKERS)
-    classroom_follow_up = asks_understanding or asks_reason or contextual_follow_up
-    off_topic = (
-        bool(normalized)
-        and not out_of_scope
-        and not classroom_follow_up
-        and not any(marker in normalized for marker in _MATH_TOPIC_MARKERS)
-    )
+    off_topic = classroom.off_topic and not out_of_scope
     is_question = "?" in text or "？" in text or any(
         marker in normalized for marker in ("吗", "什么", "为什么", "如何", "怎么", "哪个", "能否")
     )
     return LinearDialogueIntent(
         normalized=normalized,
+        classroom_act=classroom.act,
         mentions_slope=mentions_slope,
         mentions_intercept=mentions_intercept,
         mentions_position=mentions_position,

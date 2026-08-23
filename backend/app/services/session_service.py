@@ -140,6 +140,7 @@ def build_session_detail(
         "correction_count": 0,
         "understanding_check_count": 0,
         "direct_answer_count": 0,
+        "classroom_interaction_count": 0,
     }
     for record in behavior_records:
         key = f"{record.action_type}_count"

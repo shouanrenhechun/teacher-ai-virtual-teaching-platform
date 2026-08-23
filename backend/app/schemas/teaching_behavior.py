@@ -16,6 +16,7 @@ class TeachingActionType(StrEnum):
     CORRECTION = "correction"
     UNDERSTANDING_CHECK = "understanding_check"
     DIRECT_ANSWER = "direct_answer"
+    CLASSROOM_INTERACTION = "classroom_interaction"
 
 
 class TeachingBehaviorAnalysis(BaseModel):
@@ -51,3 +52,4 @@ class TeachingBehaviorSummaryRead(BaseModel):
     correction_count: int = Field(ge=0)
     understanding_check_count: int = Field(ge=0)
     direct_answer_count: int = Field(ge=0)
+    classroom_interaction_count: int = Field(ge=0)

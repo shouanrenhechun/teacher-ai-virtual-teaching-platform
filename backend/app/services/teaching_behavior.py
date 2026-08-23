@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from .llm import LLMClient, LLMContext
 from .llm.base import LLMError
+from .virtual_student.classroom_intent import ClassroomAct, analyze_classroom_dialogue
 from ..schemas.teaching_behavior import TeachingActionType, TeachingBehaviorAnalysis
 
 
@@ -61,11 +62,16 @@ class TeachingBehaviorAnalyzer:
             else rule_result.action_type
         )
         concept = rule_result.concept if rule_result.concept != "一次函数" else llm_result.concept
+        knowledge_accuracy = (
+            rule_result.knowledge_accuracy
+            if concept == "课堂互动"
+            else llm_result.knowledge_accuracy
+        )
         return rule_result.model_copy(
             update={
                 "action_type": action_type,
                 "concept": concept,
-                "knowledge_accuracy": llm_result.knowledge_accuracy,
+                "knowledge_accuracy": knowledge_accuracy,
                 "clarity": llm_result.clarity,
                 "checked_understanding": rule_result.checked_understanding
                 or llm_result.checked_understanding,
@@ -81,23 +87,37 @@ class TeachingBehaviorAnalyzer:
         normalized = re.sub(r"\s+", "", text.lower())
         if not normalized:
             return self._safe_default("教师输入为空")
+        classroom_intent = analyze_classroom_dialogue(text)
 
         is_question = "?" in text or "？" in text or any(
             marker in normalized for marker in ("吗", "什么", "为什么", "如何", "怎么", "哪个", "能否")
         )
-        checked_understanding = any(
+        checked_understanding = classroom_intent.act is ClassroomAct.UNDERSTANDING_CHECK or any(
             marker in normalized
             for marker in ("听懂了吗", "明白了吗", "理解了吗", "能复述", "说说你的理解", "检查一下理解")
         )
         gave_answer_directly = any(
             marker in normalized
-            for marker in ("答案是", "结论是", "记住", "直接告诉你", "就是这样", "应该是")
+            for marker in ("答案是", "结论是", "记住", "直接告诉你", "正确结果是")
         )
 
         if gave_answer_directly:
             action_type = TeachingActionType.DIRECT_ANSWER
-        elif checked_understanding:
+        elif classroom_intent.act is ClassroomAct.UNDERSTANDING_CHECK or checked_understanding:
             action_type = TeachingActionType.UNDERSTANDING_CHECK
+        elif classroom_intent.act in {
+            ClassroomAct.FEEDBACK,
+            ClassroomAct.ENCOURAGEMENT,
+            ClassroomAct.CORRECTIVE_FEEDBACK,
+        }:
+            action_type = TeachingActionType.FEEDBACK
+        elif classroom_intent.act in {
+            ClassroomAct.ELABORATION_REQUEST,
+            ClassroomAct.CONTEXTUAL_REFERENCE,
+        }:
+            action_type = TeachingActionType.QUESTION
+        elif classroom_intent.act is not ClassroomAct.SUBJECT_CONTENT:
+            action_type = TeachingActionType.CLASSROOM_INTERACTION
         elif self._contains_any(normalized, ("不对", "不是", "纠正", "更正", "并不", "不能说")):
             action_type = TeachingActionType.CORRECTION
         elif self._contains_any(normalized, ("例如", "举个例子", "比如", "画两条", "对比一下")):
@@ -109,15 +129,21 @@ class TeachingBehaviorAnalyzer:
             action_type = TeachingActionType.GUIDED_QUESTION
         elif is_question:
             action_type = TeachingActionType.QUESTION
-        elif self._contains_any(normalized, ("很好", "不错", "回答得", "说得对", "再想想", "有进步")):
-            action_type = TeachingActionType.FEEDBACK
         elif self._contains_any(normalized, ("因为", "表示", "指的是", "也就是说", "定义", "当", "改变")):
             action_type = TeachingActionType.EXPLANATION
         else:
             action_type = TeachingActionType.EXPLANATION
 
-        concept = self._detect_concept(normalized)
-        knowledge_accuracy = self._estimate_accuracy(normalized, action_type)
+        concept = (
+            "课堂互动"
+            if classroom_intent.act is not ClassroomAct.SUBJECT_CONTENT
+            else self._detect_concept(normalized)
+        )
+        knowledge_accuracy = (
+            0.0
+            if concept == "课堂互动"
+            else self._estimate_accuracy(normalized, action_type)
+        )
         clarity = self._estimate_clarity(text)
         return TeachingBehaviorAnalysis(
             action_type=action_type,

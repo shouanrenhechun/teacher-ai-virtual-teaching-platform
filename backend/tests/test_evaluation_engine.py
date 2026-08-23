@@ -20,10 +20,15 @@ class InvalidEvaluationClient(LLMClient):
         return {"strengths": "这不是字符串数组"}
 
 
-def behavior(action_type: str, accuracy: float = 0.9) -> SimpleNamespace:
+def behavior(
+    action_type: str,
+    accuracy: float = 0.9,
+    concept: str = "slope_and_intercept",
+) -> SimpleNamespace:
     return SimpleNamespace(
         action_type=action_type,
         knowledge_accuracy=accuracy,
+        concept=concept,
     )
 
 
@@ -45,6 +50,32 @@ def test_evaluation_scores_use_central_weights_and_observable_counts() -> None:
     assert scores["questioning"] > 0
     assert scores["misconception_diagnosis"] > 0
     assert 0 <= scores["overall_score"] <= 100
+
+
+def test_classroom_interactions_do_not_inflate_knowledge_accuracy() -> None:
+    session = SimpleNamespace(
+        behavior_records=[
+            behavior("classroom_interaction", accuracy=1.0, concept="课堂互动"),
+            behavior("feedback", accuracy=1.0, concept="课堂互动"),
+            behavior("explanation", accuracy=0.8),
+        ]
+    )
+
+    scores = EvaluationEngine().calculate_scores(session)
+
+    assert scores["knowledge_accuracy"] == 80.0
+    assert scores["feedback"] > 0
+
+
+def test_only_classroom_interactions_produce_zero_knowledge_accuracy() -> None:
+    session = SimpleNamespace(
+        behavior_records=[
+            behavior("classroom_interaction", accuracy=1.0, concept="课堂互动"),
+            behavior("feedback", accuracy=1.0, concept="课堂互动"),
+        ]
+    )
+
+    assert EvaluationEngine().calculate_scores(session)["knowledge_accuracy"] == 0.0
 
 
 def test_invalid_qualitative_llm_uses_rule_report() -> None:

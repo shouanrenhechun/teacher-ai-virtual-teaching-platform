@@ -97,8 +97,20 @@ class EvaluationEngine:
             return scores
 
         counts = self._counts(records)
-        knowledge_accuracy = self._round_score(
-            sum(record.knowledge_accuracy for record in records) / len(records) * 100
+        knowledge_records = [
+            record
+            for record in records
+            if record.action_type != "classroom_interaction"
+            and getattr(record, "concept", None) != "课堂互动"
+        ]
+        knowledge_accuracy = (
+            self._round_score(
+                sum(record.knowledge_accuracy for record in knowledge_records)
+                / len(knowledge_records)
+                * 100
+            )
+            if knowledge_records
+            else 0.0
         )
         questioning = self._target_score(
             counts["question"] + counts["guided_question"] * 1.25,

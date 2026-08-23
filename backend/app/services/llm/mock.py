@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 
 from .base import LLMClient, LLMContext, LLMServiceError
+from ..virtual_student.classroom_intent import ClassroomAct, analyze_classroom_dialogue
 from ..virtual_student.dialogue_intent import analyze_linear_dialogue_intent
 
 
@@ -19,8 +20,32 @@ class MockLLMClient(LLMClient):
         context = context or LLMContext()
         normalized = text.lower().replace(" ", "")
         branch = len(text) % 3
+        classroom_intent = analyze_classroom_dialogue(text)
+        classroom_response = self._respond_classroom_act(classroom_intent.act, context)
+        if classroom_response is not None:
+            return classroom_response
 
         if any(marker in context.topic for marker in ("完全平方", "平方公式")):
+            if classroom_intent.act is ClassroomAct.UNDERSTANDING_CHECK:
+                return self._profile_variant(
+                    context,
+                    "还没有完全听懂，我想再展开一道题看看。"
+                    if context.misconception_status != "corrected"
+                    else "听懂了，我可以再展开一道题验证。",
+                    "我还想再确认一次中间项是怎么来的。"
+                    if context.misconception_status != "corrected"
+                    else "我觉得听懂了，想再做一道题确认。",
+                    "还没完全懂，再给我一道题。"
+                    if context.misconception_status != "corrected"
+                    else "懂了，可以用新题检查我。",
+                )
+            if classroom_intent.off_topic:
+                return self._profile_variant(
+                    context,
+                    "这个和现在的完全平方公式无关，我们还是继续看括号展开吧。",
+                    "这个好像不是这节课的问题，可以回到括号平方吗？",
+                    "这不是当前的问题，我们继续看完全平方公式。",
+                )
             return self._respond_binomial_square(normalized, branch)
         return self._respond_linear_kb(text, context)
 
@@ -251,6 +276,65 @@ class MockLLMClient(LLMClient):
             "student_b": student_b,
             "student_c": student_c,
         }.get(context.student_profile_id, student_a)
+
+    @classmethod
+    def _respond_classroom_act(
+        cls, act: ClassroomAct, context: LLMContext
+    ) -> str | None:
+        if act is ClassroomAct.GREETING:
+            return cls._profile_variant(
+                context,
+                "老师好，我准备好了。",
+                "老师好，我准备好了，不过可能需要一点时间想。",
+                "老师好，准备好了，可以开始。",
+            )
+        if act is ClassroomAct.FEEDBACK:
+            return cls._profile_variant(
+                context,
+                "谢谢老师，我再检查一下自己的理由。",
+                "谢谢老师，我想再确认一下自己是不是理解对了。",
+                "谢谢老师，我继续往下想。",
+            )
+        if act is ClassroomAct.ENCOURAGEMENT:
+            return cls._profile_variant(
+                context,
+                "好，我再认真想一想。",
+                "好，我慢一点再试一次。",
+                "好，我再试一次。",
+            )
+        if act is ClassroomAct.ORGANIZATION:
+            return cls._profile_variant(context, "好的。", "好，我准备一下。", "好。")
+        if act is ClassroomAct.TRANSITION:
+            return cls._profile_variant(
+                context,
+                "好的，我们继续。",
+                "好的，我先看下一题。",
+                "好，下一题。",
+            )
+        if act is ClassroomAct.CLOSURE:
+            return cls._profile_variant(
+                context,
+                "好的，老师再见。",
+                "好的，谢谢老师，老师再见。",
+                "好的，老师再见。",
+            )
+        if act is ClassroomAct.CORRECTIVE_FEEDBACK:
+            return cls._profile_variant(
+                context,
+                "我再检查一下刚才的想法，可以指出是哪一步吗？",
+                "好，我再想想；我还不确定具体错在哪里。",
+                "我重新检查一下刚才的判断。",
+            )
+        if act is ClassroomAct.ACKNOWLEDGEMENT:
+            return cls._profile_variant(context, "好的。", "好。", "可以。")
+        if act is ClassroomAct.CONTINUATION:
+            return cls._profile_variant(
+                context,
+                "好，我接着说明刚才的想法。",
+                "我接着说，不过有些地方还不太确定。",
+                "我继续说刚才的理由。",
+            )
+        return None
 
     @staticmethod
     def _previous_teacher_text(context: LLMContext) -> str:

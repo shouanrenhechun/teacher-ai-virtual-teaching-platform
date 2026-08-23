@@ -1,6 +1,7 @@
 """Rule-constrained virtual student state engine."""
 
 from .behavior import TeachingBehavior, detect_teacher_behavior
+from .classroom_intent import ClassroomAct, ClassroomDialogueIntent, analyze_classroom_dialogue
 from .engine import (
     DynamicState,
     EngineSnapshot,
@@ -28,6 +29,8 @@ from .state_rules import is_evidence_insufficient, is_strong_correct_evidence
 
 __all__ = [
     "DynamicState",
+    "ClassroomAct",
+    "ClassroomDialogueIntent",
     "EngineSnapshot",
     "KnowledgeStateValue",
     "MisconceptionState",
@@ -43,6 +46,7 @@ __all__ = [
     "VirtualStudentEngine",
     "stable_profile_id",
     "detect_teacher_behavior",
+    "analyze_classroom_dialogue",
     "StudentResponseEvidence",
     "StudentResponseEvidenceAnalyzer",
     "correction_opportunity",

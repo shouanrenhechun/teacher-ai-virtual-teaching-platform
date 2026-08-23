@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from .classroom_intent import ClassroomAct
 from .dialogue_intent import analyze_linear_dialogue_intent
 
 
@@ -18,12 +19,6 @@ def detect_teacher_behavior(teacher_text: str) -> TeachingBehavior:
     """Use small transparent heuristics until a richer behavior tagger exists."""
     text = teacher_text.lower().replace(" ", "")
     intent = analyze_linear_dialogue_intent(teacher_text)
-
-    if any(
-        phrase in text
-        for phrase in ("用自己的话", "复述一下", "说说", "分别控制什么", "为什么", "是什么意思", "从哪里来", "解释")
-    ):
-        return TeachingBehavior.EFFECTIVE_QUESTION
 
     if intent.correction_statement:
         return TeachingBehavior.TARGETED_CORRECTION
@@ -47,8 +42,21 @@ def detect_teacher_behavior(teacher_text: str) -> TeachingBehavior:
         )
     ):
         return TeachingBehavior.INCORRECT_EXPLANATION
+    if intent.classroom_act in {
+        ClassroomAct.ELABORATION_REQUEST,
+        ClassroomAct.UNDERSTANDING_CHECK,
+        ClassroomAct.CONTEXTUAL_REFERENCE,
+    }:
+        return TeachingBehavior.EFFECTIVE_QUESTION
+    if intent.classroom_act is not ClassroomAct.SUBJECT_CONTENT:
+        return TeachingBehavior.NEUTRAL
     if any(phrase in text for phrase in ("答案是", "记住", "直接告诉你", "就是这样")):
         return TeachingBehavior.DIRECT_ANSWER
+    if any(
+        phrase in text
+        for phrase in ("用自己的话", "复述一下", "说说", "分别控制什么", "为什么", "是什么意思", "从哪里来", "解释")
+    ):
+        return TeachingBehavior.EFFECTIVE_QUESTION
     if any(
         phrase in text
         for phrase in (
