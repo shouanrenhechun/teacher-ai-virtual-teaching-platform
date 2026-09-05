@@ -272,7 +272,7 @@ function App() {
       <main className="app-shell">
         <header className="topbar">
           <div>
-            <div className="eyebrow">AI TEACHING PRACTICE · MODULE 08</div>
+            <div className="eyebrow">师范生教学实训 · {session.status === "active" ? "模拟课堂" : "教学复盘"}</div>
             <h1>{session.status === "active" ? "模拟课堂" : "实训报告"}</h1>
           </div>
           <div className={`connection connection-${connectionState}`} aria-live="polite">
@@ -289,7 +289,7 @@ function App() {
     <main className="app-shell">
       <header className="topbar">
         <div>
-          <div className="eyebrow">AI TEACHING PRACTICE · MODULE 05</div>
+          <div className="eyebrow">师范生教学实训 · 选择课堂</div>
           <h1>选择你的教学实训案例</h1>
         </div>
         <div className={`connection connection-${connectionState}`} aria-live="polite">
@@ -536,6 +536,30 @@ function Classroom({
     }
   };
 
+  if (isCompleted) {
+    const current = session.cognitive_trace?.current_misconception;
+    return (
+      <section className="report-workspace">
+        <div className="report-intro">
+          <div><span className="section-kicker">本次练习已完成</span><h2>{session.scenario.topic} · {session.virtual_student.name}</h2><p>从学生的变化出发，找到下一次教学可以改进的一件事。</p></div>
+          <button className="send-button" type="button" onClick={onLeave}>选择下一次实训 →</button>
+        </div>
+        <div className="report-highlights">
+          <article><span className="detail-label">学生目前的理解</span><strong>{current ? statusLabel(current.status) : "暂无认知记录"}</strong><p>{current ? statusDescription(current.status) : "可以从完整对话中回顾学生的回答。"}</p></article>
+          <article><span className="detail-label">优先复盘的问题</span><strong>{session.evaluation?.problems[0] ?? "评价尚未生成"}</strong><p>结合具体话语和学生回应，检查教学效果。</p></article>
+          <article><span className="detail-label">下一次可以尝试</span><strong>{session.evaluation?.suggestions[0] ?? "回顾本次对话，寻找一次值得继续追问的回答。"}</strong></article>
+        </div>
+        <nav className="report-nav" aria-label="复盘内容"><a href="#review-details">详细复盘</a><a href="#review-dialogue">课堂对话</a><a href="#review-history">练习历史</a></nav>
+        <div id="review-details">{session.evaluation ? <EvaluationPanel report={session.evaluation} behaviorSummary={session.behavior_summary} trace={session.cognitive_trace} /> : <p className="empty-state">本次实训已结束，暂未生成评价。你仍可查看完整对话。</p>}</div>
+        <details className="report-transcript" id="review-dialogue">
+          <summary>查看完整课堂对话 <span>{session.dialogue_records.filter(r => r.speaker === "teacher").length} 轮</span></summary>
+          <div className="transcript-content">{session.dialogue_records.map(record => <article className={`dialogue-row message-${record.speaker}`} key={record.id}><span className="dialogue-speaker">{record.speaker === "teacher" ? "教师" : session.virtual_student.name}</span><div className="dialogue-bubble">{record.content}</div></article>)}</div>
+        </details>
+        <div id="review-history"><HistoryPanel items={history} loading={historyLoading} error={historyError} /></div>
+      </section>
+    );
+  }
+
   return (
     <section className="session-shell">
       <div className="session-layout">
@@ -586,6 +610,7 @@ function Classroom({
           {errorMessage && <div className="error-banner session-error">{errorMessage}</div>}
           <form className="message-form" onSubmit={submitMessage}>
             <textarea
+              aria-label="教师教学话语"
               className="message-input"
               value={teacherText}
               onChange={(event) => setTeacherText(event.target.value)}
@@ -607,7 +632,7 @@ function Classroom({
           <CognitiveStatePanel trace={session.cognitive_trace} />
           <div className="session-panel state-panel">
             <span className="detail-label">训练状态</span>
-            <p className="state-hint">仅展示课堂反馈指标，不显示学生的内部认知错误。</p>
+            <p className="state-hint">训练状态用于辅助观察，请结合学生的具体回答判断。</p>
             <StateBar label="理解度" value={session.state.understanding} tone="green" />
             <StateBar label="困惑度" value={session.state.confusion} tone="orange" />
             <StateBar label="参与度" value={session.state.engagement} tone="blue" />
@@ -647,7 +672,7 @@ function EvaluationPanel({ report, behaviorSummary, trace }: { report: Evaluatio
           <span className="section-kicker">训练辅助评价</span>
           <h2>本次教学复盘</h2>
         </div>
-        <div className="evaluation-total"><span>参考分</span><strong>{report.overall_score}</strong><span>/ 100</span></div>
+        <div className="evaluation-total"><span>参考分</span><strong>{report.overall_score.toFixed(1)}</strong><span>/ 100</span></div>
       </div>
       <p className="evaluation-order-note">先看学生的认知变化，再结合行为指标复盘教学过程。</p>
       <CognitiveReport trace={trace} />
@@ -655,7 +680,7 @@ function EvaluationPanel({ report, behaviorSummary, trace }: { report: Evaluatio
       <div className="evaluation-scores">
         {dimensions.map(([label, score]) => (
           <div className="evaluation-score" key={label}>
-            <div><span>{label}</span><strong>{score}</strong></div>
+            <div><span>{label}</span><strong>{score.toFixed(1)}</strong></div>
             <div className="state-track"><i className="state-fill state-green" style={{ width: `${score}%` }} /></div>
           </div>
         ))}
@@ -672,7 +697,7 @@ function EvaluationPanel({ report, behaviorSummary, trace }: { report: Evaluatio
           <span className="detail-label">关键教学片段</span>
           {report.key_teaching_snippets.map((snippet) => (
             <blockquote key={`${snippet.round}-${snippet.action_type}`}>
-              <strong>第 {snippet.round} 轮 · {snippet.action_type}</strong>
+              <strong>第 {snippet.round} 轮 · {actionLabel(snippet.action_type)}</strong>
               <p>{snippet.evidence}</p>
             </blockquote>
           ))}
@@ -755,7 +780,6 @@ function EvidenceCard({ round }: { round?: CognitiveTraceRound }) {
   if (surfaceRecall) secondaryEvidence.push("可能只是复述教师结论");
   if (evidence.conceptual_uncertainty) secondaryEvidence.push("对概念仍存在真实犹豫");
   if (evidence.linguistic_hedging) secondaryEvidence.push("表达较谨慎（不等于错误）");
-  if (evidence.evidence_insufficient) secondaryEvidence.push("当前证据仍不足以判断稳定掌握");
   return (
     <div className="evidence-card">
       <div className="evidence-heading"><span className="detail-label">本轮学习证据</span><span>第 {round.round} 轮</span></div>
@@ -933,6 +957,14 @@ function BehaviorStats({ summary }: { summary: BehaviorSummary }) {
 }
 
 function HistoryPanel({ items, loading, error }: { items: HistoryItem[]; loading: boolean; error: string }) {
+  const [page, setPage] = useState(1);
+  const [student, setStudent] = useState("");
+  const ordered = useMemo(() => items.slice().sort((a, b) => (b.ended_at ?? b.started_at).localeCompare(a.ended_at ?? a.started_at) || b.id - a.id), [items]);
+  const filtered = ordered.filter(item => !student || item.virtual_student_name === student);
+  const pages = Math.max(1, Math.ceil(filtered.length / 10));
+  const currentPage = Math.min(page, pages);
+  const visible = filtered.slice((currentPage - 1) * 10, currentPage * 10);
+  const recent = useMemo(() => ordered.slice(0, 20).reverse(), [ordered]);
   return (
     <section className="history-panel">
       <div className="evaluation-header">
@@ -947,17 +979,19 @@ function HistoryPanel({ items, loading, error }: { items: HistoryItem[]; loading
       {!loading && !error && items.length === 0 && <p className="history-empty">完成第一次实训后，这里会出现你的练习记录。</p>}
       {!loading && !error && items.length > 0 && (
         <>
-          {items.length > 1 && <GrowthChart items={items} />}
+          {items.length > 1 && <><p className="history-chart-caption">最近 {recent.length} 次练习 · 参考分变化</p><GrowthChart items={recent} /></>}
+          <div className="history-toolbar"><label>筛选学生 <select value={student} onChange={event => { setStudent(event.target.value); setPage(1); }}><option value="">全部学生</option>{Array.from(new Set(items.map(item => item.virtual_student_name))).map(name => <option key={name} value={name}>{name}</option>)}</select></label><span>最新完成的练习优先展示</span></div>
           <div className="history-list">
-            {items.slice().reverse().map((item) => (
+            {visible.map((item) => (
               <div className="history-row" key={item.id}>
                 <span>{formatDate(item.started_at)}</span>
                 <strong>{item.topic}</strong>
                 <span>{item.virtual_student_name}</span>
-                <b>{item.overall_score === null ? "—" : item.overall_score}</b>
+                <b>{item.overall_score === null ? "—" : item.overall_score.toFixed(1)}</b>
               </div>
             ))}
           </div>
+          <nav className="history-pagination" aria-label="历史记录分页"><button type="button" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>上一页</button><span role="status">第 {currentPage} / {pages} 页 · 共 {filtered.length} 条</span><button type="button" disabled={currentPage >= pages} onClick={() => setPage(currentPage + 1)}>下一页</button></nav>
         </>
       )}
     </section>

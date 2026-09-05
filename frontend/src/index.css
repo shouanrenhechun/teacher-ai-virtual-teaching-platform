@@ -6,6 +6,12 @@
   text-rendering: optimizeLegibility;
 }
 
+/* Shared reading and interaction scale. */
+button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visible {
+  outline: 3px solid #249783;
+  outline-offset: 4px;
+}
+
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; min-height: 100vh; }
 button { font: inherit; }
@@ -299,4 +305,57 @@ h2 { margin-bottom: 0; color: #173b37; font-size: 1.35rem; letter-spacing: -.03e
   .cognitive-summary-grid > div:last-child { grid-column: 1 / -1; }
   .history-row { grid-template-columns: 72px minmax(0, 1fr) 45px; }
   .history-row span:nth-of-type(2) { display: none; }
+}
+
+/* Completed practice has its own reading layout, separate from the classroom. */
+.report-workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; min-width: 0; }
+.report-workspace > *, .report-highlights > *, .report-intro > * { min-width: 0; }
+.report-intro { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.report-intro p { margin: 10px 0 0; color: #56746e; font-size: .94rem; line-height: 1.7; }
+.report-intro .send-button { flex-shrink: 0; min-height: 46px; }
+.report-highlights { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.report-highlights article { padding: 24px; border: 1px solid #dce9e4; border-radius: 18px; background: #fff; }
+.report-highlights article:first-child { background: #eaf5ef; border-color: #c3ddd0; }
+.report-highlights article:last-child { border-top: 3px solid #278572; }
+.report-highlights strong { display: block; color: #214b42; font-size: 1.02rem; line-height: 1.65; }
+.report-highlights p { margin: 10px 0 0; color: #56746e; font-size: .88rem; line-height: 1.7; }
+.report-nav { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid #d9e7e1; }
+.report-nav a { padding: 9px 16px; color: #245c50; background: #e8f1ec; border-radius: 999px; text-decoration: none; font-size: .9rem; font-weight: 700; }
+.report-nav a:hover { background: #d5e8dd; }
+.report-workspace .evaluation-panel, .report-workspace .history-panel { margin-top: 0; box-shadow: none; }
+.report-transcript { border: 1px solid #dce9e4; border-radius: 18px; background: #fff; }
+.report-transcript summary { padding: 22px 24px; cursor: pointer; color: #214b42; font-weight: 700; }
+.report-transcript summary span { margin-left: 10px; color: #58766c; font-size: .88rem; font-weight: 400; }
+.transcript-content { display: grid; gap: 22px; padding: 12px 24px 28px; }
+#review-details, #review-dialogue, #review-history { scroll-margin-top: 24px; }
+.history-toolbar, .history-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; color: #536e65; font-size: .88rem; }
+.history-toolbar label { display: flex; align-items: center; gap: 10px; }
+.history-toolbar select { padding: 9px 12px; border: 1px solid #cadcd3; border-radius: 8px; background: white; color: #214b42; font: inherit; }
+.history-chart-caption { color: #536e65; font-size: .88rem; margin: 22px 0 0; }
+.history-pagination { padding-top: 18px; border-top: 1px solid #e3ece7; }
+.history-pagination button { min-height: 42px; padding: 8px 16px; border: 1px solid #cadcd3; border-radius: 9px; color: #245c50; background: #fff; cursor: pointer; }
+.history-pagination button:disabled { color: #87988f; background: #f3f6f4; cursor: not-allowed; }
+.detail-label, .section-kicker, .muted-note, .dialogue-speaker { color: #55736a; font-size: .8rem; }
+.cognitive-description, .fallback-copy, .state-hint, .student-traits p,
+.evaluation-list ul, .evaluation-evidence blockquote, .cognitive-next-advice p,
+.cognitive-summary-grid p, .next-evidence ul, .cognitive-reason-list { color: #4a685f; font-size: .88rem; line-height: 1.7; }
+.evidence-item, .timeline-content span, .timeline-content strong, .history-row { font-size: .85rem; }
+.strength-scale, .strength-meter small, .evidence-secondary { font-size: .76rem; color: #617b70; }
+.report-workspace .evaluation-total strong { font-size: 2rem; }
+@media (max-width: 680px) {
+  .report-workspace { gap: 18px; }
+  .report-intro { align-items: stretch; flex-direction: column; gap: 16px; }
+  .report-highlights { grid-template-columns: 1fr; gap: 12px; }
+  .report-highlights article { padding: 18px; }
+  .report-nav { gap: 8px; }
+  .report-nav a { flex: 1; padding: 10px 8px; text-align: center; white-space: nowrap; }
+  .history-toolbar { align-items: flex-start; flex-direction: column; }
+  .history-pagination { flex-wrap: wrap; justify-content: center; }
+  .history-row { grid-template-columns: 60px minmax(0, 1fr) 50px; }
+  .transcript-content { padding: 8px 16px 20px; }
+  .report-transcript summary { padding: 18px 16px; }
+  .report-workspace .evaluation-header { align-items: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
 }
