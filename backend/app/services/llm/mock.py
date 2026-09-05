@@ -225,6 +225,23 @@ class MockLLMClient(LLMClient):
             )
 
         if direct_answer:
+            # An unverified direct claim must not fall through to the
+            # canned correct-answer acknowledgement. Keep the student tied
+            # to the current misconception until the claim is known correct.
+            if claim.correct is not True:
+                if status == "corrected":
+                    return cls._profile_variant(
+                        context,
+                        "这个说法好像不对，我记得 b 只改变上下位置，不能直接改变直线的倾斜程度。",
+                        "我不太接受这个说法，想再用图像核对 b 和倾斜程度是不是一回事。",
+                        "这个结论和我刚才的理解不一样，我想检查 b 到底改变位置还是倾斜。",
+                    )
+                return cls._profile_variant(
+                    context,
+                    "我也觉得 b 变大以后直线会更陡一些，但我还说不清原因。",
+                    "我不太敢确定……我感觉 b 大一点可能也会让直线更斜。",
+                    "我觉得 b 越大直线就越陡，应该是这样。",
+                )
             if not (intent.mentions_slope or intent.mentions_intercept):
                 return cls._profile_variant(
                     context,

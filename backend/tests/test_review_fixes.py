@@ -5,6 +5,7 @@ from app.services.llm.mock import MockLLMClient
 from app.services.teaching_behavior import TeachingBehaviorAnalyzer
 from app.services.virtual_student import VirtualStudentEngine
 from app.services.virtual_student.behavior import detect_teacher_behavior, TeachingBehavior
+from app.services.virtual_student.classroom_intent import ClassroomAct, analyze_classroom_dialogue
 from app.services.virtual_student.linear_math import equations
 from app.services.virtual_student.task_context import active_task
 from validation.case_loader import load_student_profile
@@ -47,6 +48,24 @@ def test_wrong_claim_cannot_receive_mock_default_high_score(text):
     report = TeachingBehaviorAnalyzer().analyze(text, llm_client=MockLLMClient())
     assert report.knowledge_accuracy <= 0.2
     assert detect_teacher_behavior(text) is TeachingBehavior.INCORRECT_EXPLANATION
+
+
+@pytest.mark.parametrize('text', [
+    '答案就是 b 越大越陡，记住。',
+    '结论就是 b 越大，直线越陡。',
+    '直接记住，b 变大以后直线会更陡。',
+    '这里答案就是 b 控制倾斜程度。',
+])
+def test_wrong_direct_answer_is_detected_and_keeps_student_misconception(text):
+    intent = analyze_classroom_dialogue(text)
+    assert intent.has(ClassroomAct.DIRECT_ANSWER)
+    report = TeachingBehaviorAnalyzer().analyze(text, llm_client=MockLLMClient())
+    assert report.action_type.value == 'direct_answer'
+    assert report.gave_answer_directly is True
+    assert report.knowledge_accuracy <= 0.2
+    response = MockLLMClient().respond(text, LLMContext(student_profile_id='student_a'))
+    assert 'b' in response and '更陡' in response
+    assert 'k 决定倾斜' not in response
 
 
 @pytest.mark.parametrize('count', [0, 1, 3, 6])

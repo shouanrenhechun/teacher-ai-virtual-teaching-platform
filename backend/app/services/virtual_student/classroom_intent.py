@@ -224,13 +224,20 @@ def analyze_classroom_dialogue(
     direct_answer = any(
         _matches(
             re.sub(r"[\s：:]", "", clause),
-            r"(?:答案|结论|结果)(?:是|为).+",
+            r"(?:答案|结论|结果)(?:是|为|就是).+",
             r"(?:直接|就)(?:写|填)(?:上)?[+\-]?\d",
             r"(?:我)?(?:直接|就)告诉你.+(?:是|等于|=).+",
             r"记住(?:[a-z]|[+\-]?\d).+",
             r"这里应该是[+\-]?\d",
         ) and not re.search(r"什么|多少|是否|吗|[?？]", clause)
         for clause in re.split(r"[，。,；;]", text.lower())
+    )
+    direct_answer = direct_answer or (
+        _matches(
+            normalized,
+            r"(?:直接)?记住(?:[a-z]|[+\-]?\d|斜率|倾斜|截距|直线).+",
+        )
+        and not re.search(r"什么|多少|是否|吗|[?？]", text)
     )
     if direct_answer:
         found.add(ClassroomAct.DIRECT_ANSWER)
