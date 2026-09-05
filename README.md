@@ -90,7 +90,7 @@ npm run build
 
 ## 虚拟学生一致性验证
 
-验证框架当前包含一次函数 `linear_kb` 和完全平方公式 `binomial_square` 两类认知错误，并支持 Student A / Student B 画像。验证覆盖角色一致性、知识边界、错误认知保持性、可纠正性、语言自然度和状态一致性。默认 Mock 验证不调用真实 API，报告写入 `backend/validation/reports/`，该目录中的生成文件不会提交 Git。
+验证框架当前包含一次函数 `linear_kb` 和完全平方公式 `binomial_square` 两类认知错误，并支持 Student A / Student B / Student C 验证画像；其中 `binomial_square` 当前仅使用 Student A，Student B / Student C 用于 `linear_kb` 验证。验证覆盖角色一致性、知识边界、错误认知保持性、可纠正性、语言自然度和状态一致性。默认 Mock 验证不调用真实 API，报告写入 `backend/validation/reports/`，该目录中的生成文件不会提交 Git。
 
 运行 Mock 验证：
 
