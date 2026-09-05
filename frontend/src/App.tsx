@@ -472,11 +472,13 @@ function Classroom({
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState("");
-  const dialogueEndRef = useRef<HTMLDivElement>(null);
+  const dialogueListRef = useRef<HTMLDivElement>(null);
   const isCompleted = session.status !== "active";
 
   useEffect(() => {
-    dialogueEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const dialogueList = dialogueListRef.current;
+    if (!dialogueList || session.dialogue_records.length === 0) return;
+    dialogueList.scrollTo({ top: dialogueList.scrollHeight, behavior: "smooth" });
   }, [session.dialogue_records.length]);
 
   useEffect(() => {
@@ -570,7 +572,7 @@ function Classroom({
               {isCompleted ? "已完成" : "进行中"}
             </span>
           </div>
-          <div className="dialogue-list" aria-live="polite">
+          <div ref={dialogueListRef} className="dialogue-list" aria-live="polite">
             {session.dialogue_records.length === 0 && (
               <div className="dialogue-empty">先用一句话开启课堂，例如：“请说说一次函数中 k 和 b 分别表示什么。”</div>
             )}
@@ -580,7 +582,6 @@ function Classroom({
                 <div className="dialogue-bubble">{record.content}</div>
               </article>
             ))}
-            <div ref={dialogueEndRef} />
           </div>
           {errorMessage && <div className="error-banner session-error">{errorMessage}</div>}
           <form className="message-form" onSubmit={submitMessage}>
