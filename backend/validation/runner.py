@@ -193,7 +193,13 @@ def _run_case(
             else "一次函数 k 与 b 的意义"
         ),
         student_profile_id=engine.profile.profile_id,
+        student_confidence=engine.profile.confidence,
+        confidence_style=engine.profile.confidence_style,
+        response_style=engine.profile.response_style,
+        confirmation_seeking=engine.profile.confirmation_seeking,
+        correction_style=engine.profile.correction_style,
     )
+    previous_student_evidence: dict[str, object] | None = None
 
     try:
         for sequence, teacher_input in enumerate(case.teacher_inputs, start=1):
@@ -224,6 +230,17 @@ def _run_case(
                         if prompt_misconception
                         else case.misconception_type
                     ),
+                    previous_student_evidence=previous_student_evidence,
+                    misconception_stable_correct_evidence_count=(
+                        prompt_misconception.stable_correct_evidence_count
+                        if prompt_misconception
+                        else 0
+                    ),
+                    misconception_transfer_evidence=(
+                        prompt_misconception.transfer_evidence
+                        if prompt_misconception
+                        else 0
+                    ),
                 ),
             )
             if not response or not response.strip():
@@ -235,6 +252,12 @@ def _run_case(
                 opportunity,
                 previous_teacher_text=previous_teacher_text,
             )
+            if (
+                evidence.evidence_level > 0
+                or evidence.shows_residual_misconception
+                or evidence.conceptual_uncertainty
+            ):
+                previous_student_evidence = evidence.to_dict()
             state_after = _snapshot_dict(engine.snapshot())
             status_before = before["misconceptions"][0].get("status", "active")
             status_after = state_after["misconceptions"][0].get("status", "active")

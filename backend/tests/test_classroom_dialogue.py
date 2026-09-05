@@ -189,13 +189,13 @@ def test_ambiguous_unseen_turn_defaults_to_neutral_classroom_interaction() -> No
     "teacher_text",
     ("给我讲讲量子物理。", "你喜欢喝茶吗？", "介绍一下古代建筑。"),
 )
-def test_unseen_non_classroom_domains_are_rejected_without_domain_whitelist(
+def test_unrecognized_domains_require_clarification_without_positive_drift_evidence(
     teacher_text: str,
 ) -> None:
     intent = analyze_classroom_dialogue(teacher_text)
 
-    assert intent.primary_act is ClassroomAct.OFF_TOPIC
-    assert intent.classification_source == "open_set_rejection"
+    assert intent.primary_act is ClassroomAct.UNCERTAIN
+    assert intent.classification_source == "insufficient_evidence"
 
 
 def test_teaching_reference_overrides_a_surface_off_topic_word() -> None:
@@ -203,6 +203,43 @@ def test_teaching_reference_overrides_a_surface_off_topic_word() -> None:
 
     assert intent.off_topic is False
     assert intent.has(ClassroomAct.SUBJECT_CONTENT)
+
+
+@pytest.mark.parametrize("prefix", ("", "请", "现在", "那么我们先"))
+@pytest.mark.parametrize("text", (
+    "把两边各自乘二再除以三", "横着挪一格再竖着挪两格", "把它们一一对应起来",
+))
+@pytest.mark.parametrize("history", ((), (("teacher", "比较两条直线。"),)))
+def test_unrecognized_instruction_abstains_independently_of_length_and_history(prefix, text, history):
+    teacher_text = prefix + text
+    intent = analyze_classroom_dialogue(teacher_text, conversation_history=history)
+    assert not intent.off_topic
+    assert intent.primary_act is ClassroomAct.UNCERTAIN
+    context = LLMContext(conversation_history=history)
+    report = TeachingBehaviorAnalyzer().analyze(teacher_text, context=context, llm_client=MockLLMClient())
+    assert report.action_type is TeachingActionType.CLASSROOM_INTERACTION
+    assert report.concept == "课堂互动"
+    response = MockLLMClient().respond(teacher_text, context)
+    assert "哪一部分" in response
+    assert detect_teacher_behavior(teacher_text) is TeachingBehavior.NEUTRAL
+    engine = VirtualStudentEngine(load_student_profile("student_a"))
+    before = engine.snapshot()
+    opportunity = engine.get_correction_opportunity(teacher_text)
+    engine.update_from_teacher_text(teacher_text)
+    engine.apply_student_response_evidence(response, teacher_text, opportunity)
+    assert engine.snapshot() == before
+
+
+@pytest.mark.parametrize("domain", ("天气", "篮球", "电影", "奶茶"))
+def test_semantic_classroom_command_beats_domain_word(domain):
+    intent = analyze_classroom_dialogue(f"请把{domain}记录表打开。")
+    assert not intent.off_topic
+    assert intent.primary_act is ClassroomAct.ORGANIZATION
+
+
+def test_unknown_without_classroom_prior_still_is_not_proven_off_topic():
+    intent = analyze_classroom_dialogue("把两边各自乘二再除以三", assume_classroom_context=False)
+    assert intent.primary_act is ClassroomAct.UNCERTAIN
 
 
 @pytest.mark.parametrize(
@@ -256,6 +293,8 @@ def test_classroom_short_dialogue_is_not_off_topic_and_has_consistent_behavior(
     assert report_behavior.action_type is expected_action
     if expected_act is ClassroomAct.ELABORATION_REQUEST:
         assert state_behavior is TeachingBehavior.EFFECTIVE_QUESTION
+    elif expected_act is ClassroomAct.FEEDBACK:
+        assert state_behavior is TeachingBehavior.PRAISE
     else:
         assert state_behavior is TeachingBehavior.NEUTRAL
 
@@ -340,7 +379,6 @@ def test_classroom_management_with_subject_terms_is_not_treated_as_explanation(
 @pytest.mark.parametrize(
     "teacher_text",
     (
-        "你回答得很好。",
         "没关系，慢慢想。",
         "请看黑板。",
         "我们继续。",
@@ -373,7 +411,7 @@ def test_affirmation_is_feedback_but_explicit_answer_is_direct_answer() -> None:
 
     assert affirmation.action_type is TeachingActionType.FEEDBACK
     assert affirmation.gave_answer_directly is False
-    assert detect_teacher_behavior("对，就是这样。") is TeachingBehavior.NEUTRAL
+    assert detect_teacher_behavior("对，就是这样。") is TeachingBehavior.PRAISE
     assert answer.action_type is TeachingActionType.DIRECT_ANSWER
     assert answer.gave_answer_directly is True
 
@@ -423,5 +461,11 @@ def test_session_records_classroom_interactions_without_changing_cognition(monke
     assert data["behavior_records"][-1]["action_type"] == "off_topic"
     assert data["behavior_summary"]["classroom_interaction_count"] == 1
     assert data["behavior_summary"]["off_topic_count"] == 1
-    assert data["cognitive_trace"]["current_state"] == initial_trace["current_state"]
+    current_state = data["cognitive_trace"]["current_state"]
+    initial_state = initial_trace["current_state"]
+    assert current_state["understanding"] == initial_state["understanding"]
+    assert current_state["confusion"] == initial_state["confusion"]
+    assert current_state["surface_recall"] == initial_state["surface_recall"]
+    assert current_state["engagement"] == pytest.approx(initial_state["engagement"] + 0.02)
+    assert current_state["confidence"] == pytest.approx(initial_state["confidence"] + 0.02)
     assert data["cognitive_trace"]["current_misconception"] == initial_trace["current_misconception"]

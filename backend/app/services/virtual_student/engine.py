@@ -140,6 +140,7 @@ class VirtualStudentEngine:
 
     def __init__(self, profile: StudentProfile) -> None:
         self.profile = deepcopy(profile)
+        self._learning_evidence_keys: set[str] = set()
         self._knowledge = {
             item.knowledge_point: deepcopy(item) for item in profile.knowledge_states
         }
@@ -168,6 +169,7 @@ class VirtualStudentEngine:
             "knowledge_states": [asdict(item) for item in self._knowledge.values()],
             "misconceptions": [asdict(item) for item in self._misconceptions],
             "classroom_state": asdict(self._classroom_state),
+            "learning_evidence_keys": sorted(self._learning_evidence_keys),
         }
 
     @classmethod
@@ -190,6 +192,7 @@ class VirtualStudentEngine:
         engine._knowledge = {item.knowledge_point: item for item in restored_knowledge}
         engine._misconceptions = [MisconceptionState(**item) for item in misconception_items]
         engine._classroom_state = DynamicState(**classroom_state)
+        engine._learning_evidence_keys = set(payload.get("learning_evidence_keys", []))
         return engine
 
     def knowledge_boundary(self) -> dict[str, list[str]]:
@@ -224,13 +227,10 @@ class VirtualStudentEngine:
         if behavior is TeachingBehavior.EFFECTIVE_EXAMPLE:
             self._classroom_state = replace(
                 state,
-                understanding=state.understanding + 0.05,
-                confusion=state.confusion - 0.03,
                 engagement=state.engagement + 0.03,
                 confidence=state.confidence + 0.02,
                 surface_recall=state.surface_recall + 0.02,
             )
-            self._increase_knowledge_if_related(0.03)
         elif behavior is TeachingBehavior.EFFECTIVE_QUESTION:
             self._classroom_state = replace(
                 state,
@@ -252,6 +252,12 @@ class VirtualStudentEngine:
             )
         elif behavior is TeachingBehavior.TARGETED_CORRECTION:
             self._apply_targeted_correction(target_misconception)
+        elif behavior is TeachingBehavior.PRAISE:
+            self._classroom_state = replace(
+                state,
+                engagement=state.engagement + 0.02,
+                confidence=state.confidence + 0.02,
+            )
         elif behavior is TeachingBehavior.NEUTRAL:
             pass
 
@@ -289,6 +295,21 @@ class VirtualStudentEngine:
             previous_teacher_text=previous_teacher_text,
             misconception=misconception,
         )
+
+        from .linear_math import equations, fingerprint
+        task_key = str(sorted(equations(teacher_text))) if equations(teacher_text) else ''
+        evidence_key = task_key + '|' + fingerprint(response)
+        if not evidence.evidence_insufficient and evidence_key in self._learning_evidence_keys:
+            return evidence
+        if not evidence.evidence_insufficient:
+            self._learning_evidence_keys.add(evidence_key)
+        if is_strong_correct_evidence(evidence.to_dict()):
+            self._classroom_state = replace(
+                self._classroom_state,
+                understanding=self._classroom_state.understanding + 0.05,
+                confusion=self._classroom_state.confusion - 0.03,
+            )
+            self._increase_knowledge_if_related(0.03)
 
         opportunity_strength = float(
             (opportunity or self.get_correction_opportunity(teacher_text)).get(

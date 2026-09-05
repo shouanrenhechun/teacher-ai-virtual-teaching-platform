@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import re
+from .linear_math import equations as parse_equations
 
 from .classroom_intent import (
     ClassroomAct,
@@ -129,13 +130,7 @@ def analyze_linear_dialogue_intent(
             "斜率相同",
         )
     )
-    equations = tuple(
-        (match.group(1), match.group(2) or "0")
-        for match in re.finditer(
-            r"y=([+-]?\d+(?:\.\d+)?)x(?:([+-]\d+(?:\.\d+)?))?",
-            normalized,
-        )
-    )
+    equations = parse_equations(normalized)
     same_slope_equations = len(equations) >= 2 and len({item[0] for item in equations}) == 1
     if same_slope_equations:
         fixed_slope = True

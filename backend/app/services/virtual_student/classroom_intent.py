@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 import re
+from .linear_math import rate_model
 
 
 class ClassroomAct(StrEnum):
@@ -22,6 +23,9 @@ class ClassroomAct(StrEnum):
     CONTINUATION = "continuation"
     CONTEXTUAL_REFERENCE = "contextual_reference"
     OFF_TOPIC = "off_topic"
+    UNCERTAIN = "uncertain"
+    QUESTION = "question"
+    GUIDED_QUESTION = "guided_question"
 
 
 _ACT_PRIORITY = (
@@ -31,6 +35,8 @@ _ACT_PRIORITY = (
     ClassroomAct.EXAMPLE,
     ClassroomAct.CONTEXTUAL_REFERENCE,
     ClassroomAct.UNDERSTANDING_CHECK,
+    ClassroomAct.GUIDED_QUESTION,
+    ClassroomAct.QUESTION,
     ClassroomAct.FEEDBACK,
     ClassroomAct.ENCOURAGEMENT,
     ClassroomAct.ORGANIZATION,
@@ -40,6 +46,7 @@ _ACT_PRIORITY = (
     ClassroomAct.CONTINUATION,
     ClassroomAct.ACKNOWLEDGEMENT,
     ClassroomAct.SUBJECT_CONTENT,
+    ClassroomAct.UNCERTAIN,
     ClassroomAct.OFF_TOPIC,
 )
 
@@ -156,7 +163,7 @@ def _semantic_act_scores(text: str) -> dict[ClassroomAct, float]:
         add(ClassroomAct.CLOSURE, 0.86)
 
     elaboration_content = _has_any(text, ("详细", "多说", "过程", "理由", "依据", "具体", "展开"))
-    elaboration_request = question_shape or text.startswith(("请", "能")) or _has_any(
+    elaboration_request = question_shape or _has_any(text, ("请", "能")) or _has_any(
         text, ("讲一下", "说一点", "说说", "补充")
     ) or (text.startswith("再") and elaboration_content)
     if elaboration_content and elaboration_request:
@@ -212,12 +219,18 @@ def analyze_classroom_dialogue(
             semantic_scores.get(ClassroomAct.CONTEXTUAL_REFERENCE, 0.0), 0.7
         )
 
-    direct_answer = _matches(
-        normalized,
-        r"(?:答案|结论|结果|正确答案|正确结果)(?:是|为)",
-        r"(?:直接|就)(?:写|填|告诉)",
-        r"记住(?:是|这个|这个结果)?",
-        r"这里应该是[+\-]?\d",
+    # Require a supplied proposition/value, not just a request to speak. Check
+    # clauses separately so a subsequent comprehension question does not hide it.
+    direct_answer = any(
+        _matches(
+            re.sub(r"[\s：:]", "", clause),
+            r"(?:答案|结论|结果)(?:是|为).+",
+            r"(?:直接|就)(?:写|填)(?:上)?[+\-]?\d",
+            r"(?:我)?(?:直接|就)告诉你.+(?:是|等于|=).+",
+            r"记住(?:[a-z]|[+\-]?\d).+",
+            r"这里应该是[+\-]?\d",
+        ) and not re.search(r"什么|多少|是否|吗|[?？]", clause)
+        for clause in re.split(r"[，。,；;]", text.lower())
     )
     if direct_answer:
         found.add(ClassroomAct.DIRECT_ANSWER)
@@ -236,6 +249,7 @@ def analyze_classroom_dialogue(
         r"为什么这么想", r"依据是什么", r"补充", r"还有吗", r"请接着说",
         r"刚才.{0,12}是什么意思", r"说(?:得)?(?:完整|清楚)一点", r"用自己的话",
         r"继续说理由", r"解释(?:一下)?为什么", r"说说理由", r"说明一下",
+        r"(?:进一步)?说明(?:一下|清楚|具体)?(?:理由|依据)",
     ):
         found.add(ClassroomAct.ELABORATION_REQUEST)
 
@@ -272,6 +286,7 @@ def analyze_classroom_dialogue(
         normalized,
         r"(?:请)?看(?:黑板|这里)", r"翻到", r"草稿纸", r"(?:课|练习|作业)本",
         r"给你.{0,4}分钟", r"先别急", r"请坐", r"注意听", r"举手",
+        r"(?:大家)?注意一下",
         r"(?:写|画|记)下来", r"拿出", r"声音大一点", r"认真观察", r"安静",
         r"停一下", r"打开课本", r"打开窗户", r"关门", r"擦黑板", r"去办公室",
     ):
@@ -318,9 +333,80 @@ def analyze_classroom_dialogue(
         or re.search(r"[=+\-×÷*/^²](?:[a-z]|\d)", normalized)
     )
     numeric_instruction = direct_answer and bool(re.search(r"[+\-]?\d+(?:\.\d+)?", normalized))
-    has_subject_content = lexical_subject or symbolic_math or numeric_instruction
+    has_subject_content = lexical_subject or symbolic_math or numeric_instruction or rate_model(text) is not None
     if has_subject_content:
         found.add(ClassroomAct.SUBJECT_CONTENT)
+
+    # Resolve clause-local polarity and actor/recipient relationships before
+    # choosing a task. An affective preface must not suppress a later question.
+    clauses = [part.strip() for part in re.split(r"[，。！？,!?；;]+", text.lower()) if part.strip()]
+    negative_feedback = False
+    positive_feedback = False
+    for clause in clauses:
+        evaluation = re.search(r"(?:回答|解答|说|思路|方法|步骤).*(?:正确|对|清楚|好)", clause)
+        negated = bool(re.search(r"(?:不|没|未|别).{0,3}(?:正确|对|清楚|好)", clause))
+        negative_feedback |= bool(evaluation and negated)
+        positive_feedback |= bool(evaluation and not negated)
+        if re.search(r"(?:说|答|做)错.*(?:也|能).*(?:帮助|发现|学习)", clause):
+            found.add(ClassroomAct.ENCOURAGEMENT)
+        if re.search(r"(?:我|老师).*(?:相信|信任|信心).*你.*(?:能|会|完成|做到)", clause) and not re.search(r"(?:不|没).{0,2}(?:相信|信任|信心)", clause):
+            found.add(ClassroomAct.ENCOURAGEMENT)
+        if re.search(r"(?:不要|别|不用).{0,2}(?:再想|尝试|试)", clause):
+            found.discard(ClassroomAct.ENCOURAGEMENT)
+            semantic_scores.pop(ClassroomAct.ENCOURAGEMENT, None)
+    if negative_feedback:
+        found.add(ClassroomAct.CORRECTIVE_FEEDBACK)
+        if not positive_feedback:
+            found.discard(ClassroomAct.FEEDBACK)
+            semantic_scores.pop(ClassroomAct.FEEDBACK, None)
+
+    requests_answer = bool(re.search(r"(?:告诉我|回答我|请回答|说出)", normalized))
+    asks_question = bool(re.search(r"[?？]|为什么|什么|怎样|如何|能否", text))
+    procedure = bool(re.search(r"(?:先|再|分别|各自).*(?:取|代|乘|除|观察|固定|改变|比较)", normalized))
+    specific_task = found & {ClassroomAct.ELABORATION_REQUEST, ClassroomAct.UNDERSTANDING_CHECK, ClassroomAct.EXAMPLE, ClassroomAct.CONTEXTUAL_REFERENCE}
+    task_verb = r"判断|判定|计算|算|验证|检验|作答|完成|求出"
+    blocked_tasks = []
+    requested_tasks = []
+    for clause in clauses:
+        match = re.search(task_verb, clause)
+        if not match:
+            continue
+        prefix = clause[:match.start()]
+        blocked = bool(re.search(r"(?<!分)别|不要|不用|不必|无需", prefix))
+        ability = bool(re.search(r"(?:我|老师).*(?:相信|信任)|你(?:能够|可以|能|会)", prefix))
+        if blocked:
+            blocked_tasks.append(clause)
+        elif ability and not re.search(r"[?？]|吗|请", clause):
+            found.add(ClassroomAct.ENCOURAGEMENT)
+        else:
+            requested_tasks.append(clause)
+    explicit_task_request = bool(requested_tasks)
+    if blocked_tasks and not requested_tasks and not requests_answer:
+        found.add(ClassroomAct.ORGANIZATION)
+    if any(re.search(r"换.*(?:办法|方法).*试|(?:请|先).*(?:推理过程|反例|复述)", c) for c in clauses):
+        found.add(ClassroomAct.ELABORATION_REQUEST)
+        specific_task.add(ClassroomAct.ELABORATION_REQUEST)
+    if re.search(r"谁愿意.*(?:说|解释|表达)", normalized):
+        found.add(ClassroomAct.ELABORATION_REQUEST)
+    if not direct_answer and not specific_task and (
+        requests_answer
+        or explicit_task_request
+        or (asks_question and (has_subject_content or procedure or found & {ClassroomAct.ENCOURAGEMENT, ClassroomAct.FEEDBACK}))
+    ):
+        guided = procedure or _has_any(normalized, ("如果", "假设", "你觉得", "为什么"))
+        found.add(ClassroomAct.GUIDED_QUESTION if guided else ClassroomAct.QUESTION)
+
+    if '不是不对' in normalized and not any(
+        re.search(r"不正确|不清楚|不对", c.replace('不是不对', '正确')) for c in clauses
+    ):
+        found.discard(ClassroomAct.CORRECTIVE_FEEDBACK)
+        semantic_scores.pop(ClassroomAct.CORRECTIVE_FEEDBACK, None)
+        found.add(ClassroomAct.FEEDBACK)
+
+    if re.search(r"不(?:讲|讨论).*(?:函数|数学)", normalized) and _has_any(normalized, _OFF_TOPIC_DOMAINS):
+        found = {ClassroomAct.OFF_TOPIC}
+        semantic_scores.clear()
+        has_subject_content = False
 
     rule_found = set(found)
     semantic_found = {act for act, score in semantic_scores.items() if score >= 0.58}
@@ -329,7 +415,16 @@ def analyze_classroom_dialogue(
         semantic_scores.get(ClassroomAct.SUBJECT_CONTENT, 0.0) >= 0.65
     )
 
-    if strong_off_topic_signal and not rule_found and not has_semantic_classroom_anchor:
+    # A domain word may be part of an instruction or teaching example. Evaluate
+    # positive classroom evidence before allowing it to trigger a redirect.
+    strong_classroom_anchor = has_semantic_classroom_anchor or any(
+        score >= 0.8
+        for act, score in semantic_scores.items()
+        # Ability-question shapes also match unrelated activities (e.g. cooking).
+        # They need an independent classroom anchor to defeat domain evidence.
+        if act is not ClassroomAct.UNDERSTANDING_CHECK
+    )
+    if strong_off_topic_signal and not rule_found and not strong_classroom_anchor:
         found = {ClassroomAct.OFF_TOPIC}
         classification_source = "off_topic_signal"
         confidence = 0.92
@@ -348,9 +443,12 @@ def analyze_classroom_dialogue(
                 classification_source = "classroom_context_fallback"
                 confidence = 0.4 if conversation_history else 0.32
             else:
-                found.add(ClassroomAct.OFF_TOPIC)
-                classification_source = "open_set_rejection"
-                confidence = 0.68
+                # Failure to recognize an intent is not evidence of topic drift.
+                # Abstain regardless of utterance length or classroom prior;
+                # downstream callers should clarify without scoring the turn.
+                found.add(ClassroomAct.UNCERTAIN)
+                classification_source = "insufficient_evidence"
+                confidence = 0.0
         elif semantic_found and rule_found:
             classification_source = "rules+semantic"
             confidence = max(semantic_scores[act] for act in semantic_found)

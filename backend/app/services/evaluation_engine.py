@@ -44,6 +44,11 @@ class EvaluationEngine:
         qualitative, analysis_source, analysis_error = self._qualitative_analysis(
             session, scores, snippets_by_round, llm_client
         )
+        unassessed = sum(record.concept == '未判定知识' for record in session.behavior_records)
+        if unassessed:
+            qualitative = qualitative.model_copy(update={
+                'problems': [*qualitative.problems, f'有 {unassessed} 轮知识内容未判定（包括待辨析命题），未计入知识准确性；该分数不代表全部教学内容。']
+            })
         selected_snippets = self._select_snippets(
             snippets_by_round, qualitative.evidence_rounds
         )
@@ -101,7 +106,7 @@ class EvaluationEngine:
             record
             for record in records
             if record.action_type not in {"classroom_interaction", "off_topic"}
-            and getattr(record, "concept", None) != "课堂互动"
+            and getattr(record, "concept", None) not in {"课堂互动", "未判定知识"}
         ]
         knowledge_accuracy = (
             self._round_score(

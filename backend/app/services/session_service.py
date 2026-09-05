@@ -18,6 +18,7 @@ from .virtual_student import (
     stable_profile_id,
 )
 from .virtual_student.prompt_builder import misconception_prompt_mode
+from .virtual_student.task_context import active_task
 from ..models import (
     DialogueRecord,
     Evaluation,
@@ -413,6 +414,19 @@ def list_session_history(db: Session) -> list[SessionHistoryItemRead]:
     ]
 
 
+def _latest_learning_evidence(trace: CognitiveTraceRead) -> dict[str, object] | None:
+    """Ignore social acknowledgements and retain the last substantive answer."""
+    for round_item in reversed(trace.rounds):
+        evidence = round_item.evidence
+        if evidence is not None and (
+            evidence.evidence_level > 0
+            or evidence.shows_residual_misconception
+            or evidence.conceptual_uncertainty
+        ):
+            return evidence.model_dump()
+    return None
+
+
 def send_teacher_message(
     db: Session,
     session: TeachingSession,
@@ -432,6 +446,10 @@ def send_teacher_message(
         (content for speaker, content in reversed(conversation_history) if speaker == "teacher"),
         "",
     )
+    task_context = active_task(
+        [(r.speaker, r.content) for r in sorted(session.dialogue_records, key=lambda r: r.sequence)],
+        teacher_text,
+    )
     opportunity = engine.get_correction_opportunity(teacher_text)
     next_sequence = max((record.sequence for record in session.dialogue_records), default=-1) + 1
     teacher_record = DialogueRecord(
@@ -446,16 +464,32 @@ def send_teacher_message(
 
     before = engine.snapshot()
     current_misconception = before.misconceptions[0] if before.misconceptions else None
+    previous_student_evidence = _latest_learning_evidence(trace)
     context = LLMContext(
         student_name=engine.profile.name,
         student_grade=engine.profile.grade,
         topic=session.scenario.topic,
         conversation_history=tuple(conversation_history),
+        task_context=task_context,
         student_profile_id=engine.profile.profile_id,
         misconception_status=(current_misconception.status if current_misconception else "corrected"),
         misconception_semantic_type=(
             current_misconception.semantic_type if current_misconception else "linear_kb"
         ),
+        previous_student_evidence=previous_student_evidence,
+        misconception_stable_correct_evidence_count=(
+            current_misconception.stable_correct_evidence_count
+            if current_misconception
+            else 0
+        ),
+        misconception_transfer_evidence=(
+            current_misconception.transfer_evidence if current_misconception else 0
+        ),
+        student_confidence=engine.profile.confidence,
+        confidence_style=engine.profile.confidence_style,
+        response_style=engine.profile.response_style,
+        confirmation_seeking=engine.profile.confirmation_seeking,
+        correction_style=engine.profile.correction_style,
     )
     behavior_analysis = TeachingBehaviorAnalyzer().analyze(
         teacher_text,
@@ -464,6 +498,8 @@ def send_teacher_message(
     )
     engine.update_from_teacher_text(teacher_text)
     prompt = engine.build_prompt(teacher_text, conversation_history)
+    if task_context:
+        prompt += f"\n【当前仍有效的题目条件】\n{task_context}\n表扬和课堂过渡不清除上述题目；以教师最新条件为准。"
     prompt_snapshot = engine.snapshot()
     prompt_misconception = (
         prompt_snapshot.misconceptions[0] if prompt_snapshot.misconceptions else None
@@ -476,6 +512,7 @@ def send_teacher_message(
             topic=session.scenario.topic,
             system_prompt=prompt,
             conversation_history=tuple(conversation_history),
+            task_context=task_context,
             student_profile_id=engine.profile.profile_id,
             misconception_status=(
                 prompt_misconception.status if prompt_misconception else "corrected"
@@ -483,6 +520,20 @@ def send_teacher_message(
             misconception_semantic_type=(
                 prompt_misconception.semantic_type if prompt_misconception else "linear_kb"
             ),
+            previous_student_evidence=previous_student_evidence,
+            misconception_stable_correct_evidence_count=(
+                prompt_misconception.stable_correct_evidence_count
+                if prompt_misconception
+                else 0
+            ),
+            misconception_transfer_evidence=(
+                prompt_misconception.transfer_evidence if prompt_misconception else 0
+            ),
+            student_confidence=engine.profile.confidence,
+            confidence_style=engine.profile.confidence_style,
+            response_style=engine.profile.response_style,
+            confirmation_seeking=engine.profile.confirmation_seeking,
+            correction_style=engine.profile.correction_style,
         ),
     )
     if not student_text.strip():

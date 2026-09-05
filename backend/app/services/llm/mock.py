@@ -3,6 +3,10 @@ from __future__ import annotations
 import re
 
 from .base import LLMClient, LLMContext, LLMServiceError
+from .praise_response import PraiseResponsePolicy
+from ..virtual_student.linear_math import number, display, NUMBER, equations, rate_model, spoken_number
+from ..virtual_student.task_context import active_task
+from ..virtual_student.propositions import assess_claims
 from ..virtual_student.classroom_intent import (
     ClassroomAct,
     ClassroomDialogueIntent,
@@ -34,8 +38,12 @@ class MockLLMClient(LLMClient):
             ClassroomAct.EXAMPLE,
             ClassroomAct.CONTEXTUAL_REFERENCE,
             ClassroomAct.SUBJECT_CONTENT,
+            ClassroomAct.QUESTION,
+            ClassroomAct.GUIDED_QUESTION,
         }
-        needs_subject_response = classroom_intent.primary_act in instructional_acts or (
+        needs_subject_response = classroom_intent.primary_act is ClassroomAct.SUBJECT_CONTENT or bool(
+            set(classroom_intent.acts) & (instructional_acts - {ClassroomAct.SUBJECT_CONTENT})
+        ) or (
             classroom_intent.primary_act is ClassroomAct.CORRECTIVE_FEEDBACK
             and classroom_intent.has_subject_content
         )
@@ -80,12 +88,17 @@ class MockLLMClient(LLMClient):
             classroom_intent=classroom_intent,
             conversation_history=context.conversation_history,
         )
+        task = active_task(context.conversation_history, text) or context.task_context
         intent_text = text
-        if current_intent.contextual_follow_up:
-            previous_teacher_text = cls._previous_teacher_text(context)
-            if previous_teacher_text:
+        if current_intent.contextual_follow_up or (
+            classroom_intent is not None
+            and not classroom_intent.has_subject_content
+            and (classroom_intent.has(ClassroomAct.QUESTION) or classroom_intent.has(ClassroomAct.GUIDED_QUESTION))
+        ):
+            previous_teacher_text = task or cls._previous_teacher_text(context)
+            if previous_teacher_text and not equations(text):
                 intent_text = f"{previous_teacher_text} {text}"
-        intent = analyze_linear_dialogue_intent(intent_text)
+        intent = current_intent if intent_text == text else analyze_linear_dialogue_intent(intent_text)
         normalized = intent.normalized
         current_normalized = current_intent.normalized
         status = context.misconception_status
@@ -93,6 +106,49 @@ class MockLLMClient(LLMClient):
             text, conversation_history=context.conversation_history
         )
         direct_answer = classroom.has(ClassroomAct.DIRECT_ANSWER)
+
+        # Numerical operations use exact arithmetic; profile phrasing cannot
+        # invent a larger value when the operands are mathematically equal.
+        task_equations = equations(text) or equations(task)
+        model = rate_model(text)
+        if model:
+            return f"我试着把数量记为 x、总费用记为 y：y={model[0]}x+{model[1]}，固定费用是 {model[1]} 元，每单位增加 {model[0]} 元。"
+        amount = re.search(r"([零一二两三四五六七八九十\d.]+)元.*(?:对应|表示)", text)
+        if amount and len(task_equations) == 1:
+            try:
+                value = spoken_number(amount[1])
+            except (ValueError, KeyError, ZeroDivisionError):
+                value = None
+            if value == number(task_equations[0][1]):
+                return f"{display(value)} 元是起始费用，对应 x=0 时的 y 值，也就是纵轴交点的纵坐标（截距）。"
+        x_match = re.search(rf"x=({NUMBER})", text.replace(' ', ''))
+        if not x_match and re.search(r"呢[？?。]?$", text):
+            previous_task = active_task(context.conversation_history)
+            x_match = re.search(rf"x=({NUMBER})", previous_task.replace(' ', ''))
+        axis_zero = bool(re.search(r"横坐标.*(?:零|0)|纵轴|y轴.*交", text))
+        if task_equations and (x_match or axis_zero):
+            x = number(x_match[1]) if x_match else number('0')
+            values = [display(number(k) * x + number(b)) for k, b in task_equations]
+            return f"把 x={display(x)} 代入，y 分别是 {'、'.join(values)}。" + (
+                "这就是与纵轴相交时的纵坐标。" if x == 0 else ""
+            )
+
+        claim = assess_claims(text)
+        if claim.error_stance == 'denied':
+            return cls._profile_variant(context,
+                "我先重新检查：原来把 b 和倾斜程度混在一起了，我想用图像确认 b 改变的是什么。",
+                "我可能把 b 的作用想错了，想再用图像核对位置和倾斜程度。",
+                "我重新核对 b 的作用，先区分位置和倾斜程度。")
+
+        if intent_text == text and not classroom.has_subject_content and (
+            classroom.has(ClassroomAct.QUESTION) or classroom.has(ClassroomAct.GUIDED_QUESTION)
+        ):
+            return cls._profile_variant(
+                context,
+                "我来试着做，不过需要先知道要用哪道题、哪些条件，才能说出结果。",
+                "我想先试一下，可以把要用的题目和条件给我吗？",
+                "我来试。要用哪道题、哪些条件？",
+            )
 
         if intent.out_of_scope:
             return cls._profile_variant(
@@ -140,7 +196,9 @@ class MockLLMClient(LLMClient):
                     f"我觉得应该一样陡，因为斜率都是 {first_slope}，不同的截距只是让位置不同。",
                     f"一样陡，斜率都是 {first_slope}；变化的是截距和上下位置。",
                 )
-            steeper = first_slope if abs(float(first_slope)) > abs(float(second_slope)) else second_slope
+            if abs(number(first_slope)) == abs(number(second_slope)):
+                return "两条直线一样陡，斜率的绝对值相等；符号不同表示上升和下降方向不同。"
+            steeper = first_slope if abs(number(first_slope)) > abs(number(second_slope)) else second_slope
             return cls._profile_variant(
                 context,
                 f"两条直线的斜率不同，绝对值更大的 {steeper} 对应的直线更陡。",
@@ -317,6 +375,13 @@ class MockLLMClient(LLMClient):
     def _respond_classroom_act(
         cls, act: ClassroomAct, context: LLMContext
     ) -> str | None:
+        if act is ClassroomAct.UNCERTAIN:
+            return cls._profile_variant(
+                context,
+                "老师，我还没弄清您希望我回答哪一部分，可以给我一点提示吗？",
+                "老师，我有点没跟上，您希望我先想哪一部分？",
+                "老师，您希望我回答哪一部分？可以再说明一下吗？",
+            )
         if act is ClassroomAct.GREETING:
             return cls._profile_variant(
                 context,
@@ -325,11 +390,9 @@ class MockLLMClient(LLMClient):
                 "老师好，准备好了，可以开始。",
             )
         if act is ClassroomAct.FEEDBACK:
-            return cls._profile_variant(
+            return PraiseResponsePolicy.respond(
                 context,
-                "谢谢老师，我再检查一下自己的理由。",
-                "谢谢老师，我想再确认一下自己是不是理解对了。",
-                "谢谢老师，我继续往下想。",
+                previous_response=cls._previous_praise_response(context),
             )
         if act is ClassroomAct.ENCOURAGEMENT:
             return cls._profile_variant(
@@ -370,6 +433,28 @@ class MockLLMClient(LLMClient):
                 "我接着说，不过有些地方还不太确定。",
                 "我继续说刚才的理由。",
             )
+        return None
+
+    @staticmethod
+    def _previous_praise_response(context: LLMContext) -> str | None:
+        history = context.conversation_history
+        if len(history) < 2:
+            return None
+        teacher_turn, student_turn = history[-2], history[-1]
+        if teacher_turn[0] != "teacher" or student_turn[0] != "student":
+            return None
+        intent = analyze_classroom_dialogue(teacher_turn[1])
+        task_acts = {
+            ClassroomAct.DIRECT_ANSWER,
+            ClassroomAct.ELABORATION_REQUEST,
+            ClassroomAct.UNDERSTANDING_CHECK,
+            ClassroomAct.EXAMPLE,
+            ClassroomAct.CONTEXTUAL_REFERENCE,
+            ClassroomAct.QUESTION,
+            ClassroomAct.GUIDED_QUESTION,
+        }
+        if intent.has(ClassroomAct.FEEDBACK) and not set(intent.acts) & task_acts:
+            return student_turn[1]
         return None
 
     @staticmethod

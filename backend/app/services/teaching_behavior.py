@@ -10,6 +10,7 @@ from .llm import LLMClient, LLMContext
 from .llm.base import LLMError
 from .virtual_student.classroom_intent import ClassroomAct, analyze_classroom_dialogue
 from .virtual_student.dialogue_intent import analyze_linear_dialogue_intent
+from .virtual_student.propositions import assess_claims
 from ..schemas.teaching_behavior import TeachingActionType, TeachingBehaviorAnalysis
 
 
@@ -57,17 +58,10 @@ class TeachingBehaviorAnalyzer:
 
         # Strong local signals win for action labels and boolean safety flags;
         # the validated model may refine the numeric assessment and concept.
-        action_type = (
-            llm_result.action_type
-            if rule_result.action_type is TeachingActionType.EXPLANATION
-            else rule_result.action_type
-        )
+        action_type = rule_result.action_type
         concept = rule_result.concept if rule_result.concept != "一次函数" else llm_result.concept
-        knowledge_accuracy = (
-            rule_result.knowledge_accuracy
-            if concept in {"课堂互动", "非教学话题"}
-            else llm_result.knowledge_accuracy
-        )
+        # A valid JSON score is not verification of a mathematical claim.
+        knowledge_accuracy = rule_result.knowledge_accuracy
         return rule_result.model_copy(
             update={
                 "action_type": action_type,
@@ -76,8 +70,7 @@ class TeachingBehaviorAnalyzer:
                 "clarity": llm_result.clarity,
                 "checked_understanding": rule_result.checked_understanding
                 or llm_result.checked_understanding,
-                "gave_answer_directly": rule_result.gave_answer_directly
-                or llm_result.gave_answer_directly,
+                "gave_answer_directly": rule_result.gave_answer_directly,
                 "analysis_source": "rules+llm",
                 "analysis_error": None,
             }
@@ -119,9 +112,15 @@ class TeachingBehaviorAnalyzer:
             ),
         )
 
-        if gave_answer_directly:
+        if classroom_intent.off_topic:
+            action_type = TeachingActionType.OFF_TOPIC
+        elif gave_answer_directly:
             action_type = TeachingActionType.DIRECT_ANSWER
-        elif is_specific_correction:
+        elif classroom_intent.has(ClassroomAct.GUIDED_QUESTION):
+            action_type = TeachingActionType.GUIDED_QUESTION
+        elif classroom_intent.has(ClassroomAct.QUESTION):
+            action_type = TeachingActionType.QUESTION
+        elif (is_specific_correction or assess_claims(text).error_stance == 'denied') and '不是不对' not in normalized:
             action_type = TeachingActionType.CORRECTION
         elif classroom_intent.has(ClassroomAct.UNDERSTANDING_CHECK) or checked_understanding:
             action_type = TeachingActionType.UNDERSTANDING_CHECK
@@ -170,6 +169,17 @@ class TeachingBehaviorAnalyzer:
             else self._estimate_accuracy(normalized, action_type)
         )
         clarity = self._estimate_clarity(text)
+        claim = assess_claims(text)
+        if action_type is TeachingActionType.CLASSROOM_INTERACTION:
+            knowledge_accuracy = 0.0
+        elif claim.correct is not None:
+            knowledge_accuracy = 0.95 if claim.correct else 0.1
+        elif claim.error_stance == 'questioned':
+            concept = "未判定知识"
+            knowledge_accuracy = 0.0
+        elif action_type in {TeachingActionType.EXPLANATION, TeachingActionType.DIRECT_ANSWER} and concept not in {"课堂互动", "非教学话题"}:
+            concept = "未判定知识"
+            knowledge_accuracy = 0.0
         return TeachingBehaviorAnalysis(
             action_type=action_type,
             concept=concept,

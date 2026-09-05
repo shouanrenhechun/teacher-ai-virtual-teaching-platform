@@ -48,14 +48,15 @@ def test_engine_initializes_all_state_values_in_range() -> None:
     assert snapshot.misconceptions[0].corrected is False
 
 
-def test_effective_example_increases_understanding_without_exceeding_one() -> None:
+def test_example_is_an_opportunity_not_automatic_mastery() -> None:
     engine = make_student_a_engine()
     before = engine.classroom_state
 
     after = engine.apply_behavior(TeachingBehavior.EFFECTIVE_EXAMPLE).classroom_state
 
-    assert after.understanding > before.understanding
-    assert after.confusion < before.confusion
+    assert after.understanding == before.understanding
+    assert after.confusion == before.confusion
+    assert after.engagement > before.engagement
     assert all(0 <= value <= 1 for value in vars(after).values())
 
 
