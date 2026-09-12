@@ -14,10 +14,12 @@ class LLMContext:
     topic: str = "一次函数 k 与 b 的意义"
     system_prompt: str | None = None
     conversation_history: tuple[tuple[str, str], ...] = ()
+    turn_index: int = 0
     task_context: str = ""
     student_profile_id: str = "student_a"
     misconception_status: str = "active"
     misconception_semantic_type: str = "linear_kb"
+    misconception_strength: float = 0.8
     previous_student_evidence: Mapping[str, object] | None = None
     misconception_stable_correct_evidence_count: int = 0
     misconception_transfer_evidence: int = 0
@@ -25,6 +27,7 @@ class LLMContext:
     confidence_style: str = "自然表达，不刻意改变知识判断。"
     response_style: str = "回答自然、简短，符合课堂中的学生表达。"
     confirmation_seeking: str = "必要时根据教师提示确认自己的理解。"
+    verbosity: str = "一到三句话。"
     correction_style: str = "接受证据后逐步修正，不因教师一句话立即宣称完全掌握。"
 
 

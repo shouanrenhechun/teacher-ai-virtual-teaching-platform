@@ -13,12 +13,25 @@ from ..virtual_student.classroom_intent import (
     analyze_classroom_dialogue,
 )
 from ..virtual_student.dialogue_intent import analyze_linear_dialogue_intent
+from ..virtual_student.response_planner import StudentResponsePlanner
+from ..virtual_student.response_renderer import (
+    DeterministicStudentRenderer,
+    StudentResponseConsistencyValidator,
+    StudentResponsePipeline,
+)
 
 
 class MockLLMClient(LLMClient):
     """Deterministic, offline student responses for the current demo case."""
 
     provider = "mock"
+
+    def __init__(self) -> None:
+        self._response_pipeline = StudentResponsePipeline(
+            planner=StudentResponsePlanner(),
+            renderer=DeterministicStudentRenderer(),
+            validator=StudentResponseConsistencyValidator(),
+        )
 
     def respond(self, teacher_text: str, context: LLMContext | None = None) -> str:
         text = teacher_text.strip()
@@ -74,7 +87,10 @@ class MockLLMClient(LLMClient):
                     "这不是当前的问题，我们继续看完全平方公式。",
                 )
             return self._respond_binomial_square(normalized, branch)
-        return self._respond_linear_kb(text, context, classroom_intent)
+        # Linear-kb Mock responses now go through the explicit semantic plan
+        # and renderer boundary.  The legacy method remains below as a
+        # compatibility reference for older callers and future fallback work.
+        return self._response_pipeline.respond(text, context)
 
     @classmethod
     def _respond_linear_kb(

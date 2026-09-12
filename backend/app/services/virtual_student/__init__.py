@@ -25,6 +25,17 @@ from .evidence import (
     StudentResponseEvidenceAnalyzer,
     correction_opportunity,
 )
+from .response_plan import StudentResponsePlan
+from .response_planner import StudentResponsePlanner
+from .response_renderer import (
+    DeterministicStudentRenderer,
+    RealLLMStudentRenderer,
+    RenderValidation,
+    ReplyPayload,
+    StudentLanguageRenderer,
+    StudentResponseConsistencyValidator,
+    StudentResponsePipeline,
+)
 from .state_rules import is_evidence_insufficient, is_strong_correct_evidence
 
 __all__ = [
@@ -52,4 +63,13 @@ __all__ = [
     "correction_opportunity",
     "is_evidence_insufficient",
     "is_strong_correct_evidence",
+    "StudentResponsePlan",
+    "StudentResponsePlanner",
+    "StudentLanguageRenderer",
+    "DeterministicStudentRenderer",
+    "RealLLMStudentRenderer",
+    "ReplyPayload",
+    "RenderValidation",
+    "StudentResponseConsistencyValidator",
+    "StudentResponsePipeline",
 ]

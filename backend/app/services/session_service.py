@@ -470,11 +470,15 @@ def send_teacher_message(
         student_grade=engine.profile.grade,
         topic=session.scenario.topic,
         conversation_history=tuple(conversation_history),
+        turn_index=len(session.dialogue_records) // 2,
         task_context=task_context,
         student_profile_id=engine.profile.profile_id,
         misconception_status=(current_misconception.status if current_misconception else "corrected"),
         misconception_semantic_type=(
             current_misconception.semantic_type if current_misconception else "linear_kb"
+        ),
+        misconception_strength=(
+            current_misconception.strength if current_misconception else 0.0
         ),
         previous_student_evidence=previous_student_evidence,
         misconception_stable_correct_evidence_count=(
@@ -489,6 +493,7 @@ def send_teacher_message(
         confidence_style=engine.profile.confidence_style,
         response_style=engine.profile.response_style,
         confirmation_seeking=engine.profile.confirmation_seeking,
+        verbosity=engine.profile.verbosity,
         correction_style=engine.profile.correction_style,
     )
     behavior_analysis = TeachingBehaviorAnalyzer().analyze(
@@ -512,6 +517,7 @@ def send_teacher_message(
             topic=session.scenario.topic,
             system_prompt=prompt,
             conversation_history=tuple(conversation_history),
+            turn_index=len(session.dialogue_records) // 2,
             task_context=task_context,
             student_profile_id=engine.profile.profile_id,
             misconception_status=(
@@ -519,6 +525,9 @@ def send_teacher_message(
             ),
             misconception_semantic_type=(
                 prompt_misconception.semantic_type if prompt_misconception else "linear_kb"
+            ),
+            misconception_strength=(
+                prompt_misconception.strength if prompt_misconception else 0.0
             ),
             previous_student_evidence=previous_student_evidence,
             misconception_stable_correct_evidence_count=(
@@ -533,6 +542,7 @@ def send_teacher_message(
             confidence_style=engine.profile.confidence_style,
             response_style=engine.profile.response_style,
             confirmation_seeking=engine.profile.confirmation_seeking,
+            verbosity=engine.profile.verbosity,
             correction_style=engine.profile.correction_style,
         ),
     )

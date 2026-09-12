@@ -30,6 +30,28 @@ def stable_profile_id(name: str, fallback: object = "record") -> str:
     return fallback_text if fallback_text.startswith("student_") else f"student_{fallback_text}"
 
 
+def _style_from_record(record: Any) -> dict[str, str]:
+    """Derive expression style from persisted profile traits, not profile IDs."""
+    personality = str(record.personality_description)
+    if record.confidence <= 0.45 or "常先确认" in personality or "不确定时强行猜测" in personality:
+        return {
+            "confidence_style": "主观自信较低，常用‘应该’‘我觉得’‘吧’等缓和表达，但这只是表达风格。",
+            "response_style": "回答自然、简短，先说明当前想法，再根据教师提示继续。",
+            "confirmation_seeking": "喜欢先确认自己的理解，必要时会请求教师再举例或追问。",
+            "verbosity": "通常一到两句话，理解复杂时再补充理由。",
+            "correction_style": "被直接告知答案后先记下结论，只有能独立解释或完成变式时才表现出稳定掌握。",
+        }
+    if record.confidence >= 0.75 or "自信程度较高" in personality:
+        return {
+            "confidence_style": "表达直接、自信，通常先明确给出自己的判断，但自信不代表概念一定正确。",
+            "response_style": "回答简短直接，先说结论，被追问时再补充理由。",
+            "confirmation_seeking": "较少主动请求确认，通常在证据与原判断冲突时才重新检查。",
+            "verbosity": "通常一到两句话，先结论后理由。",
+            "correction_style": "看到对比例证后会较快调整判断，但仍需独立解释和迁移题才能稳定纠正。",
+        }
+    return {}
+
+
 @dataclass
 class KnowledgeStateValue:
     knowledge_point: str
@@ -102,6 +124,7 @@ class StudentProfile:
     @classmethod
     def from_record(cls, record: Any) -> StudentProfile:
         """Adapt the existing ORM record without coupling the engine to SQLAlchemy."""
+        style = _style_from_record(record)
         return cls(
             name=record.name,
             grade=record.grade,
@@ -125,6 +148,7 @@ class StudentProfile:
                 for item in record.misconceptions
             ],
             profile_id=stable_profile_id(record.name, getattr(record, "id", "record")),
+            **style,
         )
 
 
