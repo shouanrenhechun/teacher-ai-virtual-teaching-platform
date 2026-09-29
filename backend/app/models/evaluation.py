@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, Float, ForeignKey, Text
+from sqlalchemy import CheckConstraint, Float, ForeignKey, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database.session import Base
@@ -26,12 +26,14 @@ class Evaluation(Base):
     session_id: Mapped[int] = mapped_column(
         ForeignKey("teaching_sessions.id", ondelete="CASCADE"), primary_key=True
     )
-    knowledge_accuracy: Mapped[float] = mapped_column(Float, nullable=False)
-    questioning: Mapped[float] = mapped_column(Float, nullable=False)
-    feedback: Mapped[float] = mapped_column(Float, nullable=False)
-    misconception_diagnosis: Mapped[float] = mapped_column(Float, nullable=False)
-    scaffolding: Mapped[float] = mapped_column(Float, nullable=False)
-    overall_score: Mapped[float] = mapped_column(Float, nullable=False)
+    rubric_version: Mapped[int] = mapped_column(Integer, default=2, server_default='2', nullable=False)
+    evidence_json: Mapped[str] = mapped_column(Text, default='{}', server_default='{}', nullable=False)
+    knowledge_accuracy: Mapped[float | None] = mapped_column(Float, nullable=True)
+    questioning: Mapped[float | None] = mapped_column(Float, nullable=True)
+    feedback: Mapped[float | None] = mapped_column(Float, nullable=True)
+    misconception_diagnosis: Mapped[float | None] = mapped_column(Float, nullable=True)
+    scaffolding: Mapped[float | None] = mapped_column(Float, nullable=True)
+    overall_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     summary: Mapped[str] = mapped_column(Text, nullable=False)
 
     session: Mapped[TeachingSession] = relationship(back_populates="evaluation")

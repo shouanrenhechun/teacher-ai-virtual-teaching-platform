@@ -12,6 +12,7 @@ backend/data/
 *.db
 *.sqlite
 *.sqlite3
+*.v1.bak
 
 # Validation reports are generated artifacts
 backend/validation/reports/*.json

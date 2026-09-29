@@ -1,18 +1,21 @@
 from datetime import datetime
 
+from .common import UTCModel
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class EvaluationRead(BaseModel):
+class EvaluationRead(UTCModel):
     model_config = ConfigDict(from_attributes=True)
 
+    rubric_version: int = 1
+    evidence: dict = Field(default_factory=dict)
     session_id: int
-    knowledge_accuracy: float = Field(ge=0, le=100)
-    questioning: float = Field(ge=0, le=100)
-    feedback: float = Field(ge=0, le=100)
-    misconception_diagnosis: float = Field(ge=0, le=100)
-    scaffolding: float = Field(ge=0, le=100)
-    overall_score: float = Field(ge=0, le=100)
+    knowledge_accuracy: float | None = Field(default=None, ge=0, le=100)
+    questioning: float | None = Field(default=None, ge=0, le=100)
+    feedback: float | None = Field(default=None, ge=0, le=100)
+    misconception_diagnosis: float | None = Field(default=None, ge=0, le=100)
+    scaffolding: float | None = Field(default=None, ge=0, le=100)
+    overall_score: float | None = Field(default=None, ge=0, le=100)
     summary: str
 
 

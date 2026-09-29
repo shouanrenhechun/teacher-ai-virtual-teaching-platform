@@ -13,6 +13,12 @@ from ..virtual_student.classroom_intent import (
     analyze_classroom_dialogue,
 )
 from ..virtual_student.dialogue_intent import analyze_linear_dialogue_intent
+from ..virtual_student.response_planner import StudentResponsePlanner
+from ..virtual_student.response_renderer import (
+    DeterministicStudentRenderer,
+    StudentResponseConsistencyValidator,
+    StudentResponsePipeline,
+)
 
 
 class MockLLMClient(LLMClient):
@@ -20,61 +26,22 @@ class MockLLMClient(LLMClient):
 
     provider = "mock"
 
+    def __init__(self) -> None:
+        self._response_pipeline = StudentResponsePipeline(
+            planner=StudentResponsePlanner(),
+            renderer=DeterministicStudentRenderer(),
+            validator=StudentResponseConsistencyValidator(),
+        )
+
     def respond(self, teacher_text: str, context: LLMContext | None = None) -> str:
         text = teacher_text.strip()
         if not text:
             raise LLMServiceError("教师输入不能为空")
 
         context = context or LLMContext()
-        normalized = text.lower().replace(" ", "")
-        branch = len(text) % 3
-        classroom_intent = analyze_classroom_dialogue(
-            text, conversation_history=context.conversation_history
-        )
-        instructional_acts = {
-            ClassroomAct.DIRECT_ANSWER,
-            ClassroomAct.ELABORATION_REQUEST,
-            ClassroomAct.UNDERSTANDING_CHECK,
-            ClassroomAct.EXAMPLE,
-            ClassroomAct.CONTEXTUAL_REFERENCE,
-            ClassroomAct.SUBJECT_CONTENT,
-            ClassroomAct.QUESTION,
-            ClassroomAct.GUIDED_QUESTION,
-        }
-        needs_subject_response = classroom_intent.primary_act is ClassroomAct.SUBJECT_CONTENT or bool(
-            set(classroom_intent.acts) & (instructional_acts - {ClassroomAct.SUBJECT_CONTENT})
-        ) or (
-            classroom_intent.primary_act is ClassroomAct.CORRECTIVE_FEEDBACK
-            and classroom_intent.has_subject_content
-        )
-        if not needs_subject_response:
-            classroom_response = self._respond_classroom_act(classroom_intent.act, context)
-            if classroom_response is not None:
-                return classroom_response
-
-        if any(marker in context.topic for marker in ("完全平方", "平方公式")):
-            if classroom_intent.has(ClassroomAct.UNDERSTANDING_CHECK):
-                return self._profile_variant(
-                    context,
-                    "还没有完全听懂，我想再展开一道题看看。"
-                    if context.misconception_status != "corrected"
-                    else "听懂了，我可以再展开一道题验证。",
-                    "我还想再确认一次中间项是怎么来的。"
-                    if context.misconception_status != "corrected"
-                    else "我觉得听懂了，想再做一道题确认。",
-                    "还没完全懂，再给我一道题。"
-                    if context.misconception_status != "corrected"
-                    else "懂了，可以用新题检查我。",
-                )
-            if classroom_intent.off_topic:
-                return self._profile_variant(
-                    context,
-                    "这个和现在的完全平方公式无关，我们还是继续看括号展开吧。",
-                    "这个好像不是这节课的问题，可以回到括号平方吗？",
-                    "这不是当前的问题，我们继续看完全平方公式。",
-                )
-            return self._respond_binomial_square(normalized, branch)
-        return self._respond_linear_kb(text, context, classroom_intent)
+        result = self._response_pipeline.respond(text, context)
+        self.last_response_metadata = dict(self._response_pipeline.last_metadata)
+        return result
 
     @classmethod
     def _respond_linear_kb(

@@ -5,6 +5,7 @@ from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
+from .common import UTCModel
 
 
 class TeachingActionType(StrEnum):
@@ -35,7 +36,7 @@ class TeachingBehaviorAnalysis(BaseModel):
     analysis_error: str | None = Field(default=None, max_length=500)
 
 
-class TeachingBehaviorRecordRead(TeachingBehaviorAnalysis):
+class TeachingBehaviorRecordRead(TeachingBehaviorAnalysis, UTCModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int

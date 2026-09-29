@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+from dataclasses import replace
 from typing import Any
 
 from pydantic import ValidationError
@@ -39,12 +40,38 @@ class TeachingBehaviorAnalyzer:
         try:
             raw_result = llm_client.analyze_behavior(teacher_text, context)
             llm_result = TeachingBehaviorAnalysis.model_validate(raw_result)
-        except (LLMError, ValidationError, TypeError, ValueError) as exc:
-            logger.warning("教学行为结构化分析失败，使用安全默认值: %s", exc)
+        except ValidationError:
+            # One bounded schema-repair attempt; the teacher's utterance and
+            # local rule result remain the source of truth if it still fails.
+            try:
+                retry_context = replace(
+                    context or LLMContext(),
+                    analysis_retry_feedback=(
+                        "上次输出未通过结构校验。请重试并严格返回 JSON；"
+                        "knowledge_accuracy 和 clarity 必须为 0 到 1 之间的数字，"
+                        "不能用文字等级代替。"
+                    ),
+                )
+                raw_result = llm_client.analyze_behavior(teacher_text, retry_context)
+                llm_result = TeachingBehaviorAnalysis.model_validate(raw_result)
+            except (LLMError, ValidationError, TypeError, ValueError) as exc:
+                logger.warning("教学行为结构化输出修复失败，使用规则结果 (%s)", type(exc).__name__)
+                return rule_result.model_copy(update={
+                    "analysis_source": "fallback",
+                    "analysis_error": "structured_output_invalid_after_one_retry",
+                })
+            except Exception as exc:  # Defensive boundary for third-party providers.
+                logger.exception("教学行为结构化输出修复出现未预期错误，使用规则结果")
+                return rule_result.model_copy(update={
+                    "analysis_source": "fallback",
+                    "analysis_error": "unexpected_error:" + type(exc).__name__,
+                })
+        except (LLMError, TypeError, ValueError) as exc:
+            logger.warning("教学行为结构化分析失败，使用规则结果 (%s)", type(exc).__name__)
             return rule_result.model_copy(
                 update={
                     "analysis_source": "fallback",
-                    "analysis_error": str(exc)[:500],
+                    "analysis_error": type(exc).__name__,
                 }
             )
         except Exception as exc:  # Defensive boundary for third-party providers.
@@ -120,6 +147,8 @@ class TeachingBehaviorAnalyzer:
             action_type = TeachingActionType.GUIDED_QUESTION
         elif classroom_intent.has(ClassroomAct.QUESTION):
             action_type = TeachingActionType.QUESTION
+        elif is_question and classroom_intent.has_subject_content and classroom_intent.primary_act not in {ClassroomAct.ORGANIZATION, ClassroomAct.TRANSITION}:
+            action_type = TeachingActionType.GUIDED_QUESTION if any(word in normalized for word in ('比较', '固定', '如果', '观察')) else TeachingActionType.QUESTION
         elif (is_specific_correction or assess_claims(text).error_stance == 'denied') and '不是不对' not in normalized:
             action_type = TeachingActionType.CORRECTION
         elif classroom_intent.has(ClassroomAct.UNDERSTANDING_CHECK) or checked_understanding:

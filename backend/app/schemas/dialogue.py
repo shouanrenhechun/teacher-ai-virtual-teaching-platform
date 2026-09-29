@@ -1,9 +1,10 @@
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
+from .common import UTCModel
 
 
-class DialogueRecordRead(BaseModel):
+class DialogueRecordRead(UTCModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -12,3 +13,5 @@ class DialogueRecordRead(BaseModel):
     content: str
     sequence: int
     timestamp: datetime
+    request_id: str | None = None
+    response_metadata: str | None = None

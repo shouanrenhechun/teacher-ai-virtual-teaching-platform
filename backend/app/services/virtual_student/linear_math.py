@@ -14,6 +14,12 @@ def display(value: Fraction) -> str:
     return str(value.numerator) if value.denominator == 1 else str(value)
 
 
+def format_equation(slope: str, intercept: str) -> str:
+    k, b = number(slope), number(intercept)
+    coefficient = "" if k == 1 else "-" if k == -1 else display(k)
+    return f"y={coefficient}x" + (f"+{display(b)}" if b > 0 else display(b) if b < 0 else "")
+
+
 def equations(text: str) -> tuple[tuple[str, str], ...]:
     result = []
     for match in EQUATION.finditer(re.sub(r"\s+", "", text.lower())):
@@ -28,6 +34,36 @@ def equations(text: str) -> tuple[tuple[str, str], ...]:
 def fingerprint(text: str) -> str:
     compact = re.sub(r"[\s，。！？、,:：；;!?]+", "", text.lower())
     return EQUATION.sub(lambda m: str(equations(m[0])), compact)
+
+
+def quadratic_coefficients(expression: str) -> tuple[Fraction, Fraction, Fraction] | None:
+    """Parse a bounded numeric polynomial, without executing arbitrary expressions."""
+    compact = re.sub(r'\s+', '', expression).replace('²', '^2')
+    unsigned = r'(?:\d+/\d+|\d+(?:\.\d+)?)'
+    term = re.compile(rf'([+-]?)(?:({unsigned})?(x(?:\^2)?)|({unsigned}))')
+    coefficients = [Fraction(0), Fraction(0), Fraction(0)]
+    position = 0
+    while position < len(compact):
+        match = term.match(compact, position)
+        if not match or (position and not match[1]):
+            return None
+        try:
+            coefficient = number(match[2] or match[4] or '1')
+        except (ValueError, ZeroDivisionError):
+            return None
+        degree = 2 if match[3] == 'x^2' else 1 if match[3] else 0
+        coefficients[degree] += -coefficient if match[1] == '-' else coefficient
+        position = match.end()
+    return tuple(reversed(coefficients)) if compact else None
+
+
+def quadratic_expressions(text: str) -> tuple[str, ...]:
+    compact = re.sub(r'\s+', '', text).replace('²', '^2')
+    # The exercise itself is not a claim about its expanded result.
+    compact = re.sub(r'\([^()]+\)\^2', '', compact)
+    unsigned = r'(?:\d+/\d+|\d+(?:\.\d+)?)'
+    term = rf'(?:{unsigned}?x(?:\^2)?|{unsigned}|x(?:\^2)?)'
+    return tuple(match[0] for match in re.finditer(rf'[+-]?{term}(?:[+-]{term})*', compact) if 'x^2' in match[0])
 
 
 def spoken_number(value: str) -> Fraction:

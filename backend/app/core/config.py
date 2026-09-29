@@ -19,6 +19,8 @@ class Settings:
     llm_api_url: str
     llm_model: str
     llm_timeout_seconds: float
+    llm_temperature: float = 0.7
+    llm_max_tokens: int = 180
 
 
 def get_settings() -> Settings:
@@ -36,6 +38,20 @@ def get_settings() -> Settings:
     if timeout <= 0 or timeout > 120:
         raise ValueError("LLM_TIMEOUT_SECONDS 必须在 0 到 120 秒之间")
 
+    try:
+        temperature = float(os.getenv("LLM_TEMPERATURE", "0.7"))
+    except ValueError as exc:
+        raise ValueError("LLM_TEMPERATURE 必须是数字") from exc
+    if temperature < 0 or temperature > 1.5:
+        raise ValueError("LLM_TEMPERATURE 必须在 0 到 1.5 之间")
+
+    try:
+        max_tokens = int(os.getenv("LLM_MAX_TOKENS", "180"))
+    except ValueError as exc:
+        raise ValueError("LLM_MAX_TOKENS 必须是整数") from exc
+    if max_tokens < 32 or max_tokens > 1000:
+        raise ValueError("LLM_MAX_TOKENS 必须在 32 到 1000 之间")
+
     return Settings(
         llm_provider=provider,  # type: ignore[arg-type]
         llm_api_key=os.getenv("LLM_API_KEY", "").strip(),
@@ -44,4 +60,6 @@ def get_settings() -> Settings:
         ).strip(),
         llm_model=os.getenv("LLM_MODEL", "gpt-4o-mini").strip(),
         llm_timeout_seconds=timeout,
+        llm_temperature=temperature,
+        llm_max_tokens=max_tokens,
     )

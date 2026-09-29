@@ -30,6 +30,46 @@ def stable_profile_id(name: str, fallback: object = "record") -> str:
     return fallback_text if fallback_text.startswith("student_") else f"student_{fallback_text}"
 
 
+def _style_from_record(record: Any) -> dict[str, object]:
+    """Derive expression style from persisted profile traits, not profile IDs."""
+    personality = str(record.personality_description)
+    if "计算能力" in personality or "正确数值" in personality:
+        return {
+            "confidence_style": "表达偏计算，常先核对步骤，再说明是否理解。",
+            "response_style": "回答短而有步骤，计算会说出来，概念不确定时请求确认。",
+            "confirmation_seeking": "经常想再确认一次，但不要每轮使用相同口头禅。",
+            "verbosity": "通常一到两句话，先说计算或判断，再补充疑问。",
+            "correction_style": "会算不等于理解，看到理由后再逐步调整。",
+            "style_examples": ("我先算一下。", "这里我想再确认。", "结果能算出来，原因还要想想。"),
+        }
+    if (
+        record.confidence <= 0.45
+        or "偏谨慎" in personality
+        or "常先确认" in personality
+        or "不确定时强行猜测" in personality
+    ):
+        return {
+            "confidence_style": "主观自信较低，常用‘应该’‘我觉得’‘吧’等缓和表达，但这只是表达风格。",
+            "response_style": "回答自然、简短，先说明当前想法，再根据教师提示继续。",
+            "confirmation_seeking": "喜欢先确认自己的理解，必要时会请求教师再举例或追问。",
+            "verbosity": "通常一到两句话，理解复杂时再补充理由。",
+            "correction_style": "被直接告知答案后先记下结论，只有能独立解释或完成变式时才表现出稳定掌握。",
+            "style_examples": ("我先试着说一下。", "嗯，我觉得应该是这样。", "我能说出结果，不过理由还得再想想。"),
+        }
+    if record.confidence >= 0.75 or "自信程度较高" in personality:
+        return {
+            "confidence_style": "表达直接、自信，通常先明确给出自己的判断，但自信不代表概念一定正确。",
+            "response_style": "回答简短直接，先说结论，被追问时再补充理由。",
+            "confirmation_seeking": "较少主动请求确认，通常在证据与原判断冲突时才重新检查。",
+            "verbosity": "通常一到两句话，先结论后理由。",
+            "correction_style": "看到对比例证后会较快调整判断，但仍需独立解释和迁移题才能稳定纠正。",
+            "style_examples": ("我大概有点明白，但这里我还不太确定。", "是不是这样？我想再确认一下。", "我会算，不过为什么这样我还没完全想清楚。"),
+        }
+    return {
+        "style_examples": ("我觉得就是这样。", "这个我能判断。", "我先直接说我的想法。"),
+    }
+
+
 @dataclass
 class KnowledgeStateValue:
     knowledge_point: str
@@ -93,6 +133,7 @@ class StudentProfile:
     confirmation_seeking: str = "必要时根据教师提示确认自己的理解。"
     verbosity: str = "一到三句话。"
     correction_style: str = "接受证据后逐步修正，不因教师一句话立即宣称完全掌握。"
+    style_examples: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         self.base_level = _clamp(self.base_level)
@@ -102,6 +143,7 @@ class StudentProfile:
     @classmethod
     def from_record(cls, record: Any) -> StudentProfile:
         """Adapt the existing ORM record without coupling the engine to SQLAlchemy."""
+        style = _style_from_record(record)
         return cls(
             name=record.name,
             grade=record.grade,
@@ -125,6 +167,7 @@ class StudentProfile:
                 for item in record.misconceptions
             ],
             profile_id=stable_profile_id(record.name, getattr(record, "id", "record")),
+            **style,
         )
 
 
@@ -170,6 +213,7 @@ class VirtualStudentEngine:
             "misconceptions": [asdict(item) for item in self._misconceptions],
             "classroom_state": asdict(self._classroom_state),
             "learning_evidence_keys": sorted(self._learning_evidence_keys),
+            "learning_evidence_key_version": 2,
         }
 
     @classmethod
@@ -280,6 +324,8 @@ class VirtualStudentEngine:
         opportunity: dict[str, object] | None = None,
         *,
         previous_teacher_text: str = "",
+        allow_learning: bool = True,
+        task_context: str = "",
     ) -> StudentResponseEvidence:
         """Update misconception state only after inspecting the student's answer."""
         misconception = self._find_misconception(None, include_corrected=True)
@@ -296,9 +342,12 @@ class VirtualStudentEngine:
             misconception=misconception,
         )
 
-        from .linear_math import equations, fingerprint
-        task_key = str(sorted(equations(teacher_text))) if equations(teacher_text) else ''
-        evidence_key = task_key + '|' + fingerprint(response)
+        if not allow_learning:
+            return StudentResponseEvidenceAnalyzer().analyze('请补充题目条件。', teacher_text=teacher_text, misconception=misconception)
+        from .task_context import task_identity
+        task_key = task_identity(teacher_text, task_context or previous_teacher_text)
+        # Different wording of the same demonstrated ability is not new learning.
+        evidence_key = task_key + '|' + str((evidence.states_correct_conclusion, evidence.explains_reason_correctly, evidence.shows_residual_misconception))
         if not evidence.evidence_insufficient and evidence_key in self._learning_evidence_keys:
             return evidence
         if not evidence.evidence_insufficient:

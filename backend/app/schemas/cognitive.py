@@ -57,6 +57,8 @@ class CognitiveTraceRoundRead(BaseModel):
     evidence: StudentResponseEvidenceRead | None = None
     correction_opportunity: CorrectionOpportunityRead
     prompt_mode: str | None = None
+    response_source: str | None = None
+    learning_evidence_allowed: bool | None = None
 
 
 class CognitiveTraceRead(BaseModel):

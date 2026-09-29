@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database.session import Base
@@ -21,6 +21,8 @@ class TeachingSession(Base):
     __tablename__ = "teaching_sessions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    owner_hash: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     scenario_id: Mapped[int] = mapped_column(ForeignKey("training_scenarios.id"), nullable=False)
     virtual_student_id: Mapped[int] = mapped_column(
         ForeignKey("virtual_students.id"), nullable=False

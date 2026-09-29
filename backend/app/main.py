@@ -50,8 +50,17 @@ app.include_router(session_router)
 
 @app.get("/api/health", tags=["system"])
 def health_check() -> dict[str, str]:
+    from .core.config import get_settings
+    try:
+        settings = get_settings()
+        mode = settings.llm_provider
+        configured = 'ready' if mode == 'mock' or bool(settings.llm_api_key and settings.llm_api_url) else 'missing_configuration'
+    except ValueError:
+        mode, configured = 'unknown', 'invalid_configuration'
     return {
         "status": "ok",
         "service": "backend",
         "project": PROJECT_NAME,
+        "mode": mode,
+        "model_configuration": configured,
     }

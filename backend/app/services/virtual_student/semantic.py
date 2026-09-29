@@ -88,7 +88,8 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
             conclusion_level = "partial"
         else:
             conclusion_level = "wrong"
-        slopes = re.findall(r"y=([+-]?\d+)x", teacher_normalized)
+        from .linear_math import equations
+        slopes = [k for k, _ in equations(teacher_normalized)]
         is_transfer = len(slopes) >= 2 and len(set(slopes[:2])) == 1
         transfer = (
             is_transfer
