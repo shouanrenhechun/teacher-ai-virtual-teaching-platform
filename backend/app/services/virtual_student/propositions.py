@@ -12,6 +12,11 @@ _LEXICAL_DENIAL = re.compile(
     r"(?:(?:再|会|能|可能|让|使|令|显得|变得|那么)"
     r"(?!(?:更陡|越陡|变陡|会陡|更斜|越斜|变斜))){0,2}"
 )
+_CLAUSE_BOUNDARY = re.compile(
+    r"[。；;]|(?:不过|但是|然而|可是|(?<!不)但)"
+    r"|(?<=[，,])(?=b(?:越大|变大|增大|决定|影响|控制))"
+)
+_ATTRIBUTION = re.compile(r"(?:有同学|有人|有些同学).{0,6}(?:说|认为|觉得|问)")
 
 
 @dataclass(frozen=True)
@@ -30,12 +35,32 @@ def _denies_locally(span: str) -> bool:
     return bool(_LEXICAL_DENIAL.search(span))
 
 
+def _claim_clauses(text: str) -> list[str]:
+    """Separate a quoted claim from a later explicit first-person stance."""
+    clauses = []
+    for segment in _CLAUSE_BOUNDARY.split(text):
+        attribution = _ATTRIBUTION.search(segment)
+        if attribution:
+            own_stance = re.search(
+                r"[，,](?=我(?:也)?(?:认为|觉得|同意))",
+                segment[attribution.end():],
+            )
+            if own_stance:
+                split_at = attribution.end() + own_stance.end()
+                clauses.extend((segment[:split_at], segment[split_at:]))
+                continue
+        clauses.append(segment)
+    return [clause for clause in clauses if clause]
+
+
 def assess_claims(text: str) -> ClaimAssessment:
     text = re.sub(r"\s+", "", text.lower())
     results = []
     stances = []
     claims = []
-    for sentence in re.split(r"[。；;]", text):
+    # A prior denial or quoted claim must not change the stance of a later
+    # assertion after a contrast or a fresh first-person endorsement.
+    for sentence in _claim_clauses(text):
         patterns = (
             (r"b(?:只)?(?:决定|表示|控制|影响|管|是)(?:直线的)?(?:斜率|倾斜程度)", False),
             (r"k(?:只)?(?:决定|表示|控制|影响|管|是)(?:直线的)?(?:截距|上下位置)", False),

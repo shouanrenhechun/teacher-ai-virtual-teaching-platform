@@ -139,6 +139,47 @@ def test_contrastive_clause_keeps_its_own_negation_scope() -> None:
     assert _linear(text).shows_residual_misconception is True
 
 
+@pytest.mark.parametrize(
+    "text",
+    [
+        "b 变大并没有更陡，但 b 越大直线越陡。",
+        "b 越大直线越陡，但 b 变大并没有更陡。",
+    ],
+)
+def test_denial_in_one_clause_does_not_clear_an_asserted_teacher_error(text: str) -> None:
+    assessment = assess_claims(text)
+    assert assessment.correct is False
+    assert assessment.error_stance == "asserted"
+    assert False in teacher_claims(text)
+    assert _linear(text).shows_residual_misconception is True
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "有同学说 b 越大直线越陡，但我也认为 b 越大直线越陡。",
+        "有同学说 b 越大直线越陡，我也认为 b 越大直线越陡。",
+    ],
+)
+def test_quoted_error_followed_by_own_endorsement_is_asserted(text: str) -> None:
+    assessment = assess_claims(text)
+    assert assessment.correct is False
+    assert assessment.error_stance == "asserted"
+    assert False in teacher_claims(text)
+    assert _linear(text).shows_residual_misconception is True
+
+
+def test_quoted_error_followed_by_own_denial_is_not_residual() -> None:
+    text = "有同学说 b 越大直线越陡，但我不这么认为，b 只改变上下位置。"
+    assert _linear(text).shows_residual_misconception is False
+
+
+def test_first_person_hedge_is_not_split_from_its_subject() -> None:
+    text = "b 变大，我觉得直线会更陡。"
+    assert assess_claims(text).correct is False
+    assert _linear(text).shows_residual_misconception is True
+
+
 # --- validation framework self-description ---------------------------------
 
 def test_validation_package_documents_that_it_is_not_independent() -> None:

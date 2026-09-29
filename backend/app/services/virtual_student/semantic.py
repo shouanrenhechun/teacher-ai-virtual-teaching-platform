@@ -247,23 +247,20 @@ def _linear_residual(response: str, teacher_text: str) -> bool:
     if _has_explicit_linear_self_correction(response):
         correction_tail = re.split(r"(?:现在|后来|如今)", response, maxsplit=1)[-1]
         return _linear_positive_error(correction_tail)
-    # A denial, or an error raised only as an attribution or counterfactual,
-    # is not the student showing the misconception themselves. Both guards must
-    # run before error detection: the error patterns happily match quoted text.
-    # Denial is scoped per clause, so a later asserted error still counts as
-    # residual (negation in one clause must not erase an error in another).
-    if _is_hypothetical(response):
-        return False
-    clauses = _linear_clauses(response)
-    if clauses and all(_denies_steepness(clause) for clause in clauses):
-        return False
-    if any(_linear_positive_error(clause) for clause in clauses):
+    # Only the clause raising a hypothetical/quoted error is excluded. A later
+    # first-person endorsement still expresses the student's misconception.
+    asserted_clauses = [
+        clause for clause in _linear_clauses(response)
+        if not _is_hypothetical(clause) and not _denies_steepness(clause)
+    ]
+    if any(_linear_positive_error(clause) for clause in asserted_clauses):
         return True
     if "2和3" in teacher_text or "y=2x+3" in teacher_text:
-        # A bare intercept number is not misconception evidence on its own; only
-        # read it as one when no clause denies the steepness claim.
-        if not any(_denies_steepness(clause) for clause in _linear_clauses(response)):
-            return bool(re.search(r"(?:3|它).{0,16}(?:越陡|更陡|变陡|会陡)", response))
+        # Keep the intercept-number fallback within asserted clauses too.
+        return any(
+            re.search(r"(?:3|它).{0,16}(?:越陡|更陡|变陡|会陡)", clause)
+            for clause in asserted_clauses
+        )
     return False
 
 
@@ -289,8 +286,18 @@ def _linear_b_role(response: str) -> bool:
 
 
 def _linear_clauses(response: str) -> list[str]:
-    """Keep contrastive clauses separate so negation cannot cross a turn."""
-    return [clause for clause in re.split(r"(?:不过|但是|然而|可是|但)", response) if clause]
+    """Keep quoted claims and later personal endorsements in separate clauses."""
+    clauses = []
+    for segment in re.split(r"(?:不过|但是|然而|可是|(?<!不)但)", response):
+        attribution = re.search(r"(?:有同学|有人|有些同学).{0,6}(?:说|认为|觉得|问)", segment)
+        if attribution:
+            own_stance = re.search(r"我(?:也)?(?:认为|觉得|同意)", segment[attribution.end():])
+            if own_stance:
+                split_at = attribution.end() + own_stance.start()
+                clauses.extend((segment[:split_at], segment[split_at:]))
+                continue
+        clauses.append(segment)
+    return [clause for clause in clauses if clause]
 
 
 # Denial of the b-to-steepness relation, in the forms students actually use.
