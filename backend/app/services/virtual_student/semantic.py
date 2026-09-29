@@ -59,6 +59,9 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
                             "因为", "k相同", "k都", "斜率相同", "只改变b", "只会让直线",
                             "所以倾斜", "由k决定", "由k控制", "只看k", "k不变",
                             "斜率不变", "斜率保持不变", "倾斜程度不变", "一样陡", "同样陡",
+                            "k决定", "k控制", "k影响", "决定倾斜", "决定斜率",
+                            "只影响位置", "只改变位置", "只是上下", "只影响上下", "只改变上下",
+                            "与b无关", "跟b无关", "b无关",
                         )
                     )
                 )
@@ -244,10 +247,23 @@ def _linear_residual(response: str, teacher_text: str) -> bool:
     if _has_explicit_linear_self_correction(response):
         correction_tail = re.split(r"(?:现在|后来|如今)", response, maxsplit=1)[-1]
         return _linear_positive_error(correction_tail)
-    if any(_linear_positive_error(clause) for clause in _linear_clauses(response)):
+    # A denial, or an error raised only as an attribution or counterfactual,
+    # is not the student showing the misconception themselves. Both guards must
+    # run before error detection: the error patterns happily match quoted text.
+    # Denial is scoped per clause, so a later asserted error still counts as
+    # residual (negation in one clause must not erase an error in another).
+    if _is_hypothetical(response):
+        return False
+    clauses = _linear_clauses(response)
+    if clauses and all(_denies_steepness(clause) for clause in clauses):
+        return False
+    if any(_linear_positive_error(clause) for clause in clauses):
         return True
     if "2和3" in teacher_text or "y=2x+3" in teacher_text:
-        return bool(re.search(r"(?:3|它).{0,16}(越陡|更陡|变陡|会陡)", response))
+        # A bare intercept number is not misconception evidence on its own; only
+        # read it as one when no clause denies the steepness claim.
+        if not any(_denies_steepness(clause) for clause in _linear_clauses(response)):
+            return bool(re.search(r"(?:3|它).{0,16}(?:越陡|更陡|变陡|会陡)", response))
     return False
 
 
@@ -277,6 +293,31 @@ def _linear_clauses(response: str) -> list[str]:
     return [clause for clause in re.split(r"(?:不过|但是|然而|可是|但)", response) if clause]
 
 
+# Denial of the b-to-steepness relation, in the forms students actually use.
+# Strong negations ("并没有", "没有") deny on their own. Modal negations
+# ("不会", "不能") are only denials when they carry a causative marker, so a
+# genuine error such as "越大……也会陡一点，不过可能不会太陡吧" still counts as
+# the misconception rather than as a correction.
+_STEEPNESS_DENIAL = re.compile(
+    r"(?:(?:并没有|并没有能|并不能够|并不能|没能|并不|没有)"
+    r"|(?:不会|不能)(?:让|使|令))"
+    r".{0,4}(?:更陡|越陡|变陡|会陡|更斜|越斜|变斜|影响(?:斜率|倾斜)|改变(?:斜率|倾斜))"
+)
+_HYPOTHETICAL = re.compile(
+    r"(?:有同学|有人|有些同学).{0,6}(?:说|认为|觉得|问)|如果|假如|要是|是不是|对不对"
+)
+
+
+def _denies_steepness(text: str) -> bool:
+    """True when the text denies that b changes steepness."""
+    return bool(_STEEPNESS_DENIAL.search(text))
+
+
+def _is_hypothetical(text: str) -> bool:
+    """Text that raises the error without asserting it (attribution, question, condition)."""
+    return bool(_HYPOTHETICAL.search(text))
+
+
 def _linear_positive_error(response: str) -> bool:
     rhetorical_positive = re.search(
         r"(?:b|截距).{0,18}不是会.{0,12}(?:更陡|更斜|倾斜|斜率).{0,4}吗",
@@ -284,15 +325,19 @@ def _linear_positive_error(response: str) -> bool:
     )
     if rhetorical_positive:
         return True
+    if _denies_steepness(response):
+        return False
     if _linear_negative_claim_match(response):
         return False
     patterns = (
-        r"b.{0,18}(越大|变大|更大|增加).{0,18}(陡|倾斜|斜率)",
+        r"b[^，,]{0,12}(?:越大|变大|增大|更大|增加)[^，,]{0,12}.{0,12}(?:更陡|越陡|变陡|会陡)",
         r"(?:b|截距|[+＋]\d+).{0,20}(?:更陡|越陡|变陡|会陡|更斜|越斜|变斜|有点(?:更)?陡)",
-        r"(?:b|[+＋]\d+).{0,20}影响.{0,12}(?:陡|倾斜|斜率)",
-        r"截距.{0,18}(越大|变大|更大|增加).{0,18}(陡|倾斜|斜率|更斜)",
-        r"(觉得|感觉|认为|还是|仍然|可能|也许).{0,18}(?:b|往上移|[+＋]\d+).{0,20}(?:陡|倾斜|斜率|影响)",
-        r"往上移.{0,12}(会|有点|看起来).{0,12}(陡|倾斜)",
+        # The subject must sit next to its own verb, otherwise b is credited with
+        # a clause about k ("b 改变上下位置，因为 k 控制陡峭程度").
+        r"(?:b|[+＋]\d+).{0,6}(?:影响|决定|控制).{0,10}(?:陡|倾斜|斜率)",
+        r"(?:截距|[+＋]\d+).{0,18}(?:越大|变大|更大|增加).{0,18}(?:陡|倾斜|斜率|更斜)",
+        r"(?:觉得|感觉|认为|还是|仍然|可能|也许).{0,18}(?:b|往上移|[+＋]\d+).{0,20}(?:陡|倾斜|斜率|影响)",
+        r"往上移.{0,12}(?:会|有点|看起来).{0,12}(?:陡|倾斜)",
     )
     return any(re.search(pattern, response) for pattern in patterns)
 
