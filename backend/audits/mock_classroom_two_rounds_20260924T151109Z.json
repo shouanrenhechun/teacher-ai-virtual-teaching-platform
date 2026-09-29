@@ -1,0 +1,2021 @@
+{
+  "created_at": "2026-09-24T15:11:09.945732+00:00",
+  "provider": "mock",
+  "model": null,
+  "mode": "offline deterministic Mock; no remote API calls",
+  "scenario_title": "一次函数：k 与 b 的意义",
+  "rounds_per_student": 2,
+  "teacher_turns": [
+    "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？",
+    "我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？"
+  ],
+  "students": [
+    {
+      "student_name": "学生 A",
+      "session_id": 1,
+      "session_status": "completed",
+      "dialogue_records": [
+        {
+          "id": 1,
+          "session_id": 1,
+          "speaker": "teacher",
+          "content": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？",
+          "sequence": 0,
+          "timestamp": "2026-09-24T15:11:10.091487+00:00",
+          "request_id": "93d49d57-ad26-47af-b224-1611a8eaf567",
+          "response_metadata": null
+        },
+        {
+          "id": 2,
+          "session_id": 1,
+          "speaker": "student",
+          "content": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "sequence": 1,
+          "timestamp": "2026-09-24T15:11:10.099884+00:00",
+          "request_id": null,
+          "response_metadata": "{\"source\": \"mock\", \"retries\": 0, \"fallback_reason\": null, \"learning_evidence_allowed\": true, \"render_errors\": []}"
+        },
+        {
+          "id": 3,
+          "session_id": 1,
+          "speaker": "teacher",
+          "content": "我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？",
+          "sequence": 2,
+          "timestamp": "2026-09-24T15:11:10.127687+00:00",
+          "request_id": "80a8f167-effa-4ed3-9b89-e2a0befe7d44",
+          "response_metadata": null
+        },
+        {
+          "id": 4,
+          "session_id": 1,
+          "speaker": "student",
+          "content": "我看到的是 y=2x+3，先根据题目给的条件代入计算。",
+          "sequence": 3,
+          "timestamp": "2026-09-24T15:11:10.135777+00:00",
+          "request_id": null,
+          "response_metadata": "{\"source\": \"mock\", \"retries\": 0, \"fallback_reason\": null, \"learning_evidence_allowed\": true, \"render_errors\": []}"
+        }
+      ],
+      "turns": [
+        {
+          "round": 1,
+          "teacher_input": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？",
+          "student_response": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "response_metadata": {
+            "source": "mock",
+            "retries": 0,
+            "fallback_reason": null,
+            "learning_evidence_allowed": true,
+            "render_errors": []
+          },
+          "teaching_behavior": {
+            "action_type": "guided_question",
+            "concept": "slope",
+            "knowledge_accuracy": 0.8,
+            "clarity": 0.84,
+            "checked_understanding": false,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 1,
+            "session_id": 1,
+            "dialogue_record_id": 1,
+            "created_at": "2026-09-24T15:11:10.099884+00:00"
+          },
+          "student_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "partial",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": true,
+            "shows_uncertainty": true,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": true,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 2
+          },
+          "misconception_before": {
+            "name": "b 越大，直线越陡",
+            "concept": "k 与 b 的图像意义",
+            "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+            "semantic_type": "linear_kb",
+            "strength": 0.85,
+            "status": "active",
+            "triggered": false,
+            "correction_started": false,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "misconception_after": {
+            "name": "b 越大，直线越陡",
+            "concept": "k 与 b 的图像意义",
+            "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+            "semantic_type": "linear_kb",
+            "strength": 0.794,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "state_before": {
+            "understanding": 0.68,
+            "confusion": 0.314,
+            "engagement": 0.3,
+            "confidence": 0.55,
+            "surface_recall": 0.0
+          },
+          "state_after": {
+            "understanding": 0.68,
+            "confusion": 0.314,
+            "engagement": 0.38,
+            "confidence": 0.56,
+            "surface_recall": 0.0
+          },
+          "response_source": "mock",
+          "learning_evidence_allowed": true
+        },
+        {
+          "round": 2,
+          "teacher_input": "我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？",
+          "student_response": "我看到的是 y=2x+3，先根据题目给的条件代入计算。",
+          "response_metadata": {
+            "source": "mock",
+            "retries": 0,
+            "fallback_reason": null,
+            "learning_evidence_allowed": true,
+            "render_errors": []
+          },
+          "teaching_behavior": {
+            "action_type": "question",
+            "concept": "slope_and_intercept",
+            "knowledge_accuracy": 0.95,
+            "clarity": 0.84,
+            "checked_understanding": false,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 2,
+            "session_id": 1,
+            "dialogue_record_id": 3,
+            "created_at": "2026-09-24T15:11:10.135777+00:00"
+          },
+          "student_evidence": {
+            "states_correct_conclusion": false,
+            "conclusion_level": "wrong",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": false,
+            "shows_uncertainty": false,
+            "linguistic_hedging": false,
+            "conceptual_uncertainty": false,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": true,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 0
+          },
+          "misconception_before": {
+            "name": "b 越大，直线越陡",
+            "concept": "k 与 b 的图像意义",
+            "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+            "semantic_type": "linear_kb",
+            "strength": 0.794,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "misconception_after": {
+            "name": "b 越大，直线越陡",
+            "concept": "k 与 b 的图像意义",
+            "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+            "semantic_type": "linear_kb",
+            "strength": 0.794,
+            "status": "weakening",
+            "triggered": false,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "state_before": {
+            "understanding": 0.68,
+            "confusion": 0.314,
+            "engagement": 0.38,
+            "confidence": 0.56,
+            "surface_recall": 0.0
+          },
+          "state_after": {
+            "understanding": 0.68,
+            "confusion": 0.314,
+            "engagement": 0.46,
+            "confidence": 0.57,
+            "surface_recall": 0.0
+          },
+          "response_source": "mock",
+          "learning_evidence_allowed": true
+        }
+      ],
+      "behavior_summary": {
+        "explanation_count": 0,
+        "question_count": 1,
+        "guided_question_count": 1,
+        "example_count": 0,
+        "feedback_count": 0,
+        "correction_count": 0,
+        "understanding_check_count": 0,
+        "direct_answer_count": 0,
+        "classroom_interaction_count": 0,
+        "off_topic_count": 0
+      },
+      "cognitive_trace": {
+        "initial_state": {
+          "understanding": 0.68,
+          "confusion": 0.314,
+          "engagement": 0.3,
+          "confidence": 0.55,
+          "surface_recall": 0.0
+        },
+        "initial_misconception": {
+          "name": "b 越大，直线越陡",
+          "concept": "k 与 b 的图像意义",
+          "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+          "semantic_type": "linear_kb",
+          "strength": 0.85,
+          "status": "active",
+          "triggered": false,
+          "correction_started": false,
+          "corrected": false,
+          "stable_correct_evidence_count": 0,
+          "transfer_evidence": 0
+        },
+        "current_state": {
+          "understanding": 0.68,
+          "confusion": 0.314,
+          "engagement": 0.46,
+          "confidence": 0.57,
+          "surface_recall": 0.0
+        },
+        "current_misconception": {
+          "name": "b 越大，直线越陡",
+          "concept": "k 与 b 的图像意义",
+          "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+          "semantic_type": "linear_kb",
+          "strength": 0.794,
+          "status": "weakening",
+          "triggered": false,
+          "correction_started": true,
+          "corrected": false,
+          "stable_correct_evidence_count": 0,
+          "transfer_evidence": 0
+        },
+        "rounds": [
+          {
+            "round": 1,
+            "teacher_text": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？",
+            "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "action_type": "guided_question",
+            "state_before": {
+              "understanding": 0.68,
+              "confusion": 0.314,
+              "engagement": 0.3,
+              "confidence": 0.55,
+              "surface_recall": 0.0
+            },
+            "state_after": {
+              "understanding": 0.68,
+              "confusion": 0.314,
+              "engagement": 0.38,
+              "confidence": 0.56,
+              "surface_recall": 0.0
+            },
+            "misconception_before": {
+              "name": "b 越大，直线越陡",
+              "concept": "k 与 b 的图像意义",
+              "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+              "semantic_type": "linear_kb",
+              "strength": 0.85,
+              "status": "active",
+              "triggered": false,
+              "correction_started": false,
+              "corrected": false,
+              "stable_correct_evidence_count": 0,
+              "transfer_evidence": 0
+            },
+            "misconception_after": {
+              "name": "b 越大，直线越陡",
+              "concept": "k 与 b 的图像意义",
+              "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+              "semantic_type": "linear_kb",
+              "strength": 0.794,
+              "status": "weakening",
+              "triggered": true,
+              "correction_started": true,
+              "corrected": false,
+              "stable_correct_evidence_count": 0,
+              "transfer_evidence": 0
+            },
+            "evidence": {
+              "states_correct_conclusion": true,
+              "conclusion_level": "partial",
+              "explains_reason_correctly": false,
+              "shows_residual_misconception": true,
+              "shows_uncertainty": true,
+              "linguistic_hedging": true,
+              "conceptual_uncertainty": true,
+              "knowledge_precision": "incorrect",
+              "evidence_insufficient": false,
+              "parrots_teacher": false,
+              "transfer_success": false,
+              "evidence_level": 2
+            },
+            "correction_opportunity": {
+              "correction_opportunity": true,
+              "opportunity_strength": 0.7
+            },
+            "prompt_mode": "conflicted",
+            "response_source": "mock",
+            "learning_evidence_allowed": true
+          },
+          {
+            "round": 2,
+            "teacher_text": "我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？",
+            "student_text": "我看到的是 y=2x+3，先根据题目给的条件代入计算。",
+            "action_type": "question",
+            "state_before": {
+              "understanding": 0.68,
+              "confusion": 0.314,
+              "engagement": 0.38,
+              "confidence": 0.56,
+              "surface_recall": 0.0
+            },
+            "state_after": {
+              "understanding": 0.68,
+              "confusion": 0.314,
+              "engagement": 0.46,
+              "confidence": 0.57,
+              "surface_recall": 0.0
+            },
+            "misconception_before": {
+              "name": "b 越大，直线越陡",
+              "concept": "k 与 b 的图像意义",
+              "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+              "semantic_type": "linear_kb",
+              "strength": 0.794,
+              "status": "weakening",
+              "triggered": true,
+              "correction_started": true,
+              "corrected": false,
+              "stable_correct_evidence_count": 0,
+              "transfer_evidence": 0
+            },
+            "misconception_after": {
+              "name": "b 越大，直线越陡",
+              "concept": "k 与 b 的图像意义",
+              "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+              "semantic_type": "linear_kb",
+              "strength": 0.794,
+              "status": "weakening",
+              "triggered": false,
+              "correction_started": true,
+              "corrected": false,
+              "stable_correct_evidence_count": 0,
+              "transfer_evidence": 0
+            },
+            "evidence": {
+              "states_correct_conclusion": false,
+              "conclusion_level": "wrong",
+              "explains_reason_correctly": false,
+              "shows_residual_misconception": false,
+              "shows_uncertainty": false,
+              "linguistic_hedging": false,
+              "conceptual_uncertainty": false,
+              "knowledge_precision": "incorrect",
+              "evidence_insufficient": true,
+              "parrots_teacher": false,
+              "transfer_success": false,
+              "evidence_level": 0
+            },
+            "correction_opportunity": {
+              "correction_opportunity": true,
+              "opportunity_strength": 0.7
+            },
+            "prompt_mode": "conflicted",
+            "response_source": "mock",
+            "learning_evidence_allowed": true
+          }
+        ]
+      },
+      "evaluation": {
+        "rubric_version": 2,
+        "evidence": {
+          "rubric_version": 2,
+          "independent_tasks": 1,
+          "coverage": 1.0,
+          "dimensions": {
+            "knowledge_accuracy": [
+              {
+                "task": "linear:[('2', '3')]",
+                "rounds": [
+                  2
+                ],
+                "checks": [
+                  true,
+                  true
+                ],
+                "reason": "只核验明确主张，撤回的口误及待辨析问题不计入"
+              }
+            ],
+            "feedback": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "对应学生实际回答",
+                    "value": 1.0,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "指出具体过程或问题",
+                    "value": 1.0,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "提供可执行的下一步",
+                    "value": 1.0,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              }
+            ],
+            "questioning": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "条件明确",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "teacher_rounds": [
+                      1
+                    ],
+                    "student_rounds": [],
+                    "reason": "观察到明确证据；教师第1轮：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？"
+                  },
+                  {
+                    "criterion": "保留学生作答空间",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "teacher_rounds": [
+                      1
+                    ],
+                    "student_rounds": [],
+                    "reason": "观察到明确证据；教师第1轮：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？"
+                  },
+                  {
+                    "criterion": "要求解释或承接学生回答",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？"
+                  }
+                ]
+              }
+            ],
+            "misconception_diagnosis": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "识别已暴露的错误",
+                    "value": 0.5,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到部分证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "提供正确反例或依据",
+                    "value": 1.0,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "通过后续独立回答检验",
+                    "value": 0.0,
+                    "rounds": [],
+                    "teacher_rounds": [],
+                    "student_rounds": [],
+                    "reason": "未观察到满足该项的证据"
+                  }
+                ]
+              }
+            ],
+            "scaffolding": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "提供适当中间步骤",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？"
+                  },
+                  {
+                    "criterion": "学生实际参与",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "teacher_rounds": [],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "转向独立解释或迁移",
+                    "value": 0.0,
+                    "rounds": [
+                      1
+                    ],
+                    "teacher_rounds": [
+                      1
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "未观察到满足该项的证据；教师第1轮：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              }
+            ]
+          },
+          "withdrawn_claims": [],
+          "response_sources": [
+            {
+              "round": 1,
+              "source": "mock",
+              "learning_evidence_allowed": true
+            },
+            {
+              "round": 2,
+              "source": "mock",
+              "learning_evidence_allowed": true
+            }
+          ],
+          "excluded_fallback_response_rounds": [],
+          "limitations": [
+            "训练参考规则，尚待专业教师人工校准。"
+          ]
+        },
+        "session_id": 1,
+        "knowledge_accuracy": 100.0,
+        "questioning": 100.0,
+        "feedback": 100.0,
+        "misconception_diagnosis": 50.0,
+        "scaffolding": 66.67,
+        "overall_score": null,
+        "summary": "证据不足，暂不生成总分。主要复盘点：错误诊断中的“识别已暴露的错误”仍需补充证据（第 1、2 轮）。",
+        "strengths": [
+          "知识准确性观察到较充分的教学证据（第 2 轮）。",
+          "提问观察到较充分的教学证据（第 1 轮）。",
+          "反馈观察到较充分的教学证据（第 1、2 轮）。"
+        ],
+        "problems": [
+          "错误诊断中的“识别已暴露的错误”仍需补充证据（第 1、2 轮）。",
+          "支架支持中的“转向独立解释或迁移”仍需补充证据（第 1 轮）。"
+        ],
+        "suggestions": [
+          "结合（第 1、2 轮）复盘“识别已暴露的错误”，提供下一步提示并让学生独立作答。",
+          "结合（第 1 轮）复盘“转向独立解释或迁移”，提供下一步提示并让学生独立作答。"
+        ],
+        "key_teaching_snippets": [
+          {
+            "round": 2,
+            "action_type": "question",
+            "teacher_text": "我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？",
+            "student_text": "我看到的是 y=2x+3，先根据题目给的条件代入计算。",
+            "evidence": "第 2 轮教师通过提问引导学生：“我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？”。"
+          },
+          {
+            "round": 1,
+            "action_type": "guided_question",
+            "teacher_text": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？",
+            "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "evidence": "第 1 轮教师通过提问引导学生：“在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？”。"
+          }
+        ],
+        "disclaimer": "本评价仅用于教学训练辅助，不替代专业教师的正式评价。",
+        "generated_at": "2026-09-24T15:11:10.163699+00:00",
+        "analysis_source": "rules",
+        "analysis_error": null
+      }
+    },
+    {
+      "student_name": "学生 B",
+      "session_id": 2,
+      "session_status": "completed",
+      "dialogue_records": [
+        {
+          "id": 5,
+          "session_id": 2,
+          "speaker": "teacher",
+          "content": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？",
+          "sequence": 0,
+          "timestamp": "2026-09-24T15:11:10.200430+00:00",
+          "request_id": "e3c80931-c089-4445-832d-d7506e49b549",
+          "response_metadata": null
+        },
+        {
+          "id": 6,
+          "session_id": 2,
+          "speaker": "student",
+          "content": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "sequence": 1,
+          "timestamp": "2026-09-24T15:11:10.206583+00:00",
+          "request_id": null,
+          "response_metadata": "{\"source\": \"mock\", \"retries\": 0, \"fallback_reason\": null, \"learning_evidence_allowed\": true, \"render_errors\": []}"
+        },
+        {
+          "id": 7,
+          "session_id": 2,
+          "speaker": "teacher",
+          "content": "我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？",
+          "sequence": 2,
+          "timestamp": "2026-09-24T15:11:10.226242+00:00",
+          "request_id": "49f94ac3-d9ca-4d9e-b0d2-2da0a84c5490",
+          "response_metadata": null
+        },
+        {
+          "id": 8,
+          "session_id": 2,
+          "speaker": "student",
+          "content": "我看到的是 y=2x+3，先根据题目给的条件代入计算。",
+          "sequence": 3,
+          "timestamp": "2026-09-24T15:11:10.233737+00:00",
+          "request_id": null,
+          "response_metadata": "{\"source\": \"mock\", \"retries\": 0, \"fallback_reason\": null, \"learning_evidence_allowed\": true, \"render_errors\": []}"
+        }
+      ],
+      "turns": [
+        {
+          "round": 1,
+          "teacher_input": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？",
+          "student_response": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "response_metadata": {
+            "source": "mock",
+            "retries": 0,
+            "fallback_reason": null,
+            "learning_evidence_allowed": true,
+            "render_errors": []
+          },
+          "teaching_behavior": {
+            "action_type": "guided_question",
+            "concept": "slope",
+            "knowledge_accuracy": 0.8,
+            "clarity": 0.84,
+            "checked_understanding": false,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 3,
+            "session_id": 2,
+            "dialogue_record_id": 5,
+            "created_at": "2026-09-24T15:11:10.206583+00:00"
+          },
+          "student_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "partial",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": true,
+            "shows_uncertainty": true,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": true,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 2
+          },
+          "misconception_before": {
+            "name": "会算但不能解释",
+            "concept": "公式与图像的联系",
+            "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+            "semantic_type": "linear_kb",
+            "strength": 0.7,
+            "status": "active",
+            "triggered": false,
+            "correction_started": false,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "misconception_after": {
+            "name": "会算但不能解释",
+            "concept": "公式与图像的联系",
+            "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+            "semantic_type": "linear_kb",
+            "strength": 0.644,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "state_before": {
+            "understanding": 0.62,
+            "confusion": 0.326,
+            "engagement": 0.45,
+            "confidence": 0.6,
+            "surface_recall": 0.0
+          },
+          "state_after": {
+            "understanding": 0.62,
+            "confusion": 0.326,
+            "engagement": 0.53,
+            "confidence": 0.61,
+            "surface_recall": 0.0
+          },
+          "response_source": "mock",
+          "learning_evidence_allowed": true
+        },
+        {
+          "round": 2,
+          "teacher_input": "我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？",
+          "student_response": "我看到的是 y=2x+3，先根据题目给的条件代入计算。",
+          "response_metadata": {
+            "source": "mock",
+            "retries": 0,
+            "fallback_reason": null,
+            "learning_evidence_allowed": true,
+            "render_errors": []
+          },
+          "teaching_behavior": {
+            "action_type": "question",
+            "concept": "slope_and_intercept",
+            "knowledge_accuracy": 0.95,
+            "clarity": 0.84,
+            "checked_understanding": false,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 4,
+            "session_id": 2,
+            "dialogue_record_id": 7,
+            "created_at": "2026-09-24T15:11:10.233737+00:00"
+          },
+          "student_evidence": {
+            "states_correct_conclusion": false,
+            "conclusion_level": "wrong",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": false,
+            "shows_uncertainty": false,
+            "linguistic_hedging": false,
+            "conceptual_uncertainty": false,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": true,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 0
+          },
+          "misconception_before": {
+            "name": "会算但不能解释",
+            "concept": "公式与图像的联系",
+            "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+            "semantic_type": "linear_kb",
+            "strength": 0.644,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "misconception_after": {
+            "name": "会算但不能解释",
+            "concept": "公式与图像的联系",
+            "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+            "semantic_type": "linear_kb",
+            "strength": 0.644,
+            "status": "weakening",
+            "triggered": false,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "state_before": {
+            "understanding": 0.62,
+            "confusion": 0.326,
+            "engagement": 0.53,
+            "confidence": 0.61,
+            "surface_recall": 0.0
+          },
+          "state_after": {
+            "understanding": 0.62,
+            "confusion": 0.326,
+            "engagement": 0.61,
+            "confidence": 0.62,
+            "surface_recall": 0.0
+          },
+          "response_source": "mock",
+          "learning_evidence_allowed": true
+        }
+      ],
+      "behavior_summary": {
+        "explanation_count": 0,
+        "question_count": 1,
+        "guided_question_count": 1,
+        "example_count": 0,
+        "feedback_count": 0,
+        "correction_count": 0,
+        "understanding_check_count": 0,
+        "direct_answer_count": 0,
+        "classroom_interaction_count": 0,
+        "off_topic_count": 0
+      },
+      "cognitive_trace": {
+        "initial_state": {
+          "understanding": 0.62,
+          "confusion": 0.326,
+          "engagement": 0.45,
+          "confidence": 0.6,
+          "surface_recall": 0.0
+        },
+        "initial_misconception": {
+          "name": "会算但不能解释",
+          "concept": "公式与图像的联系",
+          "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+          "semantic_type": "linear_kb",
+          "strength": 0.7,
+          "status": "active",
+          "triggered": false,
+          "correction_started": false,
+          "corrected": false,
+          "stable_correct_evidence_count": 0,
+          "transfer_evidence": 0
+        },
+        "current_state": {
+          "understanding": 0.62,
+          "confusion": 0.326,
+          "engagement": 0.61,
+          "confidence": 0.62,
+          "surface_recall": 0.0
+        },
+        "current_misconception": {
+          "name": "会算但不能解释",
+          "concept": "公式与图像的联系",
+          "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+          "semantic_type": "linear_kb",
+          "strength": 0.644,
+          "status": "weakening",
+          "triggered": false,
+          "correction_started": true,
+          "corrected": false,
+          "stable_correct_evidence_count": 0,
+          "transfer_evidence": 0
+        },
+        "rounds": [
+          {
+            "round": 1,
+            "teacher_text": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？",
+            "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "action_type": "guided_question",
+            "state_before": {
+              "understanding": 0.62,
+              "confusion": 0.326,
+              "engagement": 0.45,
+              "confidence": 0.6,
+              "surface_recall": 0.0
+            },
+            "state_after": {
+              "understanding": 0.62,
+              "confusion": 0.326,
+              "engagement": 0.53,
+              "confidence": 0.61,
+              "surface_recall": 0.0
+            },
+            "misconception_before": {
+              "name": "会算但不能解释",
+              "concept": "公式与图像的联系",
+              "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+              "semantic_type": "linear_kb",
+              "strength": 0.7,
+              "status": "active",
+              "triggered": false,
+              "correction_started": false,
+              "corrected": false,
+              "stable_correct_evidence_count": 0,
+              "transfer_evidence": 0
+            },
+            "misconception_after": {
+              "name": "会算但不能解释",
+              "concept": "公式与图像的联系",
+              "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+              "semantic_type": "linear_kb",
+              "strength": 0.644,
+              "status": "weakening",
+              "triggered": true,
+              "correction_started": true,
+              "corrected": false,
+              "stable_correct_evidence_count": 0,
+              "transfer_evidence": 0
+            },
+            "evidence": {
+              "states_correct_conclusion": true,
+              "conclusion_level": "partial",
+              "explains_reason_correctly": false,
+              "shows_residual_misconception": true,
+              "shows_uncertainty": true,
+              "linguistic_hedging": true,
+              "conceptual_uncertainty": true,
+              "knowledge_precision": "incorrect",
+              "evidence_insufficient": false,
+              "parrots_teacher": false,
+              "transfer_success": false,
+              "evidence_level": 2
+            },
+            "correction_opportunity": {
+              "correction_opportunity": true,
+              "opportunity_strength": 0.7
+            },
+            "prompt_mode": "conflicted",
+            "response_source": "mock",
+            "learning_evidence_allowed": true
+          },
+          {
+            "round": 2,
+            "teacher_text": "我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？",
+            "student_text": "我看到的是 y=2x+3，先根据题目给的条件代入计算。",
+            "action_type": "question",
+            "state_before": {
+              "understanding": 0.62,
+              "confusion": 0.326,
+              "engagement": 0.53,
+              "confidence": 0.61,
+              "surface_recall": 0.0
+            },
+            "state_after": {
+              "understanding": 0.62,
+              "confusion": 0.326,
+              "engagement": 0.61,
+              "confidence": 0.62,
+              "surface_recall": 0.0
+            },
+            "misconception_before": {
+              "name": "会算但不能解释",
+              "concept": "公式与图像的联系",
+              "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+              "semantic_type": "linear_kb",
+              "strength": 0.644,
+              "status": "weakening",
+              "triggered": true,
+              "correction_started": true,
+              "corrected": false,
+              "stable_correct_evidence_count": 0,
+              "transfer_evidence": 0
+            },
+            "misconception_after": {
+              "name": "会算但不能解释",
+              "concept": "公式与图像的联系",
+              "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+              "semantic_type": "linear_kb",
+              "strength": 0.644,
+              "status": "weakening",
+              "triggered": false,
+              "correction_started": true,
+              "corrected": false,
+              "stable_correct_evidence_count": 0,
+              "transfer_evidence": 0
+            },
+            "evidence": {
+              "states_correct_conclusion": false,
+              "conclusion_level": "wrong",
+              "explains_reason_correctly": false,
+              "shows_residual_misconception": false,
+              "shows_uncertainty": false,
+              "linguistic_hedging": false,
+              "conceptual_uncertainty": false,
+              "knowledge_precision": "incorrect",
+              "evidence_insufficient": true,
+              "parrots_teacher": false,
+              "transfer_success": false,
+              "evidence_level": 0
+            },
+            "correction_opportunity": {
+              "correction_opportunity": true,
+              "opportunity_strength": 0.7
+            },
+            "prompt_mode": "conflicted",
+            "response_source": "mock",
+            "learning_evidence_allowed": true
+          }
+        ]
+      },
+      "evaluation": {
+        "rubric_version": 2,
+        "evidence": {
+          "rubric_version": 2,
+          "independent_tasks": 1,
+          "coverage": 1.0,
+          "dimensions": {
+            "knowledge_accuracy": [
+              {
+                "task": "linear:[('2', '3')]",
+                "rounds": [
+                  2
+                ],
+                "checks": [
+                  true,
+                  true
+                ],
+                "reason": "只核验明确主张，撤回的口误及待辨析问题不计入"
+              }
+            ],
+            "feedback": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "对应学生实际回答",
+                    "value": 1.0,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "指出具体过程或问题",
+                    "value": 1.0,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "提供可执行的下一步",
+                    "value": 1.0,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              }
+            ],
+            "questioning": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "条件明确",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "teacher_rounds": [
+                      1
+                    ],
+                    "student_rounds": [],
+                    "reason": "观察到明确证据；教师第1轮：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？"
+                  },
+                  {
+                    "criterion": "保留学生作答空间",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "teacher_rounds": [
+                      1
+                    ],
+                    "student_rounds": [],
+                    "reason": "观察到明确证据；教师第1轮：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？"
+                  },
+                  {
+                    "criterion": "要求解释或承接学生回答",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？"
+                  }
+                ]
+              }
+            ],
+            "misconception_diagnosis": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "识别已暴露的错误",
+                    "value": 0.5,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到部分证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "提供正确反例或依据",
+                    "value": 1.0,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "通过后续独立回答检验",
+                    "value": 0.0,
+                    "rounds": [],
+                    "teacher_rounds": [],
+                    "student_rounds": [],
+                    "reason": "未观察到满足该项的证据"
+                  }
+                ]
+              }
+            ],
+            "scaffolding": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "提供适当中间步骤",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？"
+                  },
+                  {
+                    "criterion": "学生实际参与",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "teacher_rounds": [],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "转向独立解释或迁移",
+                    "value": 0.0,
+                    "rounds": [
+                      1
+                    ],
+                    "teacher_rounds": [
+                      1
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "未观察到满足该项的证据；教师第1轮：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              }
+            ]
+          },
+          "withdrawn_claims": [],
+          "response_sources": [
+            {
+              "round": 1,
+              "source": "mock",
+              "learning_evidence_allowed": true
+            },
+            {
+              "round": 2,
+              "source": "mock",
+              "learning_evidence_allowed": true
+            }
+          ],
+          "excluded_fallback_response_rounds": [],
+          "limitations": [
+            "训练参考规则，尚待专业教师人工校准。"
+          ]
+        },
+        "session_id": 2,
+        "knowledge_accuracy": 100.0,
+        "questioning": 100.0,
+        "feedback": 100.0,
+        "misconception_diagnosis": 50.0,
+        "scaffolding": 66.67,
+        "overall_score": null,
+        "summary": "证据不足，暂不生成总分。主要复盘点：错误诊断中的“识别已暴露的错误”仍需补充证据（第 1、2 轮）。",
+        "strengths": [
+          "知识准确性观察到较充分的教学证据（第 2 轮）。",
+          "提问观察到较充分的教学证据（第 1 轮）。",
+          "反馈观察到较充分的教学证据（第 1、2 轮）。"
+        ],
+        "problems": [
+          "错误诊断中的“识别已暴露的错误”仍需补充证据（第 1、2 轮）。",
+          "支架支持中的“转向独立解释或迁移”仍需补充证据（第 1 轮）。"
+        ],
+        "suggestions": [
+          "结合（第 1、2 轮）复盘“识别已暴露的错误”，提供下一步提示并让学生独立作答。",
+          "结合（第 1 轮）复盘“转向独立解释或迁移”，提供下一步提示并让学生独立作答。"
+        ],
+        "key_teaching_snippets": [
+          {
+            "round": 2,
+            "action_type": "question",
+            "teacher_text": "我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？",
+            "student_text": "我看到的是 y=2x+3，先根据题目给的条件代入计算。",
+            "evidence": "第 2 轮教师通过提问引导学生：“我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？”。"
+          },
+          {
+            "round": 1,
+            "action_type": "guided_question",
+            "teacher_text": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？",
+            "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "evidence": "第 1 轮教师通过提问引导学生：“在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？”。"
+          }
+        ],
+        "disclaimer": "本评价仅用于教学训练辅助，不替代专业教师的正式评价。",
+        "generated_at": "2026-09-24T15:11:10.262376+00:00",
+        "analysis_source": "rules",
+        "analysis_error": null
+      }
+    },
+    {
+      "student_name": "学生 C",
+      "session_id": 3,
+      "session_status": "completed",
+      "dialogue_records": [
+        {
+          "id": 9,
+          "session_id": 3,
+          "speaker": "teacher",
+          "content": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？",
+          "sequence": 0,
+          "timestamp": "2026-09-24T15:11:10.295911+00:00",
+          "request_id": "d25031a7-c320-44a7-9a82-bffa7f66b6d6",
+          "response_metadata": null
+        },
+        {
+          "id": 10,
+          "session_id": 3,
+          "speaker": "student",
+          "content": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "sequence": 1,
+          "timestamp": "2026-09-24T15:11:10.303076+00:00",
+          "request_id": null,
+          "response_metadata": "{\"source\": \"mock\", \"retries\": 0, \"fallback_reason\": null, \"learning_evidence_allowed\": true, \"render_errors\": []}"
+        },
+        {
+          "id": 11,
+          "session_id": 3,
+          "speaker": "teacher",
+          "content": "我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？",
+          "sequence": 2,
+          "timestamp": "2026-09-24T15:11:10.321727+00:00",
+          "request_id": "792fb04c-bb6e-41c7-9e85-652646c3941f",
+          "response_metadata": null
+        },
+        {
+          "id": 12,
+          "session_id": 3,
+          "speaker": "student",
+          "content": "我看到的是 y=2x+3，先根据题目给的条件代入计算。",
+          "sequence": 3,
+          "timestamp": "2026-09-24T15:11:10.328426+00:00",
+          "request_id": null,
+          "response_metadata": "{\"source\": \"mock\", \"retries\": 0, \"fallback_reason\": null, \"learning_evidence_allowed\": true, \"render_errors\": []}"
+        }
+      ],
+      "turns": [
+        {
+          "round": 1,
+          "teacher_input": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？",
+          "student_response": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "response_metadata": {
+            "source": "mock",
+            "retries": 0,
+            "fallback_reason": null,
+            "learning_evidence_allowed": true,
+            "render_errors": []
+          },
+          "teaching_behavior": {
+            "action_type": "guided_question",
+            "concept": "slope",
+            "knowledge_accuracy": 0.8,
+            "clarity": 0.84,
+            "checked_understanding": false,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 5,
+            "session_id": 3,
+            "dialogue_record_id": 9,
+            "created_at": "2026-09-24T15:11:10.303076+00:00"
+          },
+          "student_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "partial",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": true,
+            "shows_uncertainty": true,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": true,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 2
+          },
+          "misconception_before": {
+            "name": "先给结论再补理由",
+            "concept": "k 与 b 的变量作用",
+            "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+            "semantic_type": "linear_kb",
+            "strength": 0.65,
+            "status": "active",
+            "triggered": false,
+            "correction_started": false,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "misconception_after": {
+            "name": "先给结论再补理由",
+            "concept": "k 与 b 的变量作用",
+            "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+            "semantic_type": "linear_kb",
+            "strength": 0.594,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "state_before": {
+            "understanding": 0.6,
+            "confusion": 0.33,
+            "engagement": 0.85,
+            "confidence": 0.9,
+            "surface_recall": 0.0
+          },
+          "state_after": {
+            "understanding": 0.6,
+            "confusion": 0.33,
+            "engagement": 0.93,
+            "confidence": 0.91,
+            "surface_recall": 0.0
+          },
+          "response_source": "mock",
+          "learning_evidence_allowed": true
+        },
+        {
+          "round": 2,
+          "teacher_input": "我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？",
+          "student_response": "我看到的是 y=2x+3，先根据题目给的条件代入计算。",
+          "response_metadata": {
+            "source": "mock",
+            "retries": 0,
+            "fallback_reason": null,
+            "learning_evidence_allowed": true,
+            "render_errors": []
+          },
+          "teaching_behavior": {
+            "action_type": "question",
+            "concept": "slope_and_intercept",
+            "knowledge_accuracy": 0.95,
+            "clarity": 0.84,
+            "checked_understanding": false,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 6,
+            "session_id": 3,
+            "dialogue_record_id": 11,
+            "created_at": "2026-09-24T15:11:10.328426+00:00"
+          },
+          "student_evidence": {
+            "states_correct_conclusion": false,
+            "conclusion_level": "wrong",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": false,
+            "shows_uncertainty": false,
+            "linguistic_hedging": false,
+            "conceptual_uncertainty": false,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": true,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 0
+          },
+          "misconception_before": {
+            "name": "先给结论再补理由",
+            "concept": "k 与 b 的变量作用",
+            "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+            "semantic_type": "linear_kb",
+            "strength": 0.594,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "misconception_after": {
+            "name": "先给结论再补理由",
+            "concept": "k 与 b 的变量作用",
+            "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+            "semantic_type": "linear_kb",
+            "strength": 0.594,
+            "status": "weakening",
+            "triggered": false,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "state_before": {
+            "understanding": 0.6,
+            "confusion": 0.33,
+            "engagement": 0.93,
+            "confidence": 0.91,
+            "surface_recall": 0.0
+          },
+          "state_after": {
+            "understanding": 0.6,
+            "confusion": 0.33,
+            "engagement": 1.0,
+            "confidence": 0.92,
+            "surface_recall": 0.0
+          },
+          "response_source": "mock",
+          "learning_evidence_allowed": true
+        }
+      ],
+      "behavior_summary": {
+        "explanation_count": 0,
+        "question_count": 1,
+        "guided_question_count": 1,
+        "example_count": 0,
+        "feedback_count": 0,
+        "correction_count": 0,
+        "understanding_check_count": 0,
+        "direct_answer_count": 0,
+        "classroom_interaction_count": 0,
+        "off_topic_count": 0
+      },
+      "cognitive_trace": {
+        "initial_state": {
+          "understanding": 0.6,
+          "confusion": 0.33,
+          "engagement": 0.85,
+          "confidence": 0.9,
+          "surface_recall": 0.0
+        },
+        "initial_misconception": {
+          "name": "先给结论再补理由",
+          "concept": "k 与 b 的变量作用",
+          "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+          "semantic_type": "linear_kb",
+          "strength": 0.65,
+          "status": "active",
+          "triggered": false,
+          "correction_started": false,
+          "corrected": false,
+          "stable_correct_evidence_count": 0,
+          "transfer_evidence": 0
+        },
+        "current_state": {
+          "understanding": 0.6,
+          "confusion": 0.33,
+          "engagement": 1.0,
+          "confidence": 0.92,
+          "surface_recall": 0.0
+        },
+        "current_misconception": {
+          "name": "先给结论再补理由",
+          "concept": "k 与 b 的变量作用",
+          "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+          "semantic_type": "linear_kb",
+          "strength": 0.594,
+          "status": "weakening",
+          "triggered": false,
+          "correction_started": true,
+          "corrected": false,
+          "stable_correct_evidence_count": 0,
+          "transfer_evidence": 0
+        },
+        "rounds": [
+          {
+            "round": 1,
+            "teacher_text": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？",
+            "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "action_type": "guided_question",
+            "state_before": {
+              "understanding": 0.6,
+              "confusion": 0.33,
+              "engagement": 0.85,
+              "confidence": 0.9,
+              "surface_recall": 0.0
+            },
+            "state_after": {
+              "understanding": 0.6,
+              "confusion": 0.33,
+              "engagement": 0.93,
+              "confidence": 0.91,
+              "surface_recall": 0.0
+            },
+            "misconception_before": {
+              "name": "先给结论再补理由",
+              "concept": "k 与 b 的变量作用",
+              "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+              "semantic_type": "linear_kb",
+              "strength": 0.65,
+              "status": "active",
+              "triggered": false,
+              "correction_started": false,
+              "corrected": false,
+              "stable_correct_evidence_count": 0,
+              "transfer_evidence": 0
+            },
+            "misconception_after": {
+              "name": "先给结论再补理由",
+              "concept": "k 与 b 的变量作用",
+              "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+              "semantic_type": "linear_kb",
+              "strength": 0.594,
+              "status": "weakening",
+              "triggered": true,
+              "correction_started": true,
+              "corrected": false,
+              "stable_correct_evidence_count": 0,
+              "transfer_evidence": 0
+            },
+            "evidence": {
+              "states_correct_conclusion": true,
+              "conclusion_level": "partial",
+              "explains_reason_correctly": false,
+              "shows_residual_misconception": true,
+              "shows_uncertainty": true,
+              "linguistic_hedging": true,
+              "conceptual_uncertainty": true,
+              "knowledge_precision": "incorrect",
+              "evidence_insufficient": false,
+              "parrots_teacher": false,
+              "transfer_success": false,
+              "evidence_level": 2
+            },
+            "correction_opportunity": {
+              "correction_opportunity": true,
+              "opportunity_strength": 0.7
+            },
+            "prompt_mode": "conflicted",
+            "response_source": "mock",
+            "learning_evidence_allowed": true
+          },
+          {
+            "round": 2,
+            "teacher_text": "我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？",
+            "student_text": "我看到的是 y=2x+3，先根据题目给的条件代入计算。",
+            "action_type": "question",
+            "state_before": {
+              "understanding": 0.6,
+              "confusion": 0.33,
+              "engagement": 0.93,
+              "confidence": 0.91,
+              "surface_recall": 0.0
+            },
+            "state_after": {
+              "understanding": 0.6,
+              "confusion": 0.33,
+              "engagement": 1.0,
+              "confidence": 0.92,
+              "surface_recall": 0.0
+            },
+            "misconception_before": {
+              "name": "先给结论再补理由",
+              "concept": "k 与 b 的变量作用",
+              "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+              "semantic_type": "linear_kb",
+              "strength": 0.594,
+              "status": "weakening",
+              "triggered": true,
+              "correction_started": true,
+              "corrected": false,
+              "stable_correct_evidence_count": 0,
+              "transfer_evidence": 0
+            },
+            "misconception_after": {
+              "name": "先给结论再补理由",
+              "concept": "k 与 b 的变量作用",
+              "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+              "semantic_type": "linear_kb",
+              "strength": 0.594,
+              "status": "weakening",
+              "triggered": false,
+              "correction_started": true,
+              "corrected": false,
+              "stable_correct_evidence_count": 0,
+              "transfer_evidence": 0
+            },
+            "evidence": {
+              "states_correct_conclusion": false,
+              "conclusion_level": "wrong",
+              "explains_reason_correctly": false,
+              "shows_residual_misconception": false,
+              "shows_uncertainty": false,
+              "linguistic_hedging": false,
+              "conceptual_uncertainty": false,
+              "knowledge_precision": "incorrect",
+              "evidence_insufficient": true,
+              "parrots_teacher": false,
+              "transfer_success": false,
+              "evidence_level": 0
+            },
+            "correction_opportunity": {
+              "correction_opportunity": true,
+              "opportunity_strength": 0.7
+            },
+            "prompt_mode": "conflicted",
+            "response_source": "mock",
+            "learning_evidence_allowed": true
+          }
+        ]
+      },
+      "evaluation": {
+        "rubric_version": 2,
+        "evidence": {
+          "rubric_version": 2,
+          "independent_tasks": 1,
+          "coverage": 1.0,
+          "dimensions": {
+            "knowledge_accuracy": [
+              {
+                "task": "linear:[('2', '3')]",
+                "rounds": [
+                  2
+                ],
+                "checks": [
+                  true,
+                  true
+                ],
+                "reason": "只核验明确主张，撤回的口误及待辨析问题不计入"
+              }
+            ],
+            "feedback": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "对应学生实际回答",
+                    "value": 1.0,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "指出具体过程或问题",
+                    "value": 1.0,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "提供可执行的下一步",
+                    "value": 1.0,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              }
+            ],
+            "questioning": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "条件明确",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "teacher_rounds": [
+                      1
+                    ],
+                    "student_rounds": [],
+                    "reason": "观察到明确证据；教师第1轮：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？"
+                  },
+                  {
+                    "criterion": "保留学生作答空间",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "teacher_rounds": [
+                      1
+                    ],
+                    "student_rounds": [],
+                    "reason": "观察到明确证据；教师第1轮：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？"
+                  },
+                  {
+                    "criterion": "要求解释或承接学生回答",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？"
+                  }
+                ]
+              }
+            ],
+            "misconception_diagnosis": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "识别已暴露的错误",
+                    "value": 0.5,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到部分证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "提供正确反例或依据",
+                    "value": 1.0,
+                    "rounds": [
+                      1,
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "通过后续独立回答检验",
+                    "value": 0.0,
+                    "rounds": [],
+                    "teacher_rounds": [],
+                    "student_rounds": [],
+                    "reason": "未观察到满足该项的证据"
+                  }
+                ]
+              }
+            ],
+            "scaffolding": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "提供适当中间步骤",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "teacher_rounds": [
+                      2
+                    ],
+                    "student_rounds": [],
+                    "reason": "观察到明确证据；教师第2轮：我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？"
+                  },
+                  {
+                    "criterion": "学生实际参与",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "teacher_rounds": [],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "转向独立解释或迁移",
+                    "value": 0.0,
+                    "rounds": [
+                      1
+                    ],
+                    "teacher_rounds": [
+                      1
+                    ],
+                    "student_rounds": [
+                      1
+                    ],
+                    "reason": "未观察到满足该项的证据；教师第1轮：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？；学生第1轮：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              }
+            ]
+          },
+          "withdrawn_claims": [],
+          "response_sources": [
+            {
+              "round": 1,
+              "source": "mock",
+              "learning_evidence_allowed": true
+            },
+            {
+              "round": 2,
+              "source": "mock",
+              "learning_evidence_allowed": true
+            }
+          ],
+          "excluded_fallback_response_rounds": [],
+          "limitations": [
+            "训练参考规则，尚待专业教师人工校准。"
+          ]
+        },
+        "session_id": 3,
+        "knowledge_accuracy": 100.0,
+        "questioning": 100.0,
+        "feedback": 100.0,
+        "misconception_diagnosis": 50.0,
+        "scaffolding": 66.67,
+        "overall_score": null,
+        "summary": "证据不足，暂不生成总分。主要复盘点：错误诊断中的“识别已暴露的错误”仍需补充证据（第 1、2 轮）。",
+        "strengths": [
+          "知识准确性观察到较充分的教学证据（第 2 轮）。",
+          "提问观察到较充分的教学证据（第 1 轮）。",
+          "反馈观察到较充分的教学证据（第 1、2 轮）。"
+        ],
+        "problems": [
+          "错误诊断中的“识别已暴露的错误”仍需补充证据（第 1、2 轮）。",
+          "支架支持中的“转向独立解释或迁移”仍需补充证据（第 1 轮）。"
+        ],
+        "suggestions": [
+          "结合（第 1、2 轮）复盘“识别已暴露的错误”，提供下一步提示并让学生独立作答。",
+          "结合（第 1 轮）复盘“转向独立解释或迁移”，提供下一步提示并让学生独立作答。"
+        ],
+        "key_teaching_snippets": [
+          {
+            "round": 2,
+            "action_type": "question",
+            "teacher_text": "我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？",
+            "student_text": "我看到的是 y=2x+3，先根据题目给的条件代入计算。",
+            "evidence": "第 2 轮教师通过提问引导学生：“我先告诉你：k 决定倾斜程度，b 只改变截距和上下位置。你能用自己的话说说为什么吗？”。"
+          },
+          {
+            "round": 1,
+            "action_type": "guided_question",
+            "teacher_text": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？",
+            "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "evidence": "第 1 轮教师通过提问引导学生：“在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响直线的倾斜程度？”。"
+          }
+        ],
+        "disclaimer": "本评价仅用于教学训练辅助，不替代专业教师的正式评价。",
+        "generated_at": "2026-09-24T15:11:10.392281+00:00",
+        "analysis_source": "rules",
+        "analysis_error": null
+      }
+    }
+  ]
+}

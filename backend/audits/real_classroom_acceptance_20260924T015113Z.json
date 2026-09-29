@@ -1,0 +1,4497 @@
+{
+  "status": "completed",
+  "provider": "real",
+  "model": "deepseek-v4-flash",
+  "profiles": {
+    "student_a": {
+      "profile_id": "student_a",
+      "student_name": "学生 A",
+      "session_http": 200,
+      "session_id": 1,
+      "turns": [
+        {
+          "round": 1,
+          "case_id": "ordinary_question",
+          "teacher_input": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+          "student_response": "我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。",
+          "response_metadata": {
+            "source": "deterministic_fallback",
+            "retries": 1,
+            "fallback_reason": "empty_reply",
+            "learning_evidence_allowed": true,
+            "render_error": "LLMServiceError"
+          },
+          "validator_rejected_before_retry": true,
+          "retry_count": 1,
+          "degraded": true,
+          "behavior": {
+            "action_type": "guided_question",
+            "concept": "slope_and_intercept",
+            "knowledge_accuracy": 0.8,
+            "clarity": 1.0,
+            "checked_understanding": true,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 1,
+            "session_id": 1,
+            "dialogue_record_id": 1,
+            "created_at": "2026-09-24T01:48:01.332325+00:00"
+          },
+          "state_after": {
+            "understanding": 0.68,
+            "confusion": 0.314,
+            "engagement": 0.38,
+            "confidence": 0.56,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "b 越大，直线越陡",
+            "concept": "k 与 b 的图像意义",
+            "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+            "semantic_type": "linear_kb",
+            "strength": 0.794,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "partial",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": true,
+            "shows_uncertainty": true,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": true,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 2
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        },
+        {
+          "round": 2,
+          "case_id": "misconception_probe",
+          "teacher_input": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+          "student_response": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "response_metadata": {
+            "source": "deterministic_fallback",
+            "retries": 1,
+            "fallback_reason": "empty_reply",
+            "learning_evidence_allowed": true,
+            "render_error": "LLMServiceError"
+          },
+          "validator_rejected_before_retry": true,
+          "retry_count": 1,
+          "degraded": true,
+          "behavior": {
+            "action_type": "guided_question",
+            "concept": "slope",
+            "knowledge_accuracy": 0.8,
+            "clarity": 0.96,
+            "checked_understanding": false,
+            "gave_answer_directly": false,
+            "analysis_source": "fallback",
+            "analysis_error": "2 validation errors for TeachingBehaviorAnalysis\nknowledge_accuracy\n  Input should be a valid number, unable to parse string as a number [type=float_parsing, input_value='accurate', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/float_parsing\nclarity\n  Input should be a valid number, unable to parse string as a number [type=float_parsing, input_value='clear', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/float_parsing",
+            "id": 2,
+            "session_id": 1,
+            "dialogue_record_id": 3,
+            "created_at": "2026-09-24T01:48:10.096220+00:00"
+          },
+          "state_after": {
+            "understanding": 0.68,
+            "confusion": 0.314,
+            "engagement": 0.46,
+            "confidence": 0.57,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "b 越大，直线越陡",
+            "concept": "k 与 b 的图像意义",
+            "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+            "semantic_type": "linear_kb",
+            "strength": 0.738,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "partial",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": true,
+            "shows_uncertainty": true,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": true,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 2
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        },
+        {
+          "round": 3,
+          "case_id": "follow_up",
+          "teacher_input": "为什么？那前一个呢？请结合刚才的式子说说。",
+          "student_response": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "response_metadata": {
+            "source": "deterministic_fallback",
+            "retries": 1,
+            "fallback_reason": "empty_reply",
+            "learning_evidence_allowed": true,
+            "render_error": "LLMServiceError"
+          },
+          "validator_rejected_before_retry": true,
+          "retry_count": 1,
+          "degraded": true,
+          "behavior": {
+            "action_type": "question",
+            "concept": "课堂互动",
+            "knowledge_accuracy": 0.0,
+            "clarity": 1.0,
+            "checked_understanding": true,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 3,
+            "session_id": 1,
+            "dialogue_record_id": 5,
+            "created_at": "2026-09-24T01:48:20.319501+00:00"
+          },
+          "state_after": {
+            "understanding": 0.68,
+            "confusion": 0.314,
+            "engagement": 0.54,
+            "confidence": 0.58,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "b 越大，直线越陡",
+            "concept": "k 与 b 的图像意义",
+            "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+            "semantic_type": "linear_kb",
+            "strength": 0.738,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "partial",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": true,
+            "shows_uncertainty": true,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": true,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 2
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        },
+        {
+          "round": 4,
+          "case_id": "direct_answer",
+          "teacher_input": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+          "student_response": "我把条件对照一下：我懂了一部分，b 应该主要改变位置，但还想再看一个例子。",
+          "response_metadata": {
+            "source": "deterministic_fallback",
+            "retries": 1,
+            "fallback_reason": "empty_reply",
+            "learning_evidence_allowed": true,
+            "render_error": "LLMServiceError"
+          },
+          "validator_rejected_before_retry": true,
+          "retry_count": 1,
+          "degraded": true,
+          "behavior": {
+            "action_type": "question",
+            "concept": "slope_and_intercept",
+            "knowledge_accuracy": 0.95,
+            "clarity": 0.96,
+            "checked_understanding": true,
+            "gave_answer_directly": false,
+            "analysis_source": "fallback",
+            "analysis_error": "2 validation errors for TeachingBehaviorAnalysis\nknowledge_accuracy\n  Input should be a valid number, unable to parse string as a number [type=float_parsing, input_value='准确', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/float_parsing\nclarity\n  Input should be a valid number, unable to parse string as a number [type=float_parsing, input_value='清晰', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/float_parsing",
+            "id": 4,
+            "session_id": 1,
+            "dialogue_record_id": 7,
+            "created_at": "2026-09-24T01:48:29.557239+00:00"
+          },
+          "state_after": {
+            "understanding": 0.68,
+            "confusion": 0.314,
+            "engagement": 0.62,
+            "confidence": 0.59,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "b 越大，直线越陡",
+            "concept": "k 与 b 的图像意义",
+            "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+            "semantic_type": "linear_kb",
+            "strength": 0.738,
+            "status": "weakening",
+            "triggered": false,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": false,
+            "conclusion_level": "partial",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": false,
+            "shows_uncertainty": false,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": false,
+            "knowledge_precision": "partial",
+            "evidence_insufficient": true,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 0
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        },
+        {
+          "round": 5,
+          "case_id": "transfer",
+          "teacher_input": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+          "student_response": "先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。",
+          "response_metadata": {
+            "source": "deterministic_fallback",
+            "retries": 1,
+            "fallback_reason": "empty_reply",
+            "learning_evidence_allowed": true,
+            "render_error": "LLMServiceError"
+          },
+          "validator_rejected_before_retry": true,
+          "retry_count": 1,
+          "degraded": true,
+          "behavior": {
+            "action_type": "guided_question",
+            "concept": "一次函数图像的斜率与陡峭程度",
+            "knowledge_accuracy": 0.8,
+            "clarity": 1.0,
+            "checked_understanding": true,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 5,
+            "session_id": 1,
+            "dialogue_record_id": 9,
+            "created_at": "2026-09-24T01:48:38.960172+00:00"
+          },
+          "state_after": {
+            "understanding": 0.73,
+            "confusion": 0.284,
+            "engagement": 0.7,
+            "confidence": 0.6,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "b 越大，直线越陡",
+            "concept": "k 与 b 的图像意义",
+            "description": "把 b 的变化误认为会改变直线的倾斜程度，混淆 k 和 b 的作用。",
+            "semantic_type": "linear_kb",
+            "strength": 0.588,
+            "status": "provisional",
+            "triggered": false,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 1,
+            "transfer_evidence": 1
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "correct",
+            "explains_reason_correctly": true,
+            "shows_residual_misconception": false,
+            "shows_uncertainty": false,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": false,
+            "knowledge_precision": "correct",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": true,
+            "evidence_level": 3
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        }
+      ],
+      "evaluation_http": 200,
+      "evaluation": {
+        "rubric_version": 2,
+        "evidence": {
+          "rubric_version": 2,
+          "independent_tasks": 3,
+          "coverage": 1.0,
+          "dimensions": {
+            "scaffolding": [
+              {
+                "task": "concept:linear_kb",
+                "checks": [
+                  {
+                    "criterion": "提供适当中间步骤",
+                    "value": 0.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+                  },
+                  {
+                    "criterion": "学生实际参与",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+                  },
+                  {
+                    "criterion": "转向独立解释或迁移",
+                    "value": 0.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+                  }
+                ]
+              },
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "提供适当中间步骤",
+                    "value": 0.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "学生实际参与",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "转向独立解释或迁移",
+                    "value": 0.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              },
+              {
+                "task": "linear:[('-3', '1'), ('-3', '6')]",
+                "checks": [
+                  {
+                    "criterion": "提供适当中间步骤",
+                    "value": 0.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+                  },
+                  {
+                    "criterion": "学生实际参与",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+                  },
+                  {
+                    "criterion": "转向独立解释或迁移",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+                  }
+                ]
+              }
+            ],
+            "questioning": [
+              {
+                "task": "concept:linear_kb",
+                "checks": [
+                  {
+                    "criterion": "条件明确",
+                    "value": 0.5,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "观察到部分证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+                  },
+                  {
+                    "criterion": "保留学生作答空间",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+                  },
+                  {
+                    "criterion": "要求解释或承接学生回答",
+                    "value": 0.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+                  }
+                ]
+              },
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "条件明确",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "保留学生作答空间",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "要求解释或承接学生回答",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              },
+              {
+                "task": "linear:[('-3', '1'), ('-3', '6')]",
+                "checks": [
+                  {
+                    "criterion": "条件明确",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+                  },
+                  {
+                    "criterion": "保留学生作答空间",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+                  },
+                  {
+                    "criterion": "要求解释或承接学生回答",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+                  }
+                ]
+              }
+            ],
+            "knowledge_accuracy": [
+              {
+                "task": "linear:[('2', '3')]",
+                "rounds": [
+                  4
+                ],
+                "checks": [
+                  true,
+                  true
+                ],
+                "reason": "只核验明确主张，撤回的口误及待辨析问题不计入"
+              }
+            ],
+            "feedback": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "对应学生实际回答",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "指出具体过程或问题",
+                    "value": 1.0,
+                    "rounds": [
+                      4
+                    ],
+                    "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我把条件对照一下：我懂了一部分，b 应该主要改变位置，但还想再看一个例子。"
+                  },
+                  {
+                    "criterion": "提供可执行的下一步",
+                    "value": 1.0,
+                    "rounds": [
+                      3
+                    ],
+                    "reason": "观察到明确证据；教师：为什么？那前一个呢？请结合刚才的式子说说。；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              }
+            ],
+            "misconception_diagnosis": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "识别已暴露的错误",
+                    "value": 0.5,
+                    "rounds": [
+                      2,
+                      1,
+                      3
+                    ],
+                    "reason": "观察到部分证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "提供正确反例或依据",
+                    "value": 1.0,
+                    "rounds": [
+                      4,
+                      3
+                    ],
+                    "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我把条件对照一下：我懂了一部分，b 应该主要改变位置，但还想再看一个例子。"
+                  },
+                  {
+                    "criterion": "通过后续独立回答检验",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+                  }
+                ]
+              }
+            ]
+          },
+          "withdrawn_claims": [],
+          "limitations": [
+            "训练参考规则，尚待专业教师人工校准。"
+          ]
+        },
+        "session_id": 1,
+        "knowledge_accuracy": 100.0,
+        "questioning": 83.33,
+        "feedback": 100.0,
+        "misconception_diagnosis": 83.33,
+        "scaffolding": 44.44,
+        "overall_score": 85.0,
+        "summary": "训练参考分 85.0 分。主要复盘点：第1、2、3轮学生连续暴露“b 变大也可能更陡”的误解，但教师没有提供图像、数值表、具体点坐标或动态对比等中间支架，导致学生第3轮仍重复原来的判断。",
+        "strengths": [
+          "第2轮问题条件明确，聚焦 y=2x+3 中 2 和 3 的作用，并追问哪个会影响倾斜程度，给学生保留了充分作答空间。",
+          "第4轮反馈直接针对学生“b 变大也可能让直线更陡”的错误认识，明确指出 k 决定倾斜程度、b 只改变截距和上下位置，知识澄清准确。",
+          "第5轮用 y=-3x+1 与 y=-3x+6 同斜率不同截距的新题检验迁移，学生能够独立说明“应该一样陡，因为斜率都是 -3，b 只会让位置不同”。",
+          "第3轮和第5轮都要求“为什么”，推动学生从结论走向解释，第5轮学生已能给出基于斜率的理由。"
+        ],
+        "problems": [
+          "第1、2、3轮学生连续暴露“b 变大也可能更陡”的误解，但教师没有提供图像、数值表、具体点坐标或动态对比等中间支架，导致学生第3轮仍重复原来的判断。",
+          "第3轮追问“为什么？那前一个呢？”指代不够明确，未说明要比较哪个对象或借助什么式子，学生回答与第2轮几乎相同，追问未有效推进思考。",
+          "第4轮教师直接告知“k 决定倾斜程度，b 只改变截距和上下位置”，虽然澄清了知识，但学生只表示“懂了一部分，但还想再看一个例子”，说明概念转变较多依赖告知而非学生自主辨析。",
+          "第5轮虽然用同斜率不同截距的新题检验迁移，但没有回到“b 变大是否会更陡”这一原误解做直接对错判断，也未让学生用表格或图像验证，迁移的巩固还不够扎实。",
+          "第1轮提问“k 和 b 分别会影响什么”缺少要求解释或举例的后续追问，学生仅给出不确定的初步猜测，支架作用有限。"
+        ],
+        "suggestions": [
+          "针对第1、2、3轮暴露的“b 变大也可能更陡”误解，可补充中间步骤：让学生列出 y=2x+3 与 y=2x+5 在同一 x 下的 y 值表格，或画出两条直线，直观看到 b 改变只导致上下平移，不改变倾斜程度。",
+          "改进第3轮追问，把“为什么？那前一个呢？”具体化为“请比较 y=2x+3 和 y=2x+5，当 x 都增加 1 时 y 分别增加多少？b 变化后这个增加量变了吗？”以便学生用可操作步骤回应。",
+          "承接第4轮学生“还想再看一个例子”的反馈，先给出一个 b 变大但斜率不变的反例（如 y=2x+1 与 y=2x+6），再让学生判断并解释，而不是直接进入第5轮，确保错误概念得到充分检验。",
+          "在第5轮同斜率不同截距的迁移题之后，再追加一个变式：让学生独立判断“b 从 1 变成 6 后，直线是否更陡”，并要求用“x 每增加 1，y 增加多少”来说明，强化独立解释。",
+          "后续提问可保留第2轮的条件明确优点，同时增加“请你画图/列表说明”的要求，把学生的口头判断转化为图像或表格证据，提升 scaffold 的完整性和迁移效果。"
+        ],
+        "key_teaching_snippets": [
+          {
+            "round": 1,
+            "action_type": "guided_question",
+            "teacher_text": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+            "student_text": "我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。",
+            "evidence": "第 1 轮教师通过提问引导学生：“你觉得一次函数图像中，k 和 b 分别会影响什么？”。"
+          },
+          {
+            "round": 2,
+            "action_type": "guided_question",
+            "teacher_text": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+            "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "evidence": "第 2 轮教师通过提问引导学生：“在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？”。"
+          },
+          {
+            "round": 3,
+            "action_type": "question",
+            "teacher_text": "为什么？那前一个呢？请结合刚才的式子说说。",
+            "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "evidence": "第 3 轮教师通过提问引导学生：“为什么？那前一个呢？请结合刚才的式子说说。”。"
+          },
+          {
+            "round": 4,
+            "action_type": "question",
+            "teacher_text": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+            "student_text": "我把条件对照一下：我懂了一部分，b 应该主要改变位置，但还想再看一个例子。",
+            "evidence": "第 4 轮教师通过提问引导学生：“我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。”。"
+          }
+        ],
+        "disclaimer": "本评价仅用于教学训练辅助，不替代专业教师的正式评价。",
+        "generated_at": "2026-09-24T01:48:51.332556+00:00",
+        "analysis_source": "rules+llm",
+        "analysis_error": null
+      }
+    },
+    "student_b": {
+      "profile_id": "student_b",
+      "student_name": "学生 B",
+      "session_http": 200,
+      "session_id": 2,
+      "turns": [
+        {
+          "round": 1,
+          "case_id": "ordinary_question",
+          "teacher_input": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+          "student_response": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "response_metadata": {
+            "source": "deterministic_fallback",
+            "retries": 1,
+            "fallback_reason": "empty_reply",
+            "learning_evidence_allowed": true,
+            "render_error": "LLMServiceError"
+          },
+          "validator_rejected_before_retry": true,
+          "retry_count": 1,
+          "degraded": true,
+          "behavior": {
+            "action_type": "guided_question",
+            "concept": "slope_and_intercept",
+            "knowledge_accuracy": 0.8,
+            "clarity": 1.0,
+            "checked_understanding": false,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 6,
+            "session_id": 2,
+            "dialogue_record_id": 11,
+            "created_at": "2026-09-24T01:48:59.955512+00:00"
+          },
+          "state_after": {
+            "understanding": 0.62,
+            "confusion": 0.326,
+            "engagement": 0.53,
+            "confidence": 0.61,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "会算但不能解释",
+            "concept": "公式与图像的联系",
+            "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+            "semantic_type": "linear_kb",
+            "strength": 0.644,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "partial",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": true,
+            "shows_uncertainty": true,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": true,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 2
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        },
+        {
+          "round": 2,
+          "case_id": "misconception_probe",
+          "teacher_input": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+          "student_response": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "response_metadata": {
+            "source": "deterministic_fallback",
+            "retries": 1,
+            "fallback_reason": "empty_reply",
+            "learning_evidence_allowed": true,
+            "render_error": "LLMServiceError"
+          },
+          "validator_rejected_before_retry": true,
+          "retry_count": 1,
+          "degraded": true,
+          "behavior": {
+            "action_type": "guided_question",
+            "concept": "slope",
+            "knowledge_accuracy": 0.8,
+            "clarity": 1.0,
+            "checked_understanding": true,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 7,
+            "session_id": 2,
+            "dialogue_record_id": 13,
+            "created_at": "2026-09-24T01:49:09.877805+00:00"
+          },
+          "state_after": {
+            "understanding": 0.62,
+            "confusion": 0.326,
+            "engagement": 0.61,
+            "confidence": 0.62,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "会算但不能解释",
+            "concept": "公式与图像的联系",
+            "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+            "semantic_type": "linear_kb",
+            "strength": 0.588,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "partial",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": true,
+            "shows_uncertainty": true,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": true,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 2
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        },
+        {
+          "round": 3,
+          "case_id": "follow_up",
+          "teacher_input": "为什么？那前一个呢？请结合刚才的式子说说。",
+          "student_response": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "response_metadata": {
+            "source": "deterministic_fallback",
+            "retries": 1,
+            "fallback_reason": "empty_reply",
+            "learning_evidence_allowed": true,
+            "render_error": "LLMServiceError"
+          },
+          "validator_rejected_before_retry": true,
+          "retry_count": 1,
+          "degraded": true,
+          "behavior": {
+            "action_type": "question",
+            "concept": "课堂互动",
+            "knowledge_accuracy": 0.0,
+            "clarity": 0.96,
+            "checked_understanding": false,
+            "gave_answer_directly": false,
+            "analysis_source": "fallback",
+            "analysis_error": "1 validation error for TeachingBehaviorAnalysis\nknowledge_accuracy\n  Input should be a valid number [type=float_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.13/v/float_type",
+            "id": 8,
+            "session_id": 2,
+            "dialogue_record_id": 15,
+            "created_at": "2026-09-24T01:49:23.993069+00:00"
+          },
+          "state_after": {
+            "understanding": 0.62,
+            "confusion": 0.326,
+            "engagement": 0.69,
+            "confidence": 0.63,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "会算但不能解释",
+            "concept": "公式与图像的联系",
+            "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+            "semantic_type": "linear_kb",
+            "strength": 0.588,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "partial",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": true,
+            "shows_uncertainty": true,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": true,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 2
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        },
+        {
+          "round": 4,
+          "case_id": "direct_answer",
+          "teacher_input": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+          "student_response": "我把条件对照一下：大部分听懂了，我开始觉得 b 改变的是位置，不过还想再确认理由。",
+          "response_metadata": {
+            "source": "deterministic_fallback",
+            "retries": 1,
+            "fallback_reason": "empty_reply",
+            "learning_evidence_allowed": true,
+            "render_error": "LLMServiceError"
+          },
+          "validator_rejected_before_retry": true,
+          "retry_count": 1,
+          "degraded": true,
+          "behavior": {
+            "action_type": "question",
+            "concept": "slope_and_intercept",
+            "knowledge_accuracy": 0.95,
+            "clarity": 0.96,
+            "checked_understanding": true,
+            "gave_answer_directly": false,
+            "analysis_source": "fallback",
+            "analysis_error": "2 validation errors for TeachingBehaviorAnalysis\nknowledge_accuracy\n  Input should be a valid number, unable to parse string as a number [type=float_parsing, input_value='准确（表述略简化...，与所述一致）', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/float_parsing\nclarity\n  Input should be a valid number, unable to parse string as a number [type=float_parsing, input_value='清晰', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/float_pa",
+            "id": 9,
+            "session_id": 2,
+            "dialogue_record_id": 17,
+            "created_at": "2026-09-24T01:49:36.310696+00:00"
+          },
+          "state_after": {
+            "understanding": 0.62,
+            "confusion": 0.326,
+            "engagement": 0.77,
+            "confidence": 0.64,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "会算但不能解释",
+            "concept": "公式与图像的联系",
+            "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+            "semantic_type": "linear_kb",
+            "strength": 0.588,
+            "status": "weakening",
+            "triggered": false,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": false,
+            "conclusion_level": "partial",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": false,
+            "shows_uncertainty": false,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": false,
+            "knowledge_precision": "partial",
+            "evidence_insufficient": true,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 0
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        },
+        {
+          "round": 5,
+          "case_id": "transfer",
+          "teacher_input": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+          "student_response": "先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。",
+          "response_metadata": {
+            "source": "deterministic_fallback",
+            "retries": 1,
+            "fallback_reason": "empty_reply",
+            "learning_evidence_allowed": true,
+            "render_error": "ValidationError"
+          },
+          "validator_rejected_before_retry": true,
+          "retry_count": 1,
+          "degraded": true,
+          "behavior": {
+            "action_type": "guided_question",
+            "concept": "一次函数图象的斜率与陡峭程度（两直线斜率相同则倾斜程度相同）",
+            "knowledge_accuracy": 0.8,
+            "clarity": 1.0,
+            "checked_understanding": true,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 10,
+            "session_id": 2,
+            "dialogue_record_id": 19,
+            "created_at": "2026-09-24T01:49:47.502622+00:00"
+          },
+          "state_after": {
+            "understanding": 0.67,
+            "confusion": 0.296,
+            "engagement": 0.85,
+            "confidence": 0.65,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "会算但不能解释",
+            "concept": "公式与图像的联系",
+            "description": "能够得到正确数值，但不能说明数值变化对应的图像变化。",
+            "semantic_type": "linear_kb",
+            "strength": 0.438,
+            "status": "provisional",
+            "triggered": false,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 1,
+            "transfer_evidence": 1
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "correct",
+            "explains_reason_correctly": true,
+            "shows_residual_misconception": false,
+            "shows_uncertainty": false,
+            "linguistic_hedging": false,
+            "conceptual_uncertainty": false,
+            "knowledge_precision": "correct",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": true,
+            "evidence_level": 3
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        }
+      ],
+      "evaluation_http": 200,
+      "evaluation": {
+        "rubric_version": 2,
+        "evidence": {
+          "rubric_version": 2,
+          "independent_tasks": 3,
+          "coverage": 1.0,
+          "dimensions": {
+            "scaffolding": [
+              {
+                "task": "concept:linear_kb",
+                "checks": [
+                  {
+                    "criterion": "提供适当中间步骤",
+                    "value": 0.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "学生实际参与",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "转向独立解释或迁移",
+                    "value": 0.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              },
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "提供适当中间步骤",
+                    "value": 0.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "学生实际参与",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "转向独立解释或迁移",
+                    "value": 0.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              },
+              {
+                "task": "linear:[('-3', '1'), ('-3', '6')]",
+                "checks": [
+                  {
+                    "criterion": "提供适当中间步骤",
+                    "value": 0.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+                  },
+                  {
+                    "criterion": "学生实际参与",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+                  },
+                  {
+                    "criterion": "转向独立解释或迁移",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+                  }
+                ]
+              }
+            ],
+            "questioning": [
+              {
+                "task": "concept:linear_kb",
+                "checks": [
+                  {
+                    "criterion": "条件明确",
+                    "value": 0.5,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "观察到部分证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "保留学生作答空间",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "要求解释或承接学生回答",
+                    "value": 0.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              },
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "条件明确",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "保留学生作答空间",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "要求解释或承接学生回答",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              },
+              {
+                "task": "linear:[('-3', '1'), ('-3', '6')]",
+                "checks": [
+                  {
+                    "criterion": "条件明确",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+                  },
+                  {
+                    "criterion": "保留学生作答空间",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+                  },
+                  {
+                    "criterion": "要求解释或承接学生回答",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+                  }
+                ]
+              }
+            ],
+            "knowledge_accuracy": [
+              {
+                "task": "linear:[('2', '3')]",
+                "rounds": [
+                  4
+                ],
+                "checks": [
+                  true,
+                  true
+                ],
+                "reason": "只核验明确主张，撤回的口误及待辨析问题不计入"
+              }
+            ],
+            "feedback": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "对应学生实际回答",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "指出具体过程或问题",
+                    "value": 1.0,
+                    "rounds": [
+                      4
+                    ],
+                    "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我把条件对照一下：大部分听懂了，我开始觉得 b 改变的是位置，不过还想再确认理由。"
+                  },
+                  {
+                    "criterion": "提供可执行的下一步",
+                    "value": 1.0,
+                    "rounds": [
+                      3
+                    ],
+                    "reason": "观察到明确证据；教师：为什么？那前一个呢？请结合刚才的式子说说。；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              }
+            ],
+            "misconception_diagnosis": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "识别已暴露的错误",
+                    "value": 0.5,
+                    "rounds": [
+                      2,
+                      1,
+                      3
+                    ],
+                    "reason": "观察到部分证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  },
+                  {
+                    "criterion": "提供正确反例或依据",
+                    "value": 1.0,
+                    "rounds": [
+                      4,
+                      3
+                    ],
+                    "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我把条件对照一下：大部分听懂了，我开始觉得 b 改变的是位置，不过还想再确认理由。"
+                  },
+                  {
+                    "criterion": "通过后续独立回答检验",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+                  }
+                ]
+              }
+            ]
+          },
+          "withdrawn_claims": [],
+          "limitations": [
+            "训练参考规则，尚待专业教师人工校准。"
+          ]
+        },
+        "session_id": 2,
+        "knowledge_accuracy": 100.0,
+        "questioning": 83.33,
+        "feedback": 100.0,
+        "misconception_diagnosis": 83.33,
+        "scaffolding": 44.44,
+        "overall_score": 85.0,
+        "summary": "训练参考分 85.0 分。主要复盘点：脚手架维度较弱：第1、2轮围绕 k、b 作用时，教师未提供表格、图像或对比式等中间步骤，学生连续重复“b 变大也可能让直线更陡”的相同误解；第5轮虽转向新题，但中间缺少从误解到独立解释的过渡性支撑。",
+        "strengths": [
+          "第4轮教师明确给出一次函数中 k 决定倾斜程度、b 只改变截距和上下位置的准确结论，并追问学生用自己的话理解，反馈具体且知识准确。",
+          "第5轮通过换新题 y=-3x+1 与 y=-3x+6 检验迁移，学生能独立说明“斜率都是 -3，所以一样陡；b 只改变上下位置”，说明误解得到一定纠正。",
+          "第1、2、5轮的提问保留学生作答空间，尤其第2轮在 y=2x+3 中问“2和3分别有什么作用、哪个影响倾斜程度”条件较明确，第5轮要求“为什么”能承接学生回答。"
+        ],
+        "problems": [
+          "脚手架维度较弱：第1、2轮围绕 k、b 作用时，教师未提供表格、图像或对比式等中间步骤，学生连续重复“b 变大也可能让直线更陡”的相同误解；第5轮虽转向新题，但中间缺少从误解到独立解释的过渡性支撑。",
+          "误解诊断在第1、2、3轮只出现部分证据：学生第1、2、3轮持续表达 b 可能影响陡峭程度，但教师直到第4轮才直接给出结论，未在第3轮用“k 相同、b 不同”的具体反例或数据让学生自己检验。",
+          "第3轮“为什么？那前一个呢？”指向不够具体，学生再次重复原误解，说明该追问没有有效聚焦“b 改变位置不改变倾斜程度”这一关键点。",
+          "第1轮提问只问 k、b 分别影响什么，未进一步要求学生举例或解释判断依据，条件明确与要求解释方面有欠缺。"
+        ],
+        "suggestions": [
+          "针对第1、2轮学生反复说“b 变大也可能让直线更陡”，建议补充中间步骤：固定 k 对比 y=2x+3 与 y=2x+5，让学生列表取值或画图，观察直线平行、倾斜程度不变，只上下平移，再回到“b 影响什么”的结论。",
+          "针对第3轮学生再次重复误解，建议不要直接进入结论，而是追问“如果 b 从3变到6，x每增加1，y增加量变了吗？”让学生用“变化量”检验 k 决定陡峭程度，形成可执行的反例依据。",
+          "针对第4轮教师直接告知结论，建议改为先让学生用自己的话复述“k 决定倾斜程度，b 决定上下位置”，再让学生举一个 b 不同但 k 相同的例子验证，避免仅靠教师讲授完成纠错。",
+          "针对第5轮学生已能独立说明“两条直线一样陡，因为斜率都是 -3；b 只改变上下位置”，建议进一步要求画草图或比较 y=-3x+1、y=-3x+6 的上下平移关系，把第5轮的正确回答迁移到解释“为什么 b 不影响陡峭程度”上。"
+        ],
+        "key_teaching_snippets": [
+          {
+            "round": 1,
+            "action_type": "guided_question",
+            "teacher_text": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+            "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "evidence": "第 1 轮教师通过提问引导学生：“你觉得一次函数图像中，k 和 b 分别会影响什么？”。"
+          },
+          {
+            "round": 2,
+            "action_type": "guided_question",
+            "teacher_text": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+            "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "evidence": "第 2 轮教师通过提问引导学生：“在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？”。"
+          },
+          {
+            "round": 3,
+            "action_type": "question",
+            "teacher_text": "为什么？那前一个呢？请结合刚才的式子说说。",
+            "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "evidence": "第 3 轮教师通过提问引导学生：“为什么？那前一个呢？请结合刚才的式子说说。”。"
+          },
+          {
+            "round": 4,
+            "action_type": "question",
+            "teacher_text": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+            "student_text": "我把条件对照一下：大部分听懂了，我开始觉得 b 改变的是位置，不过还想再确认理由。",
+            "evidence": "第 4 轮教师通过提问引导学生：“我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。”。"
+          }
+        ],
+        "disclaimer": "本评价仅用于教学训练辅助，不替代专业教师的正式评价。",
+        "generated_at": "2026-09-24T01:49:59.007253+00:00",
+        "analysis_source": "rules+llm",
+        "analysis_error": null
+      }
+    },
+    "student_c": {
+      "profile_id": "student_c",
+      "student_name": "学生 C",
+      "session_http": 200,
+      "session_id": 3,
+      "turns": [
+        {
+          "round": 1,
+          "case_id": "ordinary_question",
+          "teacher_input": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+          "student_response": "k 控制倾斜；b 我觉得也可能影响陡峭程度。",
+          "response_metadata": {
+            "source": "deterministic_fallback",
+            "retries": 1,
+            "fallback_reason": "empty_reply",
+            "learning_evidence_allowed": true,
+            "render_error": "LLMServiceError"
+          },
+          "validator_rejected_before_retry": true,
+          "retry_count": 1,
+          "degraded": true,
+          "behavior": {
+            "action_type": "guided_question",
+            "concept": "slope_and_intercept",
+            "knowledge_accuracy": 0.8,
+            "clarity": 1.0,
+            "checked_understanding": true,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 11,
+            "session_id": 3,
+            "dialogue_record_id": 21,
+            "created_at": "2026-09-24T01:50:10.911352+00:00"
+          },
+          "state_after": {
+            "understanding": 0.6,
+            "confusion": 0.33,
+            "engagement": 0.93,
+            "confidence": 0.91,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "先给结论再补理由",
+            "concept": "k 与 b 的变量作用",
+            "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+            "semantic_type": "linear_kb",
+            "strength": 0.594,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "partial",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": true,
+            "shows_uncertainty": true,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": true,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 2
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        },
+        {
+          "round": 2,
+          "case_id": "misconception_probe",
+          "teacher_input": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+          "student_response": "我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。",
+          "response_metadata": {
+            "source": "real",
+            "retries": 1,
+            "fallback_reason": null,
+            "learning_evidence_allowed": true,
+            "render_error": "LLMServiceError"
+          },
+          "validator_rejected_before_retry": true,
+          "retry_count": 1,
+          "degraded": false,
+          "behavior": {
+            "action_type": "guided_question",
+            "concept": "slope",
+            "knowledge_accuracy": 0.8,
+            "clarity": 0.96,
+            "checked_understanding": false,
+            "gave_answer_directly": false,
+            "analysis_source": "fallback",
+            "analysis_error": "2 validation errors for TeachingBehaviorAnalysis\nknowledge_accuracy\n  Input should be a valid number, unable to parse string as a number [type=float_parsing, input_value='准确：2 为斜率，...不影响倾斜程度', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/float_parsing\nclarity\n  Input should be a valid number, unable to parse string as a number [type=float_parsing, input_value='清晰：以 y=2x+3 为...程度这一关键点', input_type=str]\n    For further information visit https://errors.pydant",
+            "id": 12,
+            "session_id": 3,
+            "dialogue_record_id": 23,
+            "created_at": "2026-09-24T01:50:20.023713+00:00"
+          },
+          "state_after": {
+            "understanding": 0.6,
+            "confusion": 0.33,
+            "engagement": 1.0,
+            "confidence": 0.92,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "先给结论再补理由",
+            "concept": "k 与 b 的变量作用",
+            "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+            "semantic_type": "linear_kb",
+            "strength": 0.566,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": false,
+            "conclusion_level": "partial",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": true,
+            "shows_uncertainty": true,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": true,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 1
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        },
+        {
+          "round": 3,
+          "case_id": "follow_up",
+          "teacher_input": "为什么？那前一个呢？请结合刚才的式子说说。",
+          "student_response": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "response_metadata": {
+            "source": "deterministic_fallback",
+            "retries": 1,
+            "fallback_reason": "empty_reply",
+            "learning_evidence_allowed": true,
+            "render_error": "LLMServiceError"
+          },
+          "validator_rejected_before_retry": true,
+          "retry_count": 1,
+          "degraded": true,
+          "behavior": {
+            "action_type": "question",
+            "concept": "课堂互动",
+            "knowledge_accuracy": 0.0,
+            "clarity": 1.0,
+            "checked_understanding": false,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 13,
+            "session_id": 3,
+            "dialogue_record_id": 25,
+            "created_at": "2026-09-24T01:50:31.466319+00:00"
+          },
+          "state_after": {
+            "understanding": 0.6,
+            "confusion": 0.33,
+            "engagement": 1.0,
+            "confidence": 0.93,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "先给结论再补理由",
+            "concept": "k 与 b 的变量作用",
+            "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+            "semantic_type": "linear_kb",
+            "strength": 0.51,
+            "status": "weakening",
+            "triggered": true,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "partial",
+            "explains_reason_correctly": false,
+            "shows_residual_misconception": true,
+            "shows_uncertainty": true,
+            "linguistic_hedging": true,
+            "conceptual_uncertainty": true,
+            "knowledge_precision": "incorrect",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 2
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        },
+        {
+          "round": 4,
+          "case_id": "direct_answer",
+          "teacher_input": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+          "student_response": "我大概理解了，k 决定倾斜程度，b 只把图像上下挪。但我还有点犹豫，b 变大时图像看起来会不会也变陡，我想再确认一下。",
+          "response_metadata": {
+            "source": "real",
+            "retries": 0,
+            "fallback_reason": null,
+            "learning_evidence_allowed": true
+          },
+          "validator_rejected_before_retry": false,
+          "retry_count": 0,
+          "degraded": false,
+          "behavior": {
+            "action_type": "question",
+            "concept": "slope_and_intercept",
+            "knowledge_accuracy": 0.95,
+            "clarity": 1.0,
+            "checked_understanding": true,
+            "gave_answer_directly": false,
+            "analysis_source": "rules+llm",
+            "analysis_error": null,
+            "id": 14,
+            "session_id": 3,
+            "dialogue_record_id": 27,
+            "created_at": "2026-09-24T01:50:42.509644+00:00"
+          },
+          "state_after": {
+            "understanding": 0.6,
+            "confusion": 0.33,
+            "engagement": 1.0,
+            "confidence": 0.94,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "先给结论再补理由",
+            "concept": "k 与 b 的变量作用",
+            "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+            "semantic_type": "linear_kb",
+            "strength": 0.51,
+            "status": "weakening",
+            "triggered": false,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 0,
+            "transfer_evidence": 0
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "correct",
+            "explains_reason_correctly": true,
+            "shows_residual_misconception": false,
+            "shows_uncertainty": true,
+            "linguistic_hedging": false,
+            "conceptual_uncertainty": true,
+            "knowledge_precision": "correct",
+            "evidence_insufficient": true,
+            "parrots_teacher": false,
+            "transfer_success": false,
+            "evidence_level": 2
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        },
+        {
+          "round": 5,
+          "case_id": "transfer",
+          "teacher_input": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+          "student_response": "先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。",
+          "response_metadata": {
+            "source": "deterministic_fallback",
+            "retries": 1,
+            "fallback_reason": "empty_reply",
+            "learning_evidence_allowed": true,
+            "render_error": "LLMServiceError"
+          },
+          "validator_rejected_before_retry": true,
+          "retry_count": 1,
+          "degraded": true,
+          "behavior": {
+            "action_type": "guided_question",
+            "concept": "一次函数",
+            "knowledge_accuracy": 0.8,
+            "clarity": 0.96,
+            "checked_understanding": false,
+            "gave_answer_directly": false,
+            "analysis_source": "fallback",
+            "analysis_error": "1 validation error for TeachingBehaviorAnalysis\nclarity\n  Input should be a valid number, unable to parse string as a number [type=float_parsing, input_value='高', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/float_parsing",
+            "id": 15,
+            "session_id": 3,
+            "dialogue_record_id": 29,
+            "created_at": "2026-09-24T01:50:59.181749+00:00"
+          },
+          "state_after": {
+            "understanding": 0.65,
+            "confusion": 0.3,
+            "engagement": 1.0,
+            "confidence": 0.95,
+            "surface_recall": 0.0
+          },
+          "misconception_after": {
+            "name": "先给结论再补理由",
+            "concept": "k 与 b 的变量作用",
+            "description": "能快速判断答案，但会把 k 和 b 的变化效果混在一起。",
+            "semantic_type": "linear_kb",
+            "strength": 0.36,
+            "status": "provisional",
+            "triggered": false,
+            "correction_started": true,
+            "corrected": false,
+            "stable_correct_evidence_count": 1,
+            "transfer_evidence": 1
+          },
+          "student_response_evidence": {
+            "states_correct_conclusion": true,
+            "conclusion_level": "correct",
+            "explains_reason_correctly": true,
+            "shows_residual_misconception": false,
+            "shows_uncertainty": false,
+            "linguistic_hedging": false,
+            "conceptual_uncertainty": false,
+            "knowledge_precision": "correct",
+            "evidence_insufficient": false,
+            "parrots_teacher": false,
+            "transfer_success": true,
+            "evidence_level": 3
+          },
+          "correction_opportunity": {
+            "correction_opportunity": true,
+            "opportunity_strength": 0.7
+          }
+        }
+      ],
+      "evaluation_http": 200,
+      "evaluation": {
+        "rubric_version": 2,
+        "evidence": {
+          "rubric_version": 2,
+          "independent_tasks": 3,
+          "coverage": 1.0,
+          "dimensions": {
+            "scaffolding": [
+              {
+                "task": "concept:linear_kb",
+                "checks": [
+                  {
+                    "criterion": "提供适当中间步骤",
+                    "value": 0.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+                  },
+                  {
+                    "criterion": "学生实际参与",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+                  },
+                  {
+                    "criterion": "转向独立解释或迁移",
+                    "value": 0.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+                  }
+                ]
+              },
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "提供适当中间步骤",
+                    "value": 0.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+                  },
+                  {
+                    "criterion": "学生实际参与",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+                  },
+                  {
+                    "criterion": "转向独立解释或迁移",
+                    "value": 0.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+                  }
+                ]
+              },
+              {
+                "task": "linear:[('-3', '1'), ('-3', '6')]",
+                "checks": [
+                  {
+                    "criterion": "提供适当中间步骤",
+                    "value": 0.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+                  },
+                  {
+                    "criterion": "学生实际参与",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+                  },
+                  {
+                    "criterion": "转向独立解释或迁移",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+                  }
+                ]
+              }
+            ],
+            "questioning": [
+              {
+                "task": "concept:linear_kb",
+                "checks": [
+                  {
+                    "criterion": "条件明确",
+                    "value": 0.5,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "观察到部分证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+                  },
+                  {
+                    "criterion": "保留学生作答空间",
+                    "value": 1.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+                  },
+                  {
+                    "criterion": "要求解释或承接学生回答",
+                    "value": 0.0,
+                    "rounds": [
+                      1
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+                  }
+                ]
+              },
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "条件明确",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+                  },
+                  {
+                    "criterion": "保留学生作答空间",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+                  },
+                  {
+                    "criterion": "要求解释或承接学生回答",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+                  }
+                ]
+              },
+              {
+                "task": "linear:[('-3', '1'), ('-3', '6')]",
+                "checks": [
+                  {
+                    "criterion": "条件明确",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+                  },
+                  {
+                    "criterion": "保留学生作答空间",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+                  },
+                  {
+                    "criterion": "要求解释或承接学生回答",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+                  }
+                ]
+              }
+            ],
+            "knowledge_accuracy": [
+              {
+                "task": "linear:[('2', '3')]",
+                "rounds": [
+                  4
+                ],
+                "checks": [
+                  true,
+                  true
+                ],
+                "reason": "只核验明确主张，撤回的口误及待辨析问题不计入"
+              }
+            ],
+            "feedback": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "对应学生实际回答",
+                    "value": 1.0,
+                    "rounds": [
+                      2
+                    ],
+                    "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+                  },
+                  {
+                    "criterion": "指出具体过程或问题",
+                    "value": 1.0,
+                    "rounds": [
+                      4
+                    ],
+                    "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我大概理解了，k 决定倾斜程度，b 只把图像上下挪。但我还有点犹豫，b 变大时图像看起来会不会也变陡，我想再确认一下。"
+                  },
+                  {
+                    "criterion": "提供可执行的下一步",
+                    "value": 1.0,
+                    "rounds": [
+                      3
+                    ],
+                    "reason": "观察到明确证据；教师：为什么？那前一个呢？请结合刚才的式子说说。；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+                  }
+                ]
+              },
+              {
+                "task": "linear:[('-3', '1'), ('-3', '6')]",
+                "checks": [
+                  {
+                    "criterion": "对应学生实际回答",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+                  },
+                  {
+                    "criterion": "指出具体过程或问题",
+                    "value": 0.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+                  },
+                  {
+                    "criterion": "提供可执行的下一步",
+                    "value": 0.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+                  }
+                ]
+              }
+            ],
+            "misconception_diagnosis": [
+              {
+                "task": "linear:[('2', '3')]",
+                "checks": [
+                  {
+                    "criterion": "识别已暴露的错误",
+                    "value": 0.5,
+                    "rounds": [
+                      2,
+                      1,
+                      3
+                    ],
+                    "reason": "观察到部分证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+                  },
+                  {
+                    "criterion": "提供正确反例或依据",
+                    "value": 1.0,
+                    "rounds": [
+                      4,
+                      3
+                    ],
+                    "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我大概理解了，k 决定倾斜程度，b 只把图像上下挪。但我还有点犹豫，b 变大时图像看起来会不会也变陡，我想再确认一下。"
+                  },
+                  {
+                    "criterion": "通过后续独立回答检验",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+                  }
+                ]
+              },
+              {
+                "task": "linear:[('-3', '1'), ('-3', '6')]",
+                "checks": [
+                  {
+                    "criterion": "识别已暴露的错误",
+                    "value": 0.5,
+                    "rounds": [
+                      5,
+                      3
+                    ],
+                    "reason": "观察到部分证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+                  },
+                  {
+                    "criterion": "提供正确反例或依据",
+                    "value": 1.0,
+                    "rounds": [
+                      5,
+                      3
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+                  },
+                  {
+                    "criterion": "通过后续独立回答检验",
+                    "value": 1.0,
+                    "rounds": [
+                      5
+                    ],
+                    "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+                  }
+                ]
+              }
+            ]
+          },
+          "withdrawn_claims": [],
+          "limitations": [
+            "训练参考规则，尚待专业教师人工校准。"
+          ]
+        },
+        "session_id": 3,
+        "knowledge_accuracy": 100.0,
+        "questioning": 83.33,
+        "feedback": 66.67,
+        "misconception_diagnosis": 83.33,
+        "scaffolding": 44.44,
+        "overall_score": 80.0,
+        "summary": "训练参考分 80.0 分。主要复盘点：第1、2轮脚手架不足：学生已暴露“b 也可能影响陡峭程度”，教师没有提供表格、图像、取点计算等中间步骤，导致学生仍停留在“不太确定”和“还是觉得”的状态。",
+        "strengths": [
+          "第2、5轮提问条件明确且保留学生作答空间：第2轮问“在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？”，第5轮问“y=-3x+1 和 y=-3x+6 哪条更陡？为什么？”，都要求学生说明判断依据。",
+          "第3轮能承接学生回答并追问解释：“为什么？那前一个呢？请结合刚才的式子说说。”这有助于暴露学生仍认为“b 变大也可能让直线更陡”的迷思。",
+          "第4轮知识结论准确，明确“k 决定倾斜程度，b 只改变截距和上下位置”；第5轮用新题 y=-3x+1 与 y=-3x+6 检验，学生能独立说出“一样陡，斜率都是 -3；b 只改变上下位置，斜率不变”。",
+          "第5轮通过独立变式题检验了学生对“b 不影响陡峭程度”的理解，体现从迷思暴露到迁移检验的诊断闭环。"
+        ],
+        "problems": [
+          "第1、2轮脚手架不足：学生已暴露“b 也可能影响陡峭程度”，教师没有提供表格、图像、取点计算等中间步骤，导致学生仍停留在“不太确定”和“还是觉得”的状态。",
+          "第3、4轮处理迷思时偏向直接给结论：第4轮教师直接说“我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置”，学生随后仍表示“还有点犹豫，b 变大时图像看起来会不会也变陡”，说明未真正通过证据辨析消除迷思。",
+          "第5轮反馈深度不足：学生答对“一样陡，斜率都是 -3；b 只改变上下位置，斜率不变”后，教师没有指出其推理过程、追问“为什么 b 不改变斜率”，也没有给出可执行的下一步检验，反馈未进一步巩固。",
+          "迷思诊断虽在第4轮给出正确结论、第5轮用新题检验，但第1至第3轮学生反复表达“b 也可能影响陡峭程度”时，未明确命名该迷思，也未用同 k 不同 b 的反例或图像证据进行针对性辨析。"
+        ],
+        "suggestions": [
+          "针对第1、2轮“b 也可能影响陡峭程度”的迷思，增加中间步骤：让学生列 y=2x+3 与 y=2x+5 的对应值表，计算两点间 Δy/Δx，观察 k 不变时比值不变，从而明确 b 只改变截距和上下位置。",
+          "针对第3、4轮不要直接给结论，改为引导比较：在同一坐标系画 y=2x+3、y=2x+5，或取 x=0、x=1 两点计算斜率，让学生自己说出“b 变大图像上下平移，但倾斜程度不变”。",
+          "针对第4轮学生仍犹豫，补充反例和检验任务：追问“如果 b 影响陡峭，y=2x+1 和 y=2x+5 的斜率会不一样吗？请用两点计算证明”，再让学生用自己的话总结 k 与 b 的作用。",
+          "针对第5轮反馈，增加可执行下一步：让学生解释“为什么斜率都是 -3 就一样陡”，或变式问 y=-3x+1 与 y=-3x+6 是否平行、与 y=2x+1 相比谁更陡，巩固 k 决定倾斜、b 决定上下位置。",
+          "针对第5轮正确回答，要求迁移到新式子：给出 y=5x-2 与 y=5x+4，让学生先判断是否一样陡，再解释 b 的作用，并说明可用取值计算或图像平移来检验。"
+        ],
+        "key_teaching_snippets": [
+          {
+            "round": 1,
+            "action_type": "guided_question",
+            "teacher_text": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+            "student_text": "k 控制倾斜；b 我觉得也可能影响陡峭程度。",
+            "evidence": "第 1 轮教师通过提问引导学生：“你觉得一次函数图像中，k 和 b 分别会影响什么？”。"
+          },
+          {
+            "round": 2,
+            "action_type": "guided_question",
+            "teacher_text": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+            "student_text": "我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。",
+            "evidence": "第 2 轮教师通过提问引导学生：“在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？”。"
+          },
+          {
+            "round": 3,
+            "action_type": "question",
+            "teacher_text": "为什么？那前一个呢？请结合刚才的式子说说。",
+            "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "evidence": "第 3 轮教师通过提问引导学生：“为什么？那前一个呢？请结合刚才的式子说说。”。"
+          },
+          {
+            "round": 4,
+            "action_type": "question",
+            "teacher_text": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+            "student_text": "我大概理解了，k 决定倾斜程度，b 只把图像上下挪。但我还有点犹豫，b 变大时图像看起来会不会也变陡，我想再确认一下。",
+            "evidence": "第 4 轮教师通过提问引导学生：“我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。”。"
+          }
+        ],
+        "disclaimer": "本评价仅用于教学训练辅助，不替代专业教师的正式评价。",
+        "generated_at": "2026-09-24T01:51:13.495796+00:00",
+        "analysis_source": "rules+llm",
+        "analysis_error": null
+      }
+    }
+  },
+  "call_accounting": {
+    "expected_base_calls": 33,
+    "successful_renderer_turns": 2,
+    "renderer_retry_calls": 14,
+    "estimated_provider_calls": 47,
+    "note": "Estimate counts one behavior-analysis call and one initial renderer call per turn, plus one evaluation call per session; renderer retries are counted from response metadata."
+  },
+  "pipeline_accounting": {
+    "validator_rejected_turns": 14,
+    "degraded_turns": 13,
+    "fallback_reasons": [
+      {
+        "profile_id": "student_a",
+        "round": 1,
+        "source": "deterministic_fallback",
+        "reason": "empty_reply"
+      },
+      {
+        "profile_id": "student_a",
+        "round": 2,
+        "source": "deterministic_fallback",
+        "reason": "empty_reply"
+      },
+      {
+        "profile_id": "student_a",
+        "round": 3,
+        "source": "deterministic_fallback",
+        "reason": "empty_reply"
+      },
+      {
+        "profile_id": "student_a",
+        "round": 4,
+        "source": "deterministic_fallback",
+        "reason": "empty_reply"
+      },
+      {
+        "profile_id": "student_a",
+        "round": 5,
+        "source": "deterministic_fallback",
+        "reason": "empty_reply"
+      },
+      {
+        "profile_id": "student_b",
+        "round": 1,
+        "source": "deterministic_fallback",
+        "reason": "empty_reply"
+      },
+      {
+        "profile_id": "student_b",
+        "round": 2,
+        "source": "deterministic_fallback",
+        "reason": "empty_reply"
+      },
+      {
+        "profile_id": "student_b",
+        "round": 3,
+        "source": "deterministic_fallback",
+        "reason": "empty_reply"
+      },
+      {
+        "profile_id": "student_b",
+        "round": 4,
+        "source": "deterministic_fallback",
+        "reason": "empty_reply"
+      },
+      {
+        "profile_id": "student_b",
+        "round": 5,
+        "source": "deterministic_fallback",
+        "reason": "empty_reply"
+      },
+      {
+        "profile_id": "student_c",
+        "round": 1,
+        "source": "deterministic_fallback",
+        "reason": "empty_reply"
+      },
+      {
+        "profile_id": "student_c",
+        "round": 3,
+        "source": "deterministic_fallback",
+        "reason": "empty_reply"
+      },
+      {
+        "profile_id": "student_c",
+        "round": 5,
+        "source": "deterministic_fallback",
+        "reason": "empty_reply"
+      }
+    ]
+  },
+  "scoring_evidence_audit": {
+    "student_a": {
+      "rubric_version": 2,
+      "analysis_source": "rules+llm",
+      "scores": {
+        "knowledge_accuracy": 100.0,
+        "questioning": 83.33,
+        "feedback": 100.0,
+        "misconception_diagnosis": 83.33,
+        "scaffolding": 44.44,
+        "overall_score": 85.0
+      },
+      "dimensions": {
+        "scaffolding": [
+          {
+            "task": "concept:linear_kb",
+            "checks": [
+              {
+                "criterion": "提供适当中间步骤",
+                "value": 0.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+              },
+              {
+                "criterion": "学生实际参与",
+                "value": 1.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+              },
+              {
+                "criterion": "转向独立解释或迁移",
+                "value": 0.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+              }
+            ]
+          },
+          {
+            "task": "linear:[('2', '3')]",
+            "checks": [
+              {
+                "criterion": "提供适当中间步骤",
+                "value": 0.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "学生实际参与",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "转向独立解释或迁移",
+                "value": 0.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "task": "linear:[('-3', '1'), ('-3', '6')]",
+            "checks": [
+              {
+                "criterion": "提供适当中间步骤",
+                "value": 0.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+              },
+              {
+                "criterion": "学生实际参与",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+              },
+              {
+                "criterion": "转向独立解释或迁移",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+              }
+            ]
+          }
+        ],
+        "questioning": [
+          {
+            "task": "concept:linear_kb",
+            "checks": [
+              {
+                "criterion": "条件明确",
+                "value": 0.5,
+                "rounds": [
+                  1
+                ],
+                "reason": "观察到部分证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+              },
+              {
+                "criterion": "保留学生作答空间",
+                "value": 1.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+              },
+              {
+                "criterion": "要求解释或承接学生回答",
+                "value": 0.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+              }
+            ]
+          },
+          {
+            "task": "linear:[('2', '3')]",
+            "checks": [
+              {
+                "criterion": "条件明确",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "保留学生作答空间",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "要求解释或承接学生回答",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "task": "linear:[('-3', '1'), ('-3', '6')]",
+            "checks": [
+              {
+                "criterion": "条件明确",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+              },
+              {
+                "criterion": "保留学生作答空间",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+              },
+              {
+                "criterion": "要求解释或承接学生回答",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+              }
+            ]
+          }
+        ],
+        "knowledge_accuracy": [
+          {
+            "task": "linear:[('2', '3')]",
+            "rounds": [
+              4
+            ],
+            "checks": [
+              true,
+              true
+            ],
+            "reason": "只核验明确主张，撤回的口误及待辨析问题不计入"
+          }
+        ],
+        "feedback": [
+          {
+            "task": "linear:[('2', '3')]",
+            "checks": [
+              {
+                "criterion": "对应学生实际回答",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "指出具体过程或问题",
+                "value": 1.0,
+                "rounds": [
+                  4
+                ],
+                "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我把条件对照一下：我懂了一部分，b 应该主要改变位置，但还想再看一个例子。"
+              },
+              {
+                "criterion": "提供可执行的下一步",
+                "value": 1.0,
+                "rounds": [
+                  3
+                ],
+                "reason": "观察到明确证据；教师：为什么？那前一个呢？请结合刚才的式子说说。；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          }
+        ],
+        "misconception_diagnosis": [
+          {
+            "task": "linear:[('2', '3')]",
+            "checks": [
+              {
+                "criterion": "识别已暴露的错误",
+                "value": 0.5,
+                "rounds": [
+                  2,
+                  1,
+                  3
+                ],
+                "reason": "观察到部分证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "提供正确反例或依据",
+                "value": 1.0,
+                "rounds": [
+                  4,
+                  3
+                ],
+                "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我把条件对照一下：我懂了一部分，b 应该主要改变位置，但还想再看一个例子。"
+              },
+              {
+                "criterion": "通过后续独立回答检验",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+              }
+            ]
+          }
+        ]
+      },
+      "key_teaching_snippets": [
+        {
+          "round": 1,
+          "action_type": "guided_question",
+          "teacher_text": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+          "student_text": "我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。",
+          "evidence": "第 1 轮教师通过提问引导学生：“你觉得一次函数图像中，k 和 b 分别会影响什么？”。"
+        },
+        {
+          "round": 2,
+          "action_type": "guided_question",
+          "teacher_text": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+          "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "evidence": "第 2 轮教师通过提问引导学生：“在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？”。"
+        },
+        {
+          "round": 3,
+          "action_type": "question",
+          "teacher_text": "为什么？那前一个呢？请结合刚才的式子说说。",
+          "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "evidence": "第 3 轮教师通过提问引导学生：“为什么？那前一个呢？请结合刚才的式子说说。”。"
+        },
+        {
+          "round": 4,
+          "action_type": "question",
+          "teacher_text": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+          "student_text": "我把条件对照一下：我懂了一部分，b 应该主要改变位置，但还想再看一个例子。",
+          "evidence": "第 4 轮教师通过提问引导学生：“我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。”。"
+        }
+      ],
+      "temporal_reference_check": {
+        "all_references_in_range": true,
+        "invalid_references": [],
+        "checks": [
+          {
+            "dimension": "scaffolding",
+            "criterion": "提供适当中间步骤",
+            "value": 0.0,
+            "rounds": [
+              1
+            ],
+            "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "学生实际参与",
+            "value": 1.0,
+            "rounds": [
+              1
+            ],
+            "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "转向独立解释或迁移",
+            "value": 0.0,
+            "rounds": [
+              1
+            ],
+            "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "提供适当中间步骤",
+            "value": 0.0,
+            "rounds": [
+              2
+            ],
+            "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "学生实际参与",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "转向独立解释或迁移",
+            "value": 0.0,
+            "rounds": [
+              2
+            ],
+            "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "提供适当中间步骤",
+            "value": 0.0,
+            "rounds": [
+              5
+            ],
+            "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "学生实际参与",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "转向独立解释或迁移",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "条件明确",
+            "value": 0.5,
+            "rounds": [
+              1
+            ],
+            "reason": "观察到部分证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "保留学生作答空间",
+            "value": 1.0,
+            "rounds": [
+              1
+            ],
+            "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "要求解释或承接学生回答",
+            "value": 0.0,
+            "rounds": [
+              1
+            ],
+            "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "条件明确",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "保留学生作答空间",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "要求解释或承接学生回答",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "条件明确",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "保留学生作答空间",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "要求解释或承接学生回答",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "feedback",
+            "criterion": "对应学生实际回答",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "feedback",
+            "criterion": "指出具体过程或问题",
+            "value": 1.0,
+            "rounds": [
+              4
+            ],
+            "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我把条件对照一下：我懂了一部分，b 应该主要改变位置，但还想再看一个例子。",
+            "teacher_student_pairs": [
+              {
+                "round": 4,
+                "teacher": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+                "student": "我把条件对照一下：我懂了一部分，b 应该主要改变位置，但还想再看一个例子。"
+              }
+            ]
+          },
+          {
+            "dimension": "feedback",
+            "criterion": "提供可执行的下一步",
+            "value": 1.0,
+            "rounds": [
+              3
+            ],
+            "reason": "观察到明确证据；教师：为什么？那前一个呢？请结合刚才的式子说说。；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 3,
+                "teacher": "为什么？那前一个呢？请结合刚才的式子说说。",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "misconception_diagnosis",
+            "criterion": "识别已暴露的错误",
+            "value": 0.5,
+            "rounds": [
+              2,
+              1,
+              3
+            ],
+            "reason": "观察到部分证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "我觉得 k 和倾斜有关，不过我不太确定，b 变大后可能也会更斜。"
+              },
+              {
+                "round": 3,
+                "teacher": "为什么？那前一个呢？请结合刚才的式子说说。",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "misconception_diagnosis",
+            "criterion": "提供正确反例或依据",
+            "value": 1.0,
+            "rounds": [
+              4,
+              3
+            ],
+            "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我把条件对照一下：我懂了一部分，b 应该主要改变位置，但还想再看一个例子。",
+            "teacher_student_pairs": [
+              {
+                "round": 4,
+                "teacher": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+                "student": "我把条件对照一下：我懂了一部分，b 应该主要改变位置，但还想再看一个例子。"
+              },
+              {
+                "round": 3,
+                "teacher": "为什么？那前一个呢？请结合刚才的式子说说。",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "misconception_diagnosis",
+            "criterion": "通过后续独立回答检验",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：我觉得应该一样陡，因为斜率都是 -3，b 只会让位置不同，斜率不变。"
+              }
+            ]
+          }
+        ],
+        "review_note": "逐项引用需结合相邻轮次审查：教师支架应归于教师行为及学生随后参与；纠错效果应引用纠错之后的独立学生回答，而不能只引用纠错前回答。"
+      }
+    },
+    "student_b": {
+      "rubric_version": 2,
+      "analysis_source": "rules+llm",
+      "scores": {
+        "knowledge_accuracy": 100.0,
+        "questioning": 83.33,
+        "feedback": 100.0,
+        "misconception_diagnosis": 83.33,
+        "scaffolding": 44.44,
+        "overall_score": 85.0
+      },
+      "dimensions": {
+        "scaffolding": [
+          {
+            "task": "concept:linear_kb",
+            "checks": [
+              {
+                "criterion": "提供适当中间步骤",
+                "value": 0.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "学生实际参与",
+                "value": 1.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "转向独立解释或迁移",
+                "value": 0.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "task": "linear:[('2', '3')]",
+            "checks": [
+              {
+                "criterion": "提供适当中间步骤",
+                "value": 0.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "学生实际参与",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "转向独立解释或迁移",
+                "value": 0.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "task": "linear:[('-3', '1'), ('-3', '6')]",
+            "checks": [
+              {
+                "criterion": "提供适当中间步骤",
+                "value": 0.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+              },
+              {
+                "criterion": "学生实际参与",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+              },
+              {
+                "criterion": "转向独立解释或迁移",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+              }
+            ]
+          }
+        ],
+        "questioning": [
+          {
+            "task": "concept:linear_kb",
+            "checks": [
+              {
+                "criterion": "条件明确",
+                "value": 0.5,
+                "rounds": [
+                  1
+                ],
+                "reason": "观察到部分证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "保留学生作答空间",
+                "value": 1.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "要求解释或承接学生回答",
+                "value": 0.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "task": "linear:[('2', '3')]",
+            "checks": [
+              {
+                "criterion": "条件明确",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "保留学生作答空间",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "要求解释或承接学生回答",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "task": "linear:[('-3', '1'), ('-3', '6')]",
+            "checks": [
+              {
+                "criterion": "条件明确",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+              },
+              {
+                "criterion": "保留学生作答空间",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+              },
+              {
+                "criterion": "要求解释或承接学生回答",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+              }
+            ]
+          }
+        ],
+        "knowledge_accuracy": [
+          {
+            "task": "linear:[('2', '3')]",
+            "rounds": [
+              4
+            ],
+            "checks": [
+              true,
+              true
+            ],
+            "reason": "只核验明确主张，撤回的口误及待辨析问题不计入"
+          }
+        ],
+        "feedback": [
+          {
+            "task": "linear:[('2', '3')]",
+            "checks": [
+              {
+                "criterion": "对应学生实际回答",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "指出具体过程或问题",
+                "value": 1.0,
+                "rounds": [
+                  4
+                ],
+                "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我把条件对照一下：大部分听懂了，我开始觉得 b 改变的是位置，不过还想再确认理由。"
+              },
+              {
+                "criterion": "提供可执行的下一步",
+                "value": 1.0,
+                "rounds": [
+                  3
+                ],
+                "reason": "观察到明确证据；教师：为什么？那前一个呢？请结合刚才的式子说说。；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          }
+        ],
+        "misconception_diagnosis": [
+          {
+            "task": "linear:[('2', '3')]",
+            "checks": [
+              {
+                "criterion": "识别已暴露的错误",
+                "value": 0.5,
+                "rounds": [
+                  2,
+                  1,
+                  3
+                ],
+                "reason": "观察到部分证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "criterion": "提供正确反例或依据",
+                "value": 1.0,
+                "rounds": [
+                  4,
+                  3
+                ],
+                "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我把条件对照一下：大部分听懂了，我开始觉得 b 改变的是位置，不过还想再确认理由。"
+              },
+              {
+                "criterion": "通过后续独立回答检验",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+              }
+            ]
+          }
+        ]
+      },
+      "key_teaching_snippets": [
+        {
+          "round": 1,
+          "action_type": "guided_question",
+          "teacher_text": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+          "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "evidence": "第 1 轮教师通过提问引导学生：“你觉得一次函数图像中，k 和 b 分别会影响什么？”。"
+        },
+        {
+          "round": 2,
+          "action_type": "guided_question",
+          "teacher_text": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+          "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "evidence": "第 2 轮教师通过提问引导学生：“在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？”。"
+        },
+        {
+          "round": 3,
+          "action_type": "question",
+          "teacher_text": "为什么？那前一个呢？请结合刚才的式子说说。",
+          "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "evidence": "第 3 轮教师通过提问引导学生：“为什么？那前一个呢？请结合刚才的式子说说。”。"
+        },
+        {
+          "round": 4,
+          "action_type": "question",
+          "teacher_text": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+          "student_text": "我把条件对照一下：大部分听懂了，我开始觉得 b 改变的是位置，不过还想再确认理由。",
+          "evidence": "第 4 轮教师通过提问引导学生：“我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。”。"
+        }
+      ],
+      "temporal_reference_check": {
+        "all_references_in_range": true,
+        "invalid_references": [],
+        "checks": [
+          {
+            "dimension": "scaffolding",
+            "criterion": "提供适当中间步骤",
+            "value": 0.0,
+            "rounds": [
+              1
+            ],
+            "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "学生实际参与",
+            "value": 1.0,
+            "rounds": [
+              1
+            ],
+            "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "转向独立解释或迁移",
+            "value": 0.0,
+            "rounds": [
+              1
+            ],
+            "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "提供适当中间步骤",
+            "value": 0.0,
+            "rounds": [
+              2
+            ],
+            "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "学生实际参与",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "转向独立解释或迁移",
+            "value": 0.0,
+            "rounds": [
+              2
+            ],
+            "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "提供适当中间步骤",
+            "value": 0.0,
+            "rounds": [
+              5
+            ],
+            "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "学生实际参与",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "转向独立解释或迁移",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "条件明确",
+            "value": 0.5,
+            "rounds": [
+              1
+            ],
+            "reason": "观察到部分证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "保留学生作答空间",
+            "value": 1.0,
+            "rounds": [
+              1
+            ],
+            "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "要求解释或承接学生回答",
+            "value": 0.0,
+            "rounds": [
+              1
+            ],
+            "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "条件明确",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "保留学生作答空间",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "要求解释或承接学生回答",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "条件明确",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "保留学生作答空间",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "要求解释或承接学生回答",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "feedback",
+            "criterion": "对应学生实际回答",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "feedback",
+            "criterion": "指出具体过程或问题",
+            "value": 1.0,
+            "rounds": [
+              4
+            ],
+            "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我把条件对照一下：大部分听懂了，我开始觉得 b 改变的是位置，不过还想再确认理由。",
+            "teacher_student_pairs": [
+              {
+                "round": 4,
+                "teacher": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+                "student": "我把条件对照一下：大部分听懂了，我开始觉得 b 改变的是位置，不过还想再确认理由。"
+              }
+            ]
+          },
+          {
+            "dimension": "feedback",
+            "criterion": "提供可执行的下一步",
+            "value": 1.0,
+            "rounds": [
+              3
+            ],
+            "reason": "观察到明确证据；教师：为什么？那前一个呢？请结合刚才的式子说说。；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 3,
+                "teacher": "为什么？那前一个呢？请结合刚才的式子说说。",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "misconception_diagnosis",
+            "criterion": "识别已暴露的错误",
+            "value": 0.5,
+            "rounds": [
+              2,
+              1,
+              3
+            ],
+            "reason": "观察到部分证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              },
+              {
+                "round": 3,
+                "teacher": "为什么？那前一个呢？请结合刚才的式子说说。",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "misconception_diagnosis",
+            "criterion": "提供正确反例或依据",
+            "value": 1.0,
+            "rounds": [
+              4,
+              3
+            ],
+            "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我把条件对照一下：大部分听懂了，我开始觉得 b 改变的是位置，不过还想再确认理由。",
+            "teacher_student_pairs": [
+              {
+                "round": 4,
+                "teacher": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+                "student": "我把条件对照一下：大部分听懂了，我开始觉得 b 改变的是位置，不过还想再确认理由。"
+              },
+              {
+                "round": 3,
+                "teacher": "为什么？那前一个呢？请结合刚才的式子说说。",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "misconception_diagnosis",
+            "criterion": "通过后续独立回答检验",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：两条直线一样陡，因为它们的斜率都是 -3；b 只会改变上下位置，斜率不变。"
+              }
+            ]
+          }
+        ],
+        "review_note": "逐项引用需结合相邻轮次审查：教师支架应归于教师行为及学生随后参与；纠错效果应引用纠错之后的独立学生回答，而不能只引用纠错前回答。"
+      }
+    },
+    "student_c": {
+      "rubric_version": 2,
+      "analysis_source": "rules+llm",
+      "scores": {
+        "knowledge_accuracy": 100.0,
+        "questioning": 83.33,
+        "feedback": 66.67,
+        "misconception_diagnosis": 83.33,
+        "scaffolding": 44.44,
+        "overall_score": 80.0
+      },
+      "dimensions": {
+        "scaffolding": [
+          {
+            "task": "concept:linear_kb",
+            "checks": [
+              {
+                "criterion": "提供适当中间步骤",
+                "value": 0.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+              },
+              {
+                "criterion": "学生实际参与",
+                "value": 1.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+              },
+              {
+                "criterion": "转向独立解释或迁移",
+                "value": 0.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+              }
+            ]
+          },
+          {
+            "task": "linear:[('2', '3')]",
+            "checks": [
+              {
+                "criterion": "提供适当中间步骤",
+                "value": 0.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              },
+              {
+                "criterion": "学生实际参与",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              },
+              {
+                "criterion": "转向独立解释或迁移",
+                "value": 0.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              }
+            ]
+          },
+          {
+            "task": "linear:[('-3', '1'), ('-3', '6')]",
+            "checks": [
+              {
+                "criterion": "提供适当中间步骤",
+                "value": 0.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              },
+              {
+                "criterion": "学生实际参与",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              },
+              {
+                "criterion": "转向独立解释或迁移",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          }
+        ],
+        "questioning": [
+          {
+            "task": "concept:linear_kb",
+            "checks": [
+              {
+                "criterion": "条件明确",
+                "value": 0.5,
+                "rounds": [
+                  1
+                ],
+                "reason": "观察到部分证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+              },
+              {
+                "criterion": "保留学生作答空间",
+                "value": 1.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+              },
+              {
+                "criterion": "要求解释或承接学生回答",
+                "value": 0.0,
+                "rounds": [
+                  1
+                ],
+                "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+              }
+            ]
+          },
+          {
+            "task": "linear:[('2', '3')]",
+            "checks": [
+              {
+                "criterion": "条件明确",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              },
+              {
+                "criterion": "保留学生作答空间",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              },
+              {
+                "criterion": "要求解释或承接学生回答",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              }
+            ]
+          },
+          {
+            "task": "linear:[('-3', '1'), ('-3', '6')]",
+            "checks": [
+              {
+                "criterion": "条件明确",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              },
+              {
+                "criterion": "保留学生作答空间",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              },
+              {
+                "criterion": "要求解释或承接学生回答",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          }
+        ],
+        "knowledge_accuracy": [
+          {
+            "task": "linear:[('2', '3')]",
+            "rounds": [
+              4
+            ],
+            "checks": [
+              true,
+              true
+            ],
+            "reason": "只核验明确主张，撤回的口误及待辨析问题不计入"
+          }
+        ],
+        "feedback": [
+          {
+            "task": "linear:[('2', '3')]",
+            "checks": [
+              {
+                "criterion": "对应学生实际回答",
+                "value": 1.0,
+                "rounds": [
+                  2
+                ],
+                "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              },
+              {
+                "criterion": "指出具体过程或问题",
+                "value": 1.0,
+                "rounds": [
+                  4
+                ],
+                "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我大概理解了，k 决定倾斜程度，b 只把图像上下挪。但我还有点犹豫，b 变大时图像看起来会不会也变陡，我想再确认一下。"
+              },
+              {
+                "criterion": "提供可执行的下一步",
+                "value": 1.0,
+                "rounds": [
+                  3
+                ],
+                "reason": "观察到明确证据；教师：为什么？那前一个呢？请结合刚才的式子说说。；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "task": "linear:[('-3', '1'), ('-3', '6')]",
+            "checks": [
+              {
+                "criterion": "对应学生实际回答",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              },
+              {
+                "criterion": "指出具体过程或问题",
+                "value": 0.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              },
+              {
+                "criterion": "提供可执行的下一步",
+                "value": 0.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          }
+        ],
+        "misconception_diagnosis": [
+          {
+            "task": "linear:[('2', '3')]",
+            "checks": [
+              {
+                "criterion": "识别已暴露的错误",
+                "value": 0.5,
+                "rounds": [
+                  2,
+                  1,
+                  3
+                ],
+                "reason": "观察到部分证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              },
+              {
+                "criterion": "提供正确反例或依据",
+                "value": 1.0,
+                "rounds": [
+                  4,
+                  3
+                ],
+                "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我大概理解了，k 决定倾斜程度，b 只把图像上下挪。但我还有点犹豫，b 变大时图像看起来会不会也变陡，我想再确认一下。"
+              },
+              {
+                "criterion": "通过后续独立回答检验",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "task": "linear:[('-3', '1'), ('-3', '6')]",
+            "checks": [
+              {
+                "criterion": "识别已暴露的错误",
+                "value": 0.5,
+                "rounds": [
+                  5,
+                  3
+                ],
+                "reason": "观察到部分证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              },
+              {
+                "criterion": "提供正确反例或依据",
+                "value": 1.0,
+                "rounds": [
+                  5,
+                  3
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              },
+              {
+                "criterion": "通过后续独立回答检验",
+                "value": 1.0,
+                "rounds": [
+                  5
+                ],
+                "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          }
+        ]
+      },
+      "key_teaching_snippets": [
+        {
+          "round": 1,
+          "action_type": "guided_question",
+          "teacher_text": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+          "student_text": "k 控制倾斜；b 我觉得也可能影响陡峭程度。",
+          "evidence": "第 1 轮教师通过提问引导学生：“你觉得一次函数图像中，k 和 b 分别会影响什么？”。"
+        },
+        {
+          "round": 2,
+          "action_type": "guided_question",
+          "teacher_text": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+          "student_text": "我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。",
+          "evidence": "第 2 轮教师通过提问引导学生：“在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？”。"
+        },
+        {
+          "round": 3,
+          "action_type": "question",
+          "teacher_text": "为什么？那前一个呢？请结合刚才的式子说说。",
+          "student_text": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+          "evidence": "第 3 轮教师通过提问引导学生：“为什么？那前一个呢？请结合刚才的式子说说。”。"
+        },
+        {
+          "round": 4,
+          "action_type": "question",
+          "teacher_text": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+          "student_text": "我大概理解了，k 决定倾斜程度，b 只把图像上下挪。但我还有点犹豫，b 变大时图像看起来会不会也变陡，我想再确认一下。",
+          "evidence": "第 4 轮教师通过提问引导学生：“我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。”。"
+        }
+      ],
+      "temporal_reference_check": {
+        "all_references_in_range": true,
+        "invalid_references": [],
+        "checks": [
+          {
+            "dimension": "scaffolding",
+            "criterion": "提供适当中间步骤",
+            "value": 0.0,
+            "rounds": [
+              1
+            ],
+            "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "学生实际参与",
+            "value": 1.0,
+            "rounds": [
+              1
+            ],
+            "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "转向独立解释或迁移",
+            "value": 0.0,
+            "rounds": [
+              1
+            ],
+            "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "提供适当中间步骤",
+            "value": 0.0,
+            "rounds": [
+              2
+            ],
+            "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "学生实际参与",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "转向独立解释或迁移",
+            "value": 0.0,
+            "rounds": [
+              2
+            ],
+            "reason": "未观察到满足该项的证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "提供适当中间步骤",
+            "value": 0.0,
+            "rounds": [
+              5
+            ],
+            "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "学生实际参与",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "scaffolding",
+            "criterion": "转向独立解释或迁移",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "条件明确",
+            "value": 0.5,
+            "rounds": [
+              1
+            ],
+            "reason": "观察到部分证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "保留学生作答空间",
+            "value": 1.0,
+            "rounds": [
+              1
+            ],
+            "reason": "观察到明确证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "要求解释或承接学生回答",
+            "value": 0.0,
+            "rounds": [
+              1
+            ],
+            "reason": "未观察到满足该项的证据；教师：你觉得一次函数图像中，k 和 b 分别会影响什么？；学生：k 控制倾斜；b 我觉得也可能影响陡峭程度。",
+            "teacher_student_pairs": [
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "条件明确",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "保留学生作答空间",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "要求解释或承接学生回答",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "条件明确",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "保留学生作答空间",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "questioning",
+            "criterion": "要求解释或承接学生回答",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "feedback",
+            "criterion": "对应学生实际回答",
+            "value": 1.0,
+            "rounds": [
+              2
+            ],
+            "reason": "观察到明确证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "feedback",
+            "criterion": "指出具体过程或问题",
+            "value": 1.0,
+            "rounds": [
+              4
+            ],
+            "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我大概理解了，k 决定倾斜程度，b 只把图像上下挪。但我还有点犹豫，b 变大时图像看起来会不会也变陡，我想再确认一下。",
+            "teacher_student_pairs": [
+              {
+                "round": 4,
+                "teacher": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+                "student": "我大概理解了，k 决定倾斜程度，b 只把图像上下挪。但我还有点犹豫，b 变大时图像看起来会不会也变陡，我想再确认一下。"
+              }
+            ]
+          },
+          {
+            "dimension": "feedback",
+            "criterion": "提供可执行的下一步",
+            "value": 1.0,
+            "rounds": [
+              3
+            ],
+            "reason": "观察到明确证据；教师：为什么？那前一个呢？请结合刚才的式子说说。；学生：k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 3,
+                "teacher": "为什么？那前一个呢？请结合刚才的式子说说。",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "feedback",
+            "criterion": "对应学生实际回答",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "feedback",
+            "criterion": "指出具体过程或问题",
+            "value": 0.0,
+            "rounds": [
+              5
+            ],
+            "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "feedback",
+            "criterion": "提供可执行的下一步",
+            "value": 0.0,
+            "rounds": [
+              5
+            ],
+            "reason": "未观察到满足该项的证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "misconception_diagnosis",
+            "criterion": "识别已暴露的错误",
+            "value": 0.5,
+            "rounds": [
+              2,
+              1,
+              3
+            ],
+            "reason": "观察到部分证据；教师：在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？；学生：我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。",
+            "teacher_student_pairs": [
+              {
+                "round": 2,
+                "teacher": "在 y=2x+3 中，2 和 3 分别有什么作用？你觉得哪个会影响倾斜程度？",
+                "student": "我觉得2是斜率，影响倾斜程度；3是截距，决定和y轴交点。不过我还不太确定3会不会也让图像看起来更陡。"
+              },
+              {
+                "round": 1,
+                "teacher": "你觉得一次函数图像中，k 和 b 分别会影响什么？",
+                "student": "k 控制倾斜；b 我觉得也可能影响陡峭程度。"
+              },
+              {
+                "round": 3,
+                "teacher": "为什么？那前一个呢？请结合刚才的式子说说。",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "misconception_diagnosis",
+            "criterion": "提供正确反例或依据",
+            "value": 1.0,
+            "rounds": [
+              4,
+              3
+            ],
+            "reason": "观察到明确证据；教师：我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。；学生：我大概理解了，k 决定倾斜程度，b 只把图像上下挪。但我还有点犹豫，b 变大时图像看起来会不会也变陡，我想再确认一下。",
+            "teacher_student_pairs": [
+              {
+                "round": 4,
+                "teacher": "我告诉你结论：k 决定倾斜程度，b 只改变截距和上下位置。现在请用自己的话说说你怎么理解。",
+                "student": "我大概理解了，k 决定倾斜程度，b 只把图像上下挪。但我还有点犹豫，b 变大时图像看起来会不会也变陡，我想再确认一下。"
+              },
+              {
+                "round": 3,
+                "teacher": "为什么？那前一个呢？请结合刚才的式子说说。",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "misconception_diagnosis",
+            "criterion": "通过后续独立回答检验",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          },
+          {
+            "dimension": "misconception_diagnosis",
+            "criterion": "识别已暴露的错误",
+            "value": 0.5,
+            "rounds": [
+              5,
+              3
+            ],
+            "reason": "观察到部分证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              },
+              {
+                "round": 3,
+                "teacher": "为什么？那前一个呢？请结合刚才的式子说说。",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "misconception_diagnosis",
+            "criterion": "提供正确反例或依据",
+            "value": 1.0,
+            "rounds": [
+              5,
+              3
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              },
+              {
+                "round": 3,
+                "teacher": "为什么？那前一个呢？请结合刚才的式子说说。",
+                "student": "k 应该影响倾斜程度，但我还是觉得 b 变大也可能让直线更陡。"
+              }
+            ]
+          },
+          {
+            "dimension": "misconception_diagnosis",
+            "criterion": "通过后续独立回答检验",
+            "value": 1.0,
+            "rounds": [
+              5
+            ],
+            "reason": "观察到明确证据；教师：换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？；学生：先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。",
+            "teacher_student_pairs": [
+              {
+                "round": 5,
+                "teacher": "换一道新题：y=-3x+1 和 y=-3x+6 哪条更陡？为什么？",
+                "student": "先看这个结论：一样陡，斜率都是 -3；b 只改变上下位置，斜率不变。"
+              }
+            ]
+          }
+        ],
+        "review_note": "逐项引用需结合相邻轮次审查：教师支架应归于教师行为及学生随后参与；纠错效果应引用纠错之后的独立学生回答，而不能只引用纠错前回答。"
+      }
+    }
+  },
+  "limitations": [
+    "Style and naturalness judgments require human review of the raw transcripts.",
+    "Evaluation uses the production scoring engine; this report does not alter scores or evidence."
+  ]
+}

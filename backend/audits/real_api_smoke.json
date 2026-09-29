@@ -1,0 +1,40 @@
+{
+  "status": "degraded_or_failed",
+  "session_rounds": 3,
+  "real_responses": 0,
+  "turns": [
+    {
+      "teacher": "比较 y=1/2x+1 和 y=2x+1，哪条更陡？",
+      "student": "我想应该比较斜率的绝对值，2 的绝对值更大，所以那条更陡。",
+      "metadata": {
+        "source": "deterministic_fallback",
+        "retries": 1,
+        "fallback_reason": "empty_reply",
+        "learning_evidence_allowed": true,
+        "render_error": "LLMServiceError"
+      }
+    },
+    {
+      "teacher": "谢谢你的尝试，继续解释依据。",
+      "student": "好的，我先看下一步。",
+      "metadata": {
+        "source": "deterministic_fallback",
+        "retries": 1,
+        "fallback_reason": "empty_reply",
+        "learning_evidence_allowed": true,
+        "render_error": "LLMServiceError"
+      }
+    },
+    {
+      "teacher": "换一道 y=-2x-3，在 x=0 时 y 是多少？",
+      "student": "把 x=0 代入，y 分别是 -3。这就是与纵轴相交时的纵坐标。",
+      "metadata": {
+        "source": "deterministic_fallback",
+        "retries": 1,
+        "fallback_reason": "empty_reply",
+        "learning_evidence_allowed": true,
+        "render_error": "LLMServiceError"
+      }
+    }
+  ]
+}
