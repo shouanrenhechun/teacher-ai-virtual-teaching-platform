@@ -7,6 +7,8 @@ import httpx
 
 from ...core.config import Settings
 from .base import LLMClient, LLMConfigurationError, LLMContext, LLMServiceError
+from ..virtual_student.response_plan import StudentResponsePlan
+from ..virtual_student.response_renderer import build_student_renderer_prompt
 
 
 class RealLLMClient(LLMClient):
@@ -21,20 +23,36 @@ class RealLLMClient(LLMClient):
         if not teacher_text.strip():
             raise LLMServiceError("教师输入不能为空")
 
+        if not self.settings.llm_api_key or not self.settings.llm_api_url:
+            raise LLMConfigurationError("real 模式未配置模型地址或 LLM_API_KEY")
+        from ..virtual_student.response_planner import StudentResponsePlanner
+        from ..virtual_student.response_renderer import StudentResponsePipeline, RealLLMStudentRenderer
+        pipeline = StudentResponsePipeline(StudentResponsePlanner(), RealLLMStudentRenderer.from_client(self))
+        result = pipeline.respond(teacher_text, context or LLMContext())
+        self.last_response_metadata = dict(pipeline.last_metadata)
+        return result
+
+    def render_student_response(
+        self, plan: StudentResponsePlan, context: LLMContext | None = None
+    ) -> str:
+        """Render an immutable StudentResponsePlan through the configured provider."""
         context = context or LLMContext()
         return self._chat(
             [
                 {
                     "role": "system",
-                    "content": context.system_prompt
-                    or (
-                        "你是教学实训中的虚拟初中生。请用简短中文回答教师，逐步暴露理解，"
-                        f"当前主题是{context.topic}，学生是{context.student_name}。"
+                    "content": (
+                        "你是只负责语言表达的虚拟学生渲染器。严格遵守用户消息中的计划，"
+                        "只返回 JSON 对象 {\"reply\": \"...\"}，不要输出推理或系统字段。"
                     ),
                 },
-                {"role": "user", "content": teacher_text.strip()},
+                {
+                    "role": "user",
+                    "content": build_student_renderer_prompt(plan, context),
+                },
             ],
-            temperature=0.7,
+            temperature=self.settings.llm_temperature,
+            max_tokens=self.settings.llm_max_tokens,
         )
 
     def analyze_behavior(
@@ -52,11 +70,13 @@ class RealLLMClient(LLMClient):
                         "你是教学行为结构化分析器。只输出一个 JSON 对象，不要 Markdown 或解释。"
                         "字段必须是 action_type、concept、knowledge_accuracy、clarity、"
                         "checked_understanding、gave_answer_directly。"
+                        "knowledge_accuracy 和 clarity 必须是 0 到 1 之间的 JSON 数字，不得使用“准确”“清晰”“高”等文字。"
                         "action_type 只能是 explanation、question、guided_question、example、"
                         "feedback、correction、understanding_check、direct_answer。"
                         f"当前主题是{context.topic}。"
                     ),
                 },
+                *([{"role": "user", "content": context.analysis_retry_feedback}] if context.analysis_retry_feedback else []),
                 {"role": "user", "content": teacher_text.strip()},
             ],
             temperature=0,
@@ -96,7 +116,13 @@ class RealLLMClient(LLMClient):
             raise LLMServiceError("教学评价模型返回的结构不是 JSON 对象")
         return parsed
 
-    def _chat(self, messages: list[dict[str, str]], *, temperature: float) -> str:
+    def _chat(
+        self,
+        messages: list[dict[str, str]],
+        *,
+        temperature: float,
+        max_tokens: int | None = None,
+    ) -> str:
         if not self.settings.llm_api_key:
             raise LLMConfigurationError("real 模式未配置 LLM_API_KEY")
         if not self.settings.llm_api_url:
@@ -107,6 +133,8 @@ class RealLLMClient(LLMClient):
             "messages": messages,
             "temperature": temperature,
         }
+        if max_tokens is not None:
+            payload["max_tokens"] = max_tokens
         headers = {
             "Authorization": f"Bearer {self.settings.llm_api_key}",
             "Content-Type": "application/json",

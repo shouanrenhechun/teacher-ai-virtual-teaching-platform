@@ -59,4 +59,53 @@ def test_invalid_llm_structure_uses_safe_default_and_logs(caplog) -> None:
     assert result.action_type is TeachingActionType.GUIDED_QUESTION
     assert result.analysis_source == "fallback"
     assert result.analysis_error
-    assert "结构化分析失败" in caplog.text
+    assert "结构化输出修复失败" in caplog.text
+
+
+def test_textual_scores_get_one_bounded_schema_repair_attempt() -> None:
+    class RepairingClient(InvalidAnalysisClient):
+        def __init__(self):
+            self.calls = []
+
+        def analyze_behavior(self, teacher_text, context=None):
+            self.calls.append(context.analysis_retry_feedback if context else '')
+            if len(self.calls) == 1:
+                return {
+                    'action_type': 'guided_question', 'concept': 'slope',
+                    'knowledge_accuracy': 'accurate', 'clarity': 'clear',
+                    'checked_understanding': True, 'gave_answer_directly': False,
+                }
+            return {
+                'action_type': 'guided_question', 'concept': 'slope',
+                'knowledge_accuracy': 0.9, 'clarity': 0.8,
+                'checked_understanding': True, 'gave_answer_directly': False,
+            }
+
+    client = RepairingClient()
+    result = TeachingBehaviorAnalyzer().analyze(
+        '如果固定 k，只改变 b，图像会怎样？', llm_client=client
+    )
+    assert len(client.calls) == 2
+    assert client.calls[0] == ''
+    assert '必须为 0 到 1 之间的数字' in client.calls[1]
+    assert result.analysis_source == 'rules+llm'
+    assert 0 <= result.clarity <= 1
+
+
+def test_invalid_behavior_output_falls_back_after_exactly_one_retry() -> None:
+    client = InvalidAnalysisClient()
+    calls = 0
+    original = client.analyze_behavior
+
+    def counted(teacher_text, context=None):
+        nonlocal calls
+        calls += 1
+        return original(teacher_text, context)
+
+    client.analyze_behavior = counted
+    result = TeachingBehaviorAnalyzer().analyze(
+        '如果固定 k，只改变 b，图像会怎样？', llm_client=client
+    )
+    assert calls == 2
+    assert result.analysis_source == 'fallback'
+    assert result.analysis_error == 'structured_output_invalid_after_one_retry'

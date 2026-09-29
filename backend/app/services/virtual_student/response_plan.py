@@ -38,9 +38,9 @@ class StudentResponsePlan:
     style_constraints: Mapping[str, str] = field(default_factory=dict)
     response_shape: str = "clarify"
     turn_index: int = 0
+    teacher_text: str = ""
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "content_facts", MappingProxyType(dict(self.content_facts)))
         object.__setattr__(self, "style_constraints", MappingProxyType(dict(self.style_constraints)))
         object.__setattr__(self, "misconception_strength", max(0.0, min(1.0, float(self.misconception_strength))))
-

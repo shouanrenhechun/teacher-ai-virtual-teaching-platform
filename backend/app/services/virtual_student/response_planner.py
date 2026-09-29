@@ -16,7 +16,10 @@ class StudentResponsePlanner:
 
     def build(self, teacher_text: str, context: LLMContext | None = None) -> StudentResponsePlan:
         context = context or LLMContext()
-        text = teacher_text.strip()
+        text = re.split(r'口误[，,:：]?|更正为[：:]?|改成[：:]?\s*(?=y=|\()', teacher_text.strip())[-1]
+        if context.misconception_semantic_type == "binomial_square" or any(word in context.topic for word in ("完全平方", "平方公式")):
+            from .binomial_plan import build_binomial_plan
+            return build_binomial_plan(text, context)
         classroom = analyze_classroom_dialogue(text, conversation_history=context.conversation_history)
         intent = analyze_linear_dialogue_intent(
             text,
@@ -39,6 +42,8 @@ class StudentResponsePlanner:
                 intent = analyze_linear_dialogue_intent(intent_text, conversation_history=context.conversation_history)
         task_equations = equations(intent_text) or equations(task)
         facts: dict[str, object] = {}
+        facts['classroom_act'] = classroom.primary_act.value
+        facts["fee_context"] = bool(rate_model(task) or rate_model(text))
         if task_equations:
             slopes = tuple(item[0] for item in task_equations)
             intercepts = tuple(item[1] for item in task_equations)
@@ -52,7 +57,8 @@ class StudentResponsePlanner:
         model = rate_model(text)
         if model:
             facts.update(rate=model[0], base=model[1])
-        x_match = re.search(r"x=([+-]?(?:\d+(?:\.\d+)?|\d+/\d+))", intent_text.replace(" ", ""))
+        x_matches = list(re.finditer(r"x=([+-]?(?:\d+/\d+|\d+(?:\.\d+)?))", intent_text.replace(" ", "")))
+        x_match = x_matches[-1] if x_matches else None
         if x_match:
             x_value = number(x_match.group(1))
             facts["x"] = display(x_value)
@@ -74,6 +80,7 @@ class StudentResponsePlanner:
             allow_equation_comparison=bool(equations(text)) or intent_text != text,
         )
         return StudentResponsePlan(
+            teacher_text=text,
             semantic_type=context.misconception_semantic_type,
             topic=context.topic,
             task_type=task_type,
@@ -90,6 +97,7 @@ class StudentResponsePlanner:
                 "confirmation_seeking": context.confirmation_seeking,
                 "verbosity": context.verbosity if hasattr(context, "verbosity") else "一到三句话",
                 "correction_style": context.correction_style,
+                "style_examples": "\n".join(context.style_examples),
                 "previous_response": next(
                     (
                         content.strip()
@@ -151,7 +159,7 @@ class StudentResponsePlanner:
             ClassroomAct.GREETING, ClassroomAct.ORGANIZATION, ClassroomAct.TRANSITION,
             ClassroomAct.CLOSURE, ClassroomAct.ENCOURAGEMENT, ClassroomAct.ACKNOWLEDGEMENT,
             ClassroomAct.CONTINUATION,
-        } and not classroom.has_subject_content:
+        } and (not classroom.has_subject_content or classroom.primary_act in {ClassroomAct.ORGANIZATION, ClassroomAct.TRANSITION}):
             return "classroom_ack", "social", "acknowledge_instruction", ()
         if classroom.primary_act is ClassroomAct.OFF_TOPIC:
             return "off_topic", "clarification", "request_clarification", ("return_to_topic",)

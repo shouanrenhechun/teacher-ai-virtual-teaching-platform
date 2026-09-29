@@ -16,6 +16,7 @@ class DialogueRecord(Base):
     __tablename__ = "dialogue_records"
     __table_args__ = (
         UniqueConstraint("session_id", "sequence", name="uq_dialogue_session_sequence"),
+        UniqueConstraint("session_id", "request_id", name="uq_dialogue_request"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -26,6 +27,8 @@ class DialogueRecord(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     sequence: Mapped[int] = mapped_column(Integer, nullable=False)
     timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    request_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    response_metadata: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     session: Mapped[TeachingSession] = relationship(back_populates="dialogue_records")
     behavior_analysis: Mapped[TeachingBehaviorRecord | None] = relationship(

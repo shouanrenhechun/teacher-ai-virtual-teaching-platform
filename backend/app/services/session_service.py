@@ -4,7 +4,7 @@ from dataclasses import asdict
 from datetime import UTC, datetime
 import json
 
-from sqlalchemy import select
+from sqlalchemy import select, update, func, text
 from sqlalchemy.orm import Session, selectinload
 
 from .evaluation_engine import EvaluationEngine
@@ -42,6 +42,10 @@ from ..schemas.cognitive import (
     StudentResponseEvidenceRead,
 )
 from ..schemas.teaching_behavior import TeachingBehaviorSummaryRead
+
+
+class SessionConflict(RuntimeError):
+    pass
 
 
 def load_session(db: Session, session_id: int) -> TeachingSession | None:
@@ -122,7 +126,19 @@ def load_engine(session: TeachingSession) -> VirtualStudentEngine:
         state = json.loads(session.snapshot.engine_state_json)
         if not isinstance(state, dict):
             raise ValueError("引擎状态快照格式无效")
-        return VirtualStudentEngine.from_exported_state(profile, state)
+        engine = VirtualStudentEngine.from_exported_state(profile, state)
+        if state.get('learning_evidence_key_version', 1) < 2:
+            from .virtual_student.task_context import task_identity
+            history = []
+            for item in json.loads(session.snapshot.cognitive_trace_json).get('rounds', []):
+                evidence = item.get('evidence') or {}
+                teacher = item['teacher_text']
+                task = active_task(history, teacher)
+                if evidence and not evidence.get('evidence_insufficient', True):
+                    key = task_identity(teacher, task) + '|' + str((evidence['states_correct_conclusion'], evidence['explains_reason_correctly'], evidence['shows_residual_misconception']))
+                    engine._learning_evidence_keys.add(key)
+                history.extend([('teacher', teacher), ('student', item['student_text'])])
+        return engine
     return _replay_engine(session, profile)
 
 
@@ -157,6 +173,7 @@ def build_session_detail(
 
     return TeachingSessionDetailRead(
         id=session.id,
+        version=session.version,
         scenario_id=session.scenario_id,
         virtual_student_id=session.virtual_student_id,
         started_at=session.started_at,
@@ -235,11 +252,17 @@ def _replay_cognitive_trace(
         if record.speaker != "student" or not pending_teacher_text:
             continue
 
+        response_metadata = _decode_response_metadata(record.response_metadata)
+        response_source = response_metadata.get('source')
+        learning_allowed = response_metadata.get('learning_evidence_allowed')
+        if not isinstance(learning_allowed, bool):
+            learning_allowed = response_source not in {'deterministic_fallback', 'clarification_fallback'}
         evidence = engine.apply_student_response_evidence(
             record.content,
             pending_teacher_text,
             pending_opportunity,
             previous_teacher_text=previous_teacher_text,
+            allow_learning=learning_allowed,
         )
         after = engine.snapshot()
         before_misconception = pending_before.misconceptions[0] if pending_before.misconceptions else None
@@ -265,6 +288,8 @@ def _replay_cognitive_trace(
                     if after_misconception is not None
                     else None
                 ),
+                response_source=response_source,
+                learning_evidence_allowed=learning_allowed,
             )
         )
         previous_teacher_text = pending_teacher_text
@@ -291,6 +316,33 @@ def build_cognitive_trace(session: TeachingSession) -> CognitiveTraceRead:
     if session.snapshot is not None:
         return CognitiveTraceRead.model_validate_json(session.snapshot.cognitive_trace_json)
     return _replay_cognitive_trace(session)
+
+
+def _decode_response_metadata(value: str | dict | None) -> dict:
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            return parsed if isinstance(parsed, dict) else {}
+        except (TypeError, ValueError):
+            return {}
+    return {}
+
+
+def _canonical_response_metadata(client: LLMClient) -> dict[str, object]:
+    raw = getattr(client, 'last_response_metadata', {})
+    metadata = dict(raw) if isinstance(raw, dict) else {}
+    source = str(metadata.get('source') or client.provider)
+    metadata['source'] = source
+    allowed = metadata.get('learning_evidence_allowed')
+    if not isinstance(allowed, bool):
+        allowed = source not in {'deterministic_fallback', 'clarification_fallback'}
+    if source in {'deterministic_fallback', 'clarification_fallback'}:
+        allowed = False
+    metadata['learning_evidence_allowed'] = allowed
+    metadata.setdefault('retries', 0)
+    return metadata
 
 
 def _empty_cognitive_trace(engine: VirtualStudentEngine) -> CognitiveTraceRead:
@@ -354,8 +406,10 @@ def backfill_session_snapshots(db: Session) -> int:
 
 
 def create_or_reuse_session(
-    db: Session, scenario_id: int, virtual_student_id: int
+    db: Session, scenario_id: int, virtual_student_id: int, owner_hash: str | None = None
 ) -> TeachingSession:
+    db.rollback()
+    db.execute(text('BEGIN IMMEDIATE'))
     scenario = db.get(TrainingScenario, scenario_id)
     if scenario is None:
         raise LookupError("教学实训场景不存在")
@@ -364,15 +418,19 @@ def create_or_reuse_session(
         raise LookupError("虚拟学生不存在")
 
     active_statement = select(TeachingSession).where(
+        TeachingSession.owner_hash == owner_hash,
         TeachingSession.scenario_id == scenario_id,
         TeachingSession.virtual_student_id == virtual_student_id,
         TeachingSession.status == "active",
     )
     existing = db.scalar(active_statement.order_by(TeachingSession.id.desc()))
     if existing is not None:
-        return load_session(db, existing.id) or existing
+        existing_id = existing.id
+        db.commit()
+        return load_session(db, existing_id)
 
     session = TeachingSession(
+        owner_hash=owner_hash,
         scenario_id=scenario_id,
         virtual_student_id=virtual_student_id,
         started_at=datetime.now(UTC).replace(tzinfo=None),
@@ -387,31 +445,22 @@ def create_or_reuse_session(
     return load_session(db, session.id) or session
 
 
-def list_session_history(db: Session) -> list[SessionHistoryItemRead]:
-    statement = (
-        select(TeachingSession)
-        .where(TeachingSession.status == "completed")
-        .options(
-            selectinload(TeachingSession.scenario),
-            selectinload(TeachingSession.virtual_student),
-            selectinload(TeachingSession.evaluation),
-        )
-        .order_by(TeachingSession.started_at.asc(), TeachingSession.id.asc())
-    )
-    sessions = db.scalars(statement).all()
-    return [
-        SessionHistoryItemRead(
-            id=item.id,
-            started_at=item.started_at,
-            ended_at=item.ended_at,
-            status=item.status,
-            scenario_id=item.scenario_id,
-            topic=item.scenario.topic,
-            virtual_student_name=item.virtual_student.name,
-            overall_score=item.evaluation.overall_score if item.evaluation else None,
-        )
-        for item in sessions
-    ]
+def list_session_history(db: Session, owner_hash: str, *, page=1, page_size=10, student_id=None, rubric_version=None):
+    filters = [TeachingSession.status == 'completed', TeachingSession.owner_hash == owner_hash]
+    if student_id is not None:
+        filters.append(TeachingSession.virtual_student_id == student_id)
+    if rubric_version is not None:
+        filters.append(TeachingSession.evaluation.has(Evaluation.rubric_version == rubric_version))
+    total = db.scalar(select(func.count()).select_from(TeachingSession).where(*filters)) or 0
+    statement = (select(TeachingSession).where(*filters)
+        .options(selectinload(TeachingSession.scenario), selectinload(TeachingSession.virtual_student), selectinload(TeachingSession.evaluation))
+        .order_by(TeachingSession.ended_at.desc(), TeachingSession.id.desc()).offset((page-1)*page_size).limit(page_size))
+    items = [SessionHistoryItemRead(id=item.id, started_at=item.started_at, ended_at=item.ended_at,
+        status=item.status, scenario_id=item.scenario_id, topic=item.scenario.topic,
+        virtual_student_id=item.virtual_student_id, virtual_student_name=item.virtual_student.name,
+        rubric_version=item.evaluation.rubric_version if item.evaluation else 2,
+        overall_score=item.evaluation.overall_score if item.evaluation else None) for item in db.scalars(statement)]
+    return {'items': items, 'total': total, 'page': page, 'page_size': page_size}
 
 
 def _latest_learning_evidence(trace: CognitiveTraceRead) -> dict[str, object] | None:
@@ -432,9 +481,20 @@ def send_teacher_message(
     session: TeachingSession,
     teacher_text: str,
     client: LLMClient,
+    request_id: str | None = None,
+    expected_version: int | None = None,
 ) -> TeachingSessionDetailRead:
-    if session.status != "active":
-        raise RuntimeError("实训已结束，不能继续发送消息")
+    if request_id:
+        previous = next((r for r in session.dialogue_records if r.request_id == request_id), None)
+        if previous is not None:
+            if previous.content != teacher_text.strip():
+                raise SessionConflict('相同消息标识不能用于不同内容')
+            return build_session_detail(session)
+    if session.status != 'active':
+        raise SessionConflict('实训已结束，不能继续发送消息')
+    if expected_version is not None and expected_version != session.version:
+        raise SessionConflict('会话已有更新，请刷新后继续')
+    captured_version, session_id = session.version, session.id
 
     engine = load_engine(session)
     trace = build_cognitive_trace(session)
@@ -459,8 +519,9 @@ def send_teacher_message(
         sequence=next_sequence,
         timestamp=datetime.now(UTC).replace(tzinfo=None),
     )
-    db.add(teacher_record)
-    db.flush()
+    teacher_record.request_id = request_id
+    db.expunge_all()
+    db.rollback()  # No transaction spans model calls.
 
     before = engine.snapshot()
     current_misconception = before.misconceptions[0] if before.misconceptions else None
@@ -495,6 +556,7 @@ def send_teacher_message(
         confirmation_seeking=engine.profile.confirmation_seeking,
         verbosity=engine.profile.verbosity,
         correction_style=engine.profile.correction_style,
+        style_examples=engine.profile.style_examples,
     )
     behavior_analysis = TeachingBehaviorAnalyzer().analyze(
         teacher_text,
@@ -544,18 +606,35 @@ def send_teacher_message(
             confirmation_seeking=engine.profile.confirmation_seeking,
             verbosity=engine.profile.verbosity,
             correction_style=engine.profile.correction_style,
+            style_examples=engine.profile.style_examples,
         ),
     )
     if not student_text.strip():
         db.rollback()
         raise RuntimeError("学生回答为空，请重试")
 
+    metadata = _canonical_response_metadata(client)
     evidence = engine.apply_student_response_evidence(
         student_text.strip(),
         teacher_text,
         opportunity,
         previous_teacher_text=previous_teacher_text,
+        allow_learning=metadata['learning_evidence_allowed'],
+        task_context=task_context,
     )
+
+    result = db.execute(update(TeachingSession).where(TeachingSession.id == session_id,
+        TeachingSession.version == captured_version, TeachingSession.status == 'active').values(version=captured_version + 1))
+    if result.rowcount != 1:
+        db.rollback()
+        current = load_session(db, session_id)
+        previous = next((r for r in current.dialogue_records if request_id and r.request_id == request_id), None) if current else None
+        if previous and previous.content == teacher_text.strip():
+            return build_session_detail(current)
+        raise SessionConflict('会话已更新或结束，请刷新后继续')
+    session = load_session(db, session_id)
+    db.add(teacher_record)
+    db.flush()
 
     db.add(
         TeachingBehaviorRecord(
@@ -577,6 +656,7 @@ def send_teacher_message(
         speaker="student",
         content=student_text.strip(),
         sequence=next_sequence + 1,
+        response_metadata=json.dumps(metadata, ensure_ascii=False),
         timestamp=datetime.now(UTC).replace(tzinfo=None),
     )
     db.add(student_record)
@@ -604,6 +684,8 @@ def send_teacher_message(
             if after_misconception is not None
             else None
         ),
+        response_source=str(metadata['source']),
+        learning_evidence_allowed=bool(metadata['learning_evidence_allowed']),
     )
     updated_trace = trace.model_copy(
         update={
@@ -626,8 +708,12 @@ def end_session(
     client: LLMClient | None = None,
 ) -> TeachingSessionDetailRead:
     if session.status == "active":
-        session.status = "completed"
-        session.ended_at = datetime.now(UTC).replace(tzinfo=None)
+        result = db.execute(update(TeachingSession).where(TeachingSession.id == session.id,
+            TeachingSession.version == session.version, TeachingSession.status == 'active').values(status='completed',
+            ended_at=datetime.now(UTC).replace(tzinfo=None), version=session.version + 1))
+        if result.rowcount != 1:
+            db.rollback()
+            raise SessionConflict('会话已有更新，请刷新后结束实训')
         db.commit()
     if client is not None and (session.evaluation is None or session.evaluation.narrative is None):
         EvaluationEngine().evaluate_and_save(db, session, client)

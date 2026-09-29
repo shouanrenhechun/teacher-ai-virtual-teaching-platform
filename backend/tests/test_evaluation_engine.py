@@ -32,7 +32,7 @@ def behavior(
     )
 
 
-def test_evaluation_scores_use_central_weights_and_observable_counts() -> None:
+def test_behavior_counts_without_dialogue_do_not_produce_v2_scores() -> None:
     assert round(sum(EVALUATION_WEIGHTS.values()), 5) == 1
     session = SimpleNamespace(
         behavior_records=[
@@ -46,10 +46,7 @@ def test_evaluation_scores_use_central_weights_and_observable_counts() -> None:
 
     scores = EvaluationEngine().calculate_scores(session)
 
-    assert scores["knowledge_accuracy"] == 88.0
-    assert scores["questioning"] > 0
-    assert scores["misconception_diagnosis"] > 0
-    assert 0 <= scores["overall_score"] <= 100
+    assert all(score is None for score in scores.values())
 
 
 def test_classroom_interactions_do_not_inflate_knowledge_accuracy() -> None:
@@ -63,11 +60,11 @@ def test_classroom_interactions_do_not_inflate_knowledge_accuracy() -> None:
 
     scores = EvaluationEngine().calculate_scores(session)
 
-    assert scores["knowledge_accuracy"] == 80.0
-    assert scores["feedback"] > 0
+    assert scores["knowledge_accuracy"] is None
+    assert scores["feedback"] is None
 
 
-def test_only_classroom_interactions_produce_zero_knowledge_accuracy() -> None:
+def test_only_classroom_interactions_leave_knowledge_unassessed() -> None:
     session = SimpleNamespace(
         behavior_records=[
             behavior("classroom_interaction", accuracy=1.0, concept="课堂互动"),
@@ -75,7 +72,7 @@ def test_only_classroom_interactions_produce_zero_knowledge_accuracy() -> None:
         ]
     )
 
-    assert EvaluationEngine().calculate_scores(session)["knowledge_accuracy"] == 0.0
+    assert EvaluationEngine().calculate_scores(session)["knowledge_accuracy"] is None
 
 
 def test_off_topic_dialogue_is_excluded_from_knowledge_accuracy() -> None:
@@ -86,7 +83,7 @@ def test_off_topic_dialogue_is_excluded_from_knowledge_accuracy() -> None:
         ]
     )
 
-    assert EvaluationEngine().calculate_scores(session)["knowledge_accuracy"] == 70.0
+    assert EvaluationEngine().calculate_scores(session)["knowledge_accuracy"] is None
 
 
 def test_invalid_qualitative_llm_uses_rule_report() -> None:
@@ -167,7 +164,7 @@ def test_completed_session_returns_evaluation_with_real_evidence(monkeypatch) ->
         "misconception_diagnosis",
         "scaffolding",
     ):
-        assert 0 <= report[field] <= 100
+        assert report[field] is None or 0 <= report[field] <= 100
     assert report["strengths"]
     assert report["problems"]
     assert report["suggestions"]
@@ -177,7 +174,7 @@ def test_completed_session_returns_evaluation_with_real_evidence(monkeypatch) ->
     assert fetched.status_code == 200
     assert fetched.json()["session_id"] == session_id
     assert history.status_code == 200
-    history_item = next(item for item in history.json() if item["id"] == session_id)
+    history_item = next(item for item in history.json()["items"] if item["id"] == session_id)
     assert history_item["topic"]
     assert history_item["virtual_student_name"]
     assert history_item["overall_score"] == report["overall_score"]

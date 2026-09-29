@@ -28,6 +28,7 @@ from .evidence import (
 from .response_plan import StudentResponsePlan
 from .response_planner import StudentResponsePlanner
 from .response_renderer import (
+    build_student_renderer_prompt,
     DeterministicStudentRenderer,
     RealLLMStudentRenderer,
     RenderValidation,
@@ -66,6 +67,7 @@ __all__ = [
     "StudentResponsePlan",
     "StudentResponsePlanner",
     "StudentLanguageRenderer",
+    "build_student_renderer_prompt",
     "DeterministicStudentRenderer",
     "RealLLMStudentRenderer",
     "ReplyPayload",

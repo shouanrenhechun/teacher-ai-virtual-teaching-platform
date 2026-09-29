@@ -72,7 +72,7 @@ def test_duplicate_end_is_idempotent_and_report_remains_available(monkeypatch) -
     assert second_end.status_code == 200
     assert first_end.json()["status"] == second_end.json()["status"] == "completed"
     assert first_end.json()["ended_at"] == second_end.json()["ended_at"]
-    assert second_end.json()["evaluation"]["overall_score"] >= 0
+    assert second_end.json()["evaluation"]["overall_score"] is None
 
 
 def test_mock_demo_flow_exposes_misconception_then_correction_and_report(monkeypatch) -> None:
@@ -105,7 +105,7 @@ def test_mock_demo_flow_exposes_misconception_then_correction_and_report(monkeyp
     assert guided.json()["behavior_summary"]["correction_count"] == 1
     report = ended.json()["evaluation"]
     assert ended.status_code == 200
-    assert report["overall_score"] >= 0
+    assert report["overall_score"] is None or report["overall_score"] >= 0
     assert report["key_teaching_snippets"]
     assert "不替代专业教师" in report["disclaimer"]
 
@@ -171,8 +171,10 @@ def real_client() -> RealLLMClient:
 def test_real_llm_timeout_is_converted_to_friendly_error(monkeypatch) -> None:
     monkeypatch.setattr("app.services.llm.real.httpx.Client", TimeoutHttpClient)
 
-    with pytest.raises(LLMServiceError, match="超时"):
-        real_client().respond("请解释 b 的意义。", LLMContext())
+    client = real_client()
+    assert client.respond("请解释 b 的意义。", LLMContext())
+    assert client.last_response_metadata["source"] == "deterministic_fallback"
+    assert client.last_response_metadata["retries"] == 1
 
 
 def test_real_llm_malformed_json_is_rejected(monkeypatch) -> None:

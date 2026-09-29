@@ -7,23 +7,26 @@ import re
 class ClaimAssessment:
     correct: bool | None = None
     error_stance: str | None = None  # asserted, denied, questioned
+    claims: tuple[tuple[str, bool], ...] = ()
 
 
 def assess_claims(text: str) -> ClaimAssessment:
     text = re.sub(r"\s+", "", text.lower())
     results = []
     stances = []
+    claims = []
     for sentence in re.split(r"[。；;]", text):
         patterns = (
             (r"b(?:只)?(?:决定|表示|控制|影响|管|是)(?:直线的)?(?:斜率|倾斜程度)", False),
             (r"k(?:只)?(?:决定|表示|控制|影响|管|是)(?:直线的)?(?:截距|上下位置)", False),
             (r"b[^，,]{0,12}(?:越大|变大|增大)[^，,]{0,12}(?:更陡|越陡|变陡)", False),
-            (r"b(?:只)?(?:影响|决定|表示|控制|管|是)(?:直线的)?(?:截距|上下位置|位置)", True),
+            (r"b(?:只)?(?:影响|改变|决定|表示|控制|管|是)(?:直线的)?(?:截距|上下位置|位置)", True),
             (r"k(?:只)?(?:影响|决定|表示|控制|管|是)(?:直线的)?(?:斜率|倾斜程度|倾斜)", True),
             (r"b不(?:影响|改变)斜率", True),
             (r"(?:平方就是分别平方|没有中间项|不需要中间项)", False),
         )
-        for pattern, truth in patterns:
+        keys = ('b:slope', 'k:position', 'b:slope', 'b:position', 'k:slope', 'b:slope', 'binomial:cross_terms')
+        for key, (pattern, truth) in zip(keys, patterns):
             for match in re.finditer(pattern, sentence):
                 start = max(sentence.rfind('，', 0, match.start()), sentence.rfind(',', 0, match.start())) + 1
                 end_match = re.search(r'[，,]', sentence[match.end():])
@@ -45,8 +48,9 @@ def assess_claims(text: str) -> ClaimAssessment:
                         stances.append('questioned')
                     continue
                 results.append(not truth if local_denial else truth)
+                claims.append((key, not truth if local_denial else truth))
                 if not truth:
                     stances.append('denied' if local_denial else 'asserted')
     correct = all(results) if results else None
     stance = next((s for s in ('asserted', 'denied', 'questioned') if s in stances), None)
-    return ClaimAssessment(correct, stance)
+    return ClaimAssessment(correct, stance, tuple(claims))

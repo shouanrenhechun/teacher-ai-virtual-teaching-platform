@@ -1,6 +1,8 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from .common import UTCModel
+from uuid import uuid4
 
 from .dialogue import DialogueRecordRead
 from .cognitive import CognitiveTraceRead
@@ -10,7 +12,7 @@ from .student import VirtualStudentRead
 from .teaching_behavior import TeachingBehaviorRecordRead, TeachingBehaviorSummaryRead
 
 
-class TeachingSessionRead(BaseModel):
+class TeachingSessionRead(UTCModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -21,7 +23,7 @@ class TeachingSessionRead(BaseModel):
     status: str
 
 
-class SessionHistoryItemRead(BaseModel):
+class SessionHistoryItemRead(UTCModel):
     id: int
     started_at: datetime
     ended_at: datetime | None
@@ -29,6 +31,8 @@ class SessionHistoryItemRead(BaseModel):
     scenario_id: int
     topic: str
     virtual_student_name: str
+    virtual_student_id: int
+    rubric_version: int = 1
     overall_score: float | None = Field(default=None, ge=0, le=100)
 
 
@@ -43,6 +47,16 @@ class SessionMessageRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     teacher_text: str = Field(min_length=1, max_length=4000)
+    request_id: str = Field(default_factory=lambda: str(uuid4()), min_length=1, max_length=64)
+    expected_version: int | None = Field(default=None, ge=0)
+
+    @field_validator('teacher_text')
+    @classmethod
+    def nonempty_text(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError('教师话语不能为空')
+        return value
 
 
 class SessionStateRead(BaseModel):
@@ -52,10 +66,11 @@ class SessionStateRead(BaseModel):
     confidence: float = Field(ge=0, le=1)
 
 
-class TeachingSessionDetailRead(BaseModel):
+class TeachingSessionDetailRead(UTCModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    version: int = 0
     scenario_id: int
     virtual_student_id: int
     started_at: datetime
