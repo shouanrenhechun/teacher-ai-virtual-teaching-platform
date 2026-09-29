@@ -4,6 +4,8 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from .clause_splitter import split_linear_clauses
+
 LINEAR_KB = "linear_kb"
 BINOMIAL_SQUARE = "binomial_square"
 
@@ -44,8 +46,8 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
         teacher_normalized = _compact(teacher_text)
         has_k = _linear_k_role(normalized)
         has_b = _linear_b_role(normalized)
-        residual = _linear_residual(normalized, teacher_normalized)
-        negative_claim = _linear_negative_claim(normalized)
+        residual = _linear_residual(response, teacher_normalized)
+        negative_claim = _linear_negative_claim(response)
         self_correction = _has_explicit_linear_self_correction(normalized)
         explains = (
             not residual
@@ -244,8 +246,9 @@ def _compact(text: str) -> str:
 
 
 def _linear_residual(response: str, teacher_text: str) -> bool:
-    if _has_explicit_linear_self_correction(response):
-        correction_tail = re.split(r"(?:现在|后来|如今)", response, maxsplit=1)[-1]
+    normalized = _compact(response)
+    if _has_explicit_linear_self_correction(normalized):
+        correction_tail = re.split(r"(?:现在|后来|如今)", normalized, maxsplit=1)[-1]
         return _linear_positive_error(correction_tail)
     # Only the clause raising a hypothetical/quoted error is excluded. A later
     # first-person endorsement still expresses the student's misconception.
@@ -286,18 +289,8 @@ def _linear_b_role(response: str) -> bool:
 
 
 def _linear_clauses(response: str) -> list[str]:
-    """Keep quoted claims and later personal endorsements in separate clauses."""
-    clauses = []
-    for segment in re.split(r"(?:不过|但是|然而|可是|(?<!不)但)", response):
-        attribution = re.search(r"(?:有同学|有人|有些同学).{0,6}(?:说|认为|觉得|问)", segment)
-        if attribution:
-            own_stance = re.search(r"我(?:也)?(?:认为|觉得|同意)", segment[attribution.end():])
-            if own_stance:
-                split_at = attribution.end() + own_stance.start()
-                clauses.extend((segment[:split_at], segment[split_at:]))
-                continue
-        clauses.append(segment)
-    return [clause for clause in clauses if clause]
+    """Use the same boundaries as claim checking before compacting punctuation."""
+    return [_compact(clause) for clause in split_linear_clauses(response)]
 
 
 # Denial of the b-to-steepness relation, in the forms students actually use.

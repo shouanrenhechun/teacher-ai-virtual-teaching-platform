@@ -9,6 +9,7 @@ from __future__ import annotations
 import pytest
 
 from app.services.evidence_scoring import teacher_claims
+from app.services.virtual_student.clause_splitter import split_linear_clauses
 from app.services.virtual_student.evidence import StudentResponseEvidenceAnalyzer
 from app.services.virtual_student.propositions import assess_claims
 from app.services.virtual_student.semantic import get_semantic_evaluator
@@ -159,6 +160,7 @@ def test_denial_in_one_clause_does_not_clear_an_asserted_teacher_error(text: str
     [
         "有同学说 b 越大直线越陡，但我也认为 b 越大直线越陡。",
         "有同学说 b 越大直线越陡，我也认为 b 越大直线越陡。",
+        "有同学说 b 越大直线越陡我也认为 b 越大直线越陡。",
     ],
 )
 def test_quoted_error_followed_by_own_endorsement_is_asserted(text: str) -> None:
@@ -178,6 +180,24 @@ def test_first_person_hedge_is_not_split_from_its_subject() -> None:
     text = "b 变大，我觉得直线会更陡。"
     assert assess_claims(text).correct is False
     assert _linear(text).shows_residual_misconception is True
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "有同学说 b 越大直线越陡，我也认为 b 越大直线越陡。",
+        "有同学说 b 越大直线越陡我也认为 b 越大直线越陡。",
+    ],
+)
+def test_shared_clause_boundary_does_not_depend_on_comma(text: str) -> None:
+    clauses = [clause.rstrip("，,") for clause in split_linear_clauses(text)]
+    assert clauses == ["有同学说b越大直线越陡", "我也认为b越大直线越陡"]
+
+
+def test_shared_clause_boundary_keeps_ordinary_hedge_together() -> None:
+    assert split_linear_clauses("b 变大，我觉得直线会更陡。") == [
+        "b变大，我觉得直线会更陡"
+    ]
 
 
 # --- validation framework self-description ---------------------------------
