@@ -35,6 +35,114 @@ def test_explicit_intercept_errors_are_still_detected(text, context):
 
 
 @pytest.mark.parametrize(
+    "text",
+    [
+        "这里的 3 越大，直线就越陡。",
+        "这里的 3 决定斜率。",
+        "这里的 3 影响斜率。",
+        "3 决定斜率。",
+        "这里的 3 让直线更陡。",
+        "b 让直线更陡。",
+        "截距让直线更陡。",
+        "这里的 3 控制倾斜程度。",
+        "这里的 3 改变陡峭程度。",
+        "这里的 3 不但决定斜率，还决定位置。",
+        "这里的 3 不变，也决定斜率。",
+        "我认为“3 决定斜率”。",
+        "这里的 3 不影响斜率，但我认为 3 决定斜率。",
+        "有同学说 3 决定斜率我也认为 3 决定斜率。",
+        "3 决定斜率，但 3 不影响斜率。",
+        "3 决定斜率，3 不影响斜率。",
+        "3 不影响斜率，3 决定斜率。",
+        "以前我以为 b 越大越陡，现在我知道这不对，但 3 决定斜率。",
+    ],
+)
+def test_numeric_intercept_assertions_are_errors_in_both_analyzers(text):
+    domain = get_semantic_evaluator("linear_kb").analyze(text, "y=2x+3")
+    evidence = StudentResponseEvidenceAnalyzer().analyze(text, teacher_text="y=2x+3")
+    assert domain.shows_residual_misconception is True
+    assert evidence.shows_residual_misconception is True
+    assert evidence.explains_reason_correctly is False
+    assert evidence.transfer_success is False
+    assert not is_strong_correct_evidence(evidence.to_dict())
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "这里的 3 不决定斜率。",
+        "这里的 3 不影响斜率。",
+        "这里的 3 没有改变斜率。",
+        "这里的 3 控制不了斜率。",
+        "这里的 3 不决定倾斜程度。",
+        "不是 3 决定斜率。",
+        "3 越大，斜率不变。",
+        "3 越大，直线并没有更陡。",
+        "这里的 3 不让直线更陡。",
+        "这里的 3 决定斜率吗？",
+        "这里的 3 决定斜率？",
+        "这里的 3 是否决定斜率？",
+        "这里的 3 会不会影响斜率？",
+        "这里的 3 决定斜率，对吗？",
+        "3 决定斜率这个说法不对。",
+        "“3 决定斜率”。",
+        "3 会影响斜率，对不对？",
+        "有同学说这里的 3 决定斜率。",
+        "如果这里的 3 决定斜率，会怎样？",
+        "这里的 3 不影响斜率，但有人说 3 决定斜率。",
+        "这里的 3 不影响斜率，k 决定斜率。",
+        "3 改变位置，k 控制陡峭程度。",
+        "3 越大，b 只改变位置。",
+        "3 越大，k 增大才会更陡。",
+        "在 y=2x+3 中，k 决定斜率，b 只改变上下位置。",
+        "以前我以为 b 越大越陡，现在我知道这不对，3 不影响斜率。",
+    ],
+)
+def test_numeric_intercept_denials_and_nonassertions_are_not_residual(text):
+    assert not get_semantic_evaluator("linear_kb").analyze(text, "y=2x+3").shows_residual_misconception
+    assert not StudentResponseEvidenceAnalyzer().analyze(text, teacher_text="y=2x+3").shows_residual_misconception
+
+
+@pytest.mark.parametrize(
+    ("text", "context"),
+    [
+        ("3 决定斜率。", "y=3x+2"),
+        ("3 决定斜率。", ""),
+        ("3 决定斜率。", "y=3x+3"),
+        ("3 越大，直线越陡。", "y=3x+3"),
+        ("3 决定斜率。", "y=3x+2 和 y=2x+3"),
+        ("3 越大，直线越陡。", "y=3x+2 和 y=2x+3"),
+    ],
+)
+def test_unknown_or_ambiguous_numeric_roles_do_not_prove_an_error_or_mastery(text, context):
+    domain = get_semantic_evaluator("linear_kb").analyze(text, context)
+    evidence = StudentResponseEvidenceAnalyzer().analyze(text, teacher_text=context)
+    assert not domain.shows_residual_misconception
+    assert not evidence.shows_residual_misconception
+    assert not evidence.explains_reason_correctly
+    assert not evidence.transfer_success
+    assert not is_strong_correct_evidence(evidence.to_dict())
+
+
+@pytest.mark.parametrize("context", ["y=3x+3", "y=3x+2 和 y=2x+3", ""])
+@pytest.mark.parametrize("text", ["b 决定斜率。", "截距让直线更陡。"])
+def test_explicit_intercept_subjects_do_not_need_numeric_disambiguation(text, context):
+    assert get_semantic_evaluator("linear_kb").analyze(text, context).shows_residual_misconception
+
+
+@pytest.mark.parametrize(
+    ("text", "context"),
+    [
+        ("-3 决定斜率。", "y=2x-3"),
+        ("0.5 影响斜率。", "y=2x+0.5"),
+        ("1/2 控制斜率。", "y=2x+0.5"),
+    ],
+)
+def test_numeric_intercept_roles_use_exact_signed_values(text, context):
+    assert get_semantic_evaluator("linear_kb").analyze(text, context).shows_residual_misconception
+
+
+@pytest.mark.parametrize(
     ("text", "context", "status"),
     [
         ("k 从 2 变成 3，直线更陡。", "", "correct"),

@@ -261,10 +261,15 @@ def _compact(text: str) -> str:
 
 
 def _linear_residual(response: str, teacher_text: str) -> bool:
-    normalized = _compact(mask_equations(response))
+    masked = mask_equations(response)
+    normalized = _compact(masked)
+    context = teacher_text + "；" + response
     if _has_explicit_linear_self_correction(normalized):
-        correction_tail = re.split(r"(?:现在|后来|如今)", normalized, maxsplit=1)[-1]
-        return _linear_positive_error(correction_tail)
+        correction_tail = re.split(r"(?:现在|后来|如今)", masked, maxsplit=1)[-1]
+        return _linear_positive_error(_compact(correction_tail)) or any(
+            _linear_intercept_reference_error(clause, context)
+            for clause in split_linear_clauses(correction_tail)
+        )
     # Only the clause raising a hypothetical/quoted error is excluded. A later
     # first-person endorsement still expresses the student's misconception.
     asserted_clauses = [
@@ -274,42 +279,100 @@ def _linear_residual(response: str, teacher_text: str) -> bool:
     if any(_linear_positive_error(clause) for clause in asserted_clauses):
         return True
     return any(
-        _linear_intercept_reference_error(clause, teacher_text + "；" + response)
-        for clause in asserted_clauses
+        _linear_intercept_reference_error(clause, context)
+        # Numeric assertions keep punctuation and their own denial scope. A
+        # denial elsewhere in the clause must not erase a later assertion.
+        for clause in split_linear_clauses(masked)
     )
 
 
 def _linear_intercept_reference_error(response: str, context: str) -> bool:
     """Resolve a spoken number to an intercept before reading its assertion."""
+    if _is_hypothetical(response):
+        return False
     lines = equations(context)
     if not lines:
         return False
     intercepts = {number(b) for _, b in lines}
     slopes = {abs(number(k)) for k, _ in lines}
+    coefficients = {number(k) for k, _ in lines}
     for match in re.finditer(rf"(?<![\d./]){NUMBER}(?![\d./])", response):
         try:
             value = number(match[0])
         except (ValueError, ZeroDivisionError):
             continue
-        if value not in intercepts:
+        # A bare value shared by k and b does not identify which role the
+        # speaker means, even when the two occurrences are in different lines.
+        if value not in intercepts or value in coefficients:
             continue
-        tail = response[match.end():]
-        if re.search(r"(?:不|没|没有|不会).{0,4}(?:更陡|越陡|变陡)", tail):
-            continue
+        tail = re.split(r"k|b|截距|常数项|〈公式〉|\d", response[match.end():], maxsplit=1)[0]
         # Naming a whole line by its intercept is only contradictory here when
         # all compared lines have equal steepness. Unequal slopes need arithmetic.
-        if re.match(r"那条.{0,18}(?:更陡|越陡|变陡)", tail):
-            if len(lines) >= 2 and len(slopes) == 1:
+        line_claim = re.match(r"那条.{0,18}?(?:更陡|越陡|变陡)", tail)
+        if line_claim:
+            if (
+                len(lines) >= 2 and len(slopes) == 1
+                and _numeric_relation_is_asserted(response, match, line_claim)
+            ):
                 return True
             continue
-        if re.search(
-            r"^(?:(?!k|b|斜率|\d).){0,16}"
-            r"(?:越大|变大|增大|增加|影响|决定|控制|会让|让|使)"
-            r"(?:(?!k|b|斜率).){0,14}(?:更陡|越陡|变陡|会陡|倾斜)",
+        role_claim = re.match(
+            r"(?:(?!k|b|斜率|\d|决定|影响|控制|改变).){0,16}?"
+            r"(?:决定|影响|控制|改变)"
+            r"(?:(?!k|b|\d|[，,]).){0,10}?(?:斜率|倾斜程度|陡峭程度)",
             tail,
-        ):
+        )
+        if role_claim and _numeric_relation_is_asserted(response, match, role_claim):
+            return True
+        steepness_claim = re.match(
+            r"^(?:(?!k|b|斜率|\d).){0,16}?"
+            r"(?:越大|变大|增大|增加|影响|决定|控制|会让|让|使)"
+            r"(?:(?!k|b|斜率).){0,14}?(?:更陡|越陡|变陡|会陡|倾斜)",
+            tail,
+        )
+        if steepness_claim and _numeric_relation_is_asserted(response, match, steepness_claim):
             return True
     return False
+
+
+def _numeric_relation_is_asserted(
+    response: str, subject: re.Match[str], relation: re.Match[str]
+) -> bool:
+    """Read polarity/question markers only within this subject's assertion."""
+    # Include a denial immediately before the number ("不是 3 决定斜率"),
+    # not unrelated denials before an earlier comma or another numeric subject.
+    before = re.split(r"[，,]|\d", response[:subject.start()])[-1]
+    if re.search(r"(?:不是|并非|不(?:能)?(?:认为|觉得))$", before):
+        return False
+    span = relation[0]
+    if re.search(
+        r"(?:并非|而非|没有|没|未|不(?!但|仅|过))"
+        r"(?:是|再|会|能|让|使|令|变得|那么|了){0,2}"
+        r"(?:决定|影响|控制|改变|让|使|更陡|越陡|变陡|会陡|倾斜|斜率|陡峭程度)",
+        span,
+    ):
+        return False
+    if re.search(r"是否|是不是|会不会|能不能|对不对", span):
+        return False
+    following = response[subject.end() + relation.end():]
+    if re.match(r"(?:吗|呢)(?:[?？]|$)", following):
+        return False
+    if re.match(r"[，,]?(?:对吗|正确吗|对不对|是吗|成立吗)", following):
+        return False
+    if re.match(r"[，,]?(?:(?:这个|该)(?:说法|结论|观点))?(?:是)?(?:不对|不正确|错误)", following):
+        return False
+    for quote in re.finditer(r'“[^”]*”|「[^」]*」|"[^"]*"', response):
+        if quote.start() < subject.start() < quote.end() and not re.search(
+            r"我(?:也)?(?:认为|觉得|同意)$", response[:quote.start()]
+        ):
+            return False
+    # Preserve existing affirmative hedges such as "我觉得……越陡？";
+    # a bare question mark without an assertion stance is not an endorsement.
+    if re.match(r"[?？]", following) and not re.search(
+        r"(?:我|总|还是).{0,6}(?:觉得|认为|感觉)", response[:subject.end()] + span
+    ):
+        return False
+    return True
 
 
 def _linear_k_role(response: str) -> bool:
