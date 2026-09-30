@@ -34,6 +34,9 @@ class StudentResponseEvidenceRead(BaseModel):
     linguistic_hedging: bool
     conceptual_uncertainty: bool
     knowledge_precision: str
+    explanation_content_correct: bool | None = None
+    explanation_evidence_reason: str | None = None
+    slope_claim_status: str = "not_applicable"
     evidence_insufficient: bool
     parrots_teacher: bool
     transfer_success: bool

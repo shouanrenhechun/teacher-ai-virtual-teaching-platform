@@ -4,6 +4,10 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from .clause_splitter import split_linear_clauses
+from .linear_math import NUMBER, equations, mask_equations, number
+from .slope_claims import assess_slope_claims
+
 LINEAR_KB = "linear_kb"
 BINOMIAL_SQUARE = "binomial_square"
 
@@ -18,6 +22,7 @@ class DomainEvidence:
     shows_residual_misconception: bool
     transfer_success: bool
     knowledge_precision: str
+    slope_claim_status: str = "not_applicable"
 
 
 class MisconceptionSemanticEvaluator:
@@ -44,9 +49,10 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
         teacher_normalized = _compact(teacher_text)
         has_k = _linear_k_role(normalized)
         has_b = _linear_b_role(normalized)
-        residual = _linear_residual(normalized, teacher_normalized)
-        negative_claim = _linear_negative_claim(normalized)
+        residual = _linear_residual(response, teacher_normalized)
+        negative_claim = _linear_negative_claim(response)
         self_correction = _has_explicit_linear_self_correction(normalized)
+        slope_status = assess_slope_claims(response, teacher_text).status
         explains = (
             not residual
             and (
@@ -59,6 +65,9 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
                             "因为", "k相同", "k都", "斜率相同", "只改变b", "只会让直线",
                             "所以倾斜", "由k决定", "由k控制", "只看k", "k不变",
                             "斜率不变", "斜率保持不变", "倾斜程度不变", "一样陡", "同样陡",
+                            "k决定", "k控制", "k影响", "决定倾斜", "决定斜率",
+                            "只影响位置", "只改变位置", "只是上下", "只影响上下", "只改变上下",
+                            "与b无关", "跟b无关", "b无关",
                         )
                     )
                 )
@@ -71,16 +80,23 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
                     )
                 )
                 or (self_correction and has_k)
+                or (slope_status == "correct" and any(marker in normalized for marker in ("绝对值", "|k|")))
             )
         )
+        if slope_status in {"incorrect", "insufficient_conditions"}:
+            explains = False
         # A mixed answer can contain a correct conclusion and a residual error;
         # pure error vocabulary alone must not count as a correct conclusion.
         states_correct = (
             (has_k and (has_b or residual))
             or negative_claim
             or (self_correction and has_k)
+            or slope_status == "correct"
         )
-        if states_correct and not residual:
+        if slope_status in {"incorrect", "insufficient_conditions"}:
+            states_correct = has_b or negative_claim
+            conclusion_level = "partial" if states_correct or slope_status == "insufficient_conditions" else "wrong"
+        elif states_correct and not residual:
             conclusion_level = "correct"
         elif states_correct:
             conclusion_level = "partial"
@@ -88,7 +104,6 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
             conclusion_level = "partial"
         else:
             conclusion_level = "wrong"
-        from .linear_math import equations
         slopes = [k for k, _ in equations(teacher_normalized)]
         is_transfer = len(slopes) >= 2 and len(set(slopes[:2])) == 1
         transfer = (
@@ -98,7 +113,11 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
             and any(marker in normalized for marker in ("一样", "相同", "同样"))
             and not residual
         )
-        if residual and not (has_k and has_b):
+        if slope_status == "incorrect":
+            precision = "incorrect"
+        elif slope_status == "insufficient_conditions":
+            precision = "partial"
+        elif residual and not (has_k and has_b):
             precision = "incorrect"
         elif explains and not residual:
             precision = "correct"
@@ -111,6 +130,7 @@ class LinearKbSemanticEvaluator(MisconceptionSemanticEvaluator):
             shows_residual_misconception=residual,
             transfer_success=transfer,
             knowledge_precision=precision,
+            slope_claim_status=slope_status,
         )
 
     def matches_text(self, text: str) -> bool:
@@ -241,14 +261,118 @@ def _compact(text: str) -> str:
 
 
 def _linear_residual(response: str, teacher_text: str) -> bool:
-    if _has_explicit_linear_self_correction(response):
-        correction_tail = re.split(r"(?:现在|后来|如今)", response, maxsplit=1)[-1]
-        return _linear_positive_error(correction_tail)
-    if any(_linear_positive_error(clause) for clause in _linear_clauses(response)):
+    masked = mask_equations(response)
+    normalized = _compact(masked)
+    context = teacher_text + "；" + response
+    if _has_explicit_linear_self_correction(normalized):
+        correction_tail = re.split(r"(?:现在|后来|如今)", masked, maxsplit=1)[-1]
+        return _linear_positive_error(_compact(correction_tail)) or any(
+            _linear_intercept_reference_error(clause, context)
+            for clause in split_linear_clauses(correction_tail)
+        )
+    # Only the clause raising a hypothetical/quoted error is excluded. A later
+    # first-person endorsement still expresses the student's misconception.
+    asserted_clauses = [
+        clause for clause in _linear_clauses(response)
+        if not _is_hypothetical(clause) and not _denies_steepness(clause)
+    ]
+    if any(_linear_positive_error(clause) for clause in asserted_clauses):
         return True
-    if "2和3" in teacher_text or "y=2x+3" in teacher_text:
-        return bool(re.search(r"(?:3|它).{0,16}(越陡|更陡|变陡|会陡)", response))
+    return any(
+        _linear_intercept_reference_error(clause, context)
+        # Numeric assertions keep punctuation and their own denial scope. A
+        # denial elsewhere in the clause must not erase a later assertion.
+        for clause in split_linear_clauses(masked)
+    )
+
+
+def _linear_intercept_reference_error(response: str, context: str) -> bool:
+    """Resolve a spoken number to an intercept before reading its assertion."""
+    if _is_hypothetical(response):
+        return False
+    lines = equations(context)
+    if not lines:
+        return False
+    intercepts = {number(b) for _, b in lines}
+    slopes = {abs(number(k)) for k, _ in lines}
+    coefficients = {number(k) for k, _ in lines}
+    for match in re.finditer(rf"(?<![\d./]){NUMBER}(?![\d./])", response):
+        try:
+            value = number(match[0])
+        except (ValueError, ZeroDivisionError):
+            continue
+        # A bare value shared by k and b does not identify which role the
+        # speaker means, even when the two occurrences are in different lines.
+        if value not in intercepts or value in coefficients:
+            continue
+        tail = re.split(r"k|b|截距|常数项|〈公式〉|\d", response[match.end():], maxsplit=1)[0]
+        # Naming a whole line by its intercept is only contradictory here when
+        # all compared lines have equal steepness. Unequal slopes need arithmetic.
+        line_claim = re.match(r"那条.{0,18}?(?:更陡|越陡|变陡)", tail)
+        if line_claim:
+            if (
+                len(lines) >= 2 and len(slopes) == 1
+                and _numeric_relation_is_asserted(response, match, line_claim)
+            ):
+                return True
+            continue
+        role_claim = re.match(
+            r"(?:(?!k|b|斜率|\d|决定|影响|控制|改变).){0,16}?"
+            r"(?:决定|影响|控制|改变)"
+            r"(?:(?!k|b|\d|[，,]).){0,10}?(?:斜率|倾斜程度|陡峭程度)",
+            tail,
+        )
+        if role_claim and _numeric_relation_is_asserted(response, match, role_claim):
+            return True
+        steepness_claim = re.match(
+            r"^(?:(?!k|b|斜率|\d).){0,16}?"
+            r"(?:越大|变大|增大|增加|影响|决定|控制|会让|让|使)"
+            r"(?:(?!k|b|斜率).){0,14}?(?:更陡|越陡|变陡|会陡|倾斜)",
+            tail,
+        )
+        if steepness_claim and _numeric_relation_is_asserted(response, match, steepness_claim):
+            return True
     return False
+
+
+def _numeric_relation_is_asserted(
+    response: str, subject: re.Match[str], relation: re.Match[str]
+) -> bool:
+    """Read polarity/question markers only within this subject's assertion."""
+    # Include a denial immediately before the number ("不是 3 决定斜率"),
+    # not unrelated denials before an earlier comma or another numeric subject.
+    before = re.split(r"[，,]|\d", response[:subject.start()])[-1]
+    if re.search(r"(?:不是|并非|不(?:能)?(?:认为|觉得))$", before):
+        return False
+    span = relation[0]
+    if re.search(
+        r"(?:并非|而非|没有|没|未|不(?!但|仅|过))"
+        r"(?:是|再|会|能|让|使|令|变得|那么|了){0,2}"
+        r"(?:决定|影响|控制|改变|让|使|更陡|越陡|变陡|会陡|倾斜|斜率|陡峭程度)",
+        span,
+    ):
+        return False
+    if re.search(r"是否|是不是|会不会|能不能|对不对", span):
+        return False
+    following = response[subject.end() + relation.end():]
+    if re.match(r"(?:吗|呢)(?:[?？]|$)", following):
+        return False
+    if re.match(r"[，,]?(?:对吗|正确吗|对不对|是吗|成立吗)", following):
+        return False
+    if re.match(r"[，,]?(?:(?:这个|该)(?:说法|结论|观点))?(?:是)?(?:不对|不正确|错误)", following):
+        return False
+    for quote in re.finditer(r'“[^”]*”|「[^」]*」|"[^"]*"', response):
+        if quote.start() < subject.start() < quote.end() and not re.search(
+            r"我(?:也)?(?:认为|觉得|同意)$", response[:quote.start()]
+        ):
+            return False
+    # Preserve existing affirmative hedges such as "我觉得……越陡？";
+    # a bare question mark without an assertion stance is not an endorsement.
+    if re.match(r"[?？]", following) and not re.search(
+        r"(?:我|总|还是).{0,6}(?:觉得|认为|感觉)", response[:subject.end()] + span
+    ):
+        return False
+    return True
 
 
 def _linear_k_role(response: str) -> bool:
@@ -273,8 +397,33 @@ def _linear_b_role(response: str) -> bool:
 
 
 def _linear_clauses(response: str) -> list[str]:
-    """Keep contrastive clauses separate so negation cannot cross a turn."""
-    return [clause for clause in re.split(r"(?:不过|但是|然而|可是|但)", response) if clause]
+    """Use the same boundaries as claim checking before compacting punctuation."""
+    return [_compact(clause) for clause in split_linear_clauses(mask_equations(response))]
+
+
+# Denial of the b-to-steepness relation, in the forms students actually use.
+# Strong negations ("并没有", "没有") deny on their own. Modal negations
+# ("不会", "不能") are only denials when they carry a causative marker, so a
+# genuine error such as "越大……也会陡一点，不过可能不会太陡吧" still counts as
+# the misconception rather than as a correction.
+_STEEPNESS_DENIAL = re.compile(
+    r"(?:(?:并没有|并没有能|并不能够|并不能|没能|并不|没有)"
+    r"|(?:不会|不能)(?:让|使|令))"
+    r".{0,4}(?:更陡|越陡|变陡|会陡|更斜|越斜|变斜|影响(?:斜率|倾斜)|改变(?:斜率|倾斜))"
+)
+_HYPOTHETICAL = re.compile(
+    r"(?:有同学|有人|有些同学).{0,6}(?:说|认为|觉得|问)|如果|假如|要是|是不是|对不对"
+)
+
+
+def _denies_steepness(text: str) -> bool:
+    """True when the text denies that b changes steepness."""
+    return bool(_STEEPNESS_DENIAL.search(text))
+
+
+def _is_hypothetical(text: str) -> bool:
+    """Text that raises the error without asserting it (attribution, question, condition)."""
+    return bool(_HYPOTHETICAL.search(text))
 
 
 def _linear_positive_error(response: str) -> bool:
@@ -284,15 +433,19 @@ def _linear_positive_error(response: str) -> bool:
     )
     if rhetorical_positive:
         return True
+    if _denies_steepness(response):
+        return False
     if _linear_negative_claim_match(response):
         return False
     patterns = (
-        r"b.{0,18}(越大|变大|更大|增加).{0,18}(陡|倾斜|斜率)",
-        r"(?:b|截距|[+＋]\d+).{0,20}(?:更陡|越陡|变陡|会陡|更斜|越斜|变斜|有点(?:更)?陡)",
-        r"(?:b|[+＋]\d+).{0,20}影响.{0,12}(?:陡|倾斜|斜率)",
-        r"截距.{0,18}(越大|变大|更大|增加).{0,18}(陡|倾斜|斜率|更斜)",
-        r"(觉得|感觉|认为|还是|仍然|可能|也许).{0,18}(?:b|往上移|[+＋]\d+).{0,20}(?:陡|倾斜|斜率|影响)",
-        r"往上移.{0,12}(会|有点|看起来).{0,12}(陡|倾斜)",
+        r"b[^，,]{0,12}(?:越大|变大|增大|更大|增加)[^，,]{0,12}.{0,12}(?:更陡|越陡|变陡|会陡)",
+        r"(?:b|截距).{0,20}(?:更陡|越陡|变陡|会陡|更斜|越斜|变斜|有点(?:更)?陡)",
+        # The subject must sit next to its own verb, otherwise b is credited with
+        # a clause about k ("b 改变上下位置，因为 k 控制陡峭程度").
+        r"b.{0,6}(?:影响|决定|控制).{0,10}(?:陡|倾斜|斜率)",
+        r"截距.{0,18}(?:越大|变大|更大|增加).{0,18}(?:陡|倾斜|斜率|更斜)",
+        r"(?:觉得|感觉|认为|还是|仍然|可能|也许).{0,18}(?:b|往上移).{0,20}(?:陡|倾斜|斜率|影响)",
+        r"往上移.{0,12}(?:会|有点|看起来).{0,12}(?:陡|倾斜)",
     )
     return any(re.search(pattern, response) for pattern in patterns)
 

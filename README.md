@@ -63,7 +63,7 @@ MVP 基础模块 0～17 已完成；模块 19 的学生回答计划与渲染流�
 - 学生回答计划与渲染：根据课堂任务、学生状态和知识边界生成结构化回答计划；Mock/Real Renderer 共用校验流程，最多重试一次，备用回答与澄清带来源及降级原因，并不推进虚拟学生的认知学习证据
 - 通用课堂多意图识别：确定性规则结合离线组合语义评分、会话上下文和开放集拒绝，支持未收录的课堂同义表达并对跑题采用高门槛判定
 - 比赛 Demo 启动脚本：`start-demo.cmd`，固定使用本地 Mock 模式
-- 独立的虚拟学生一致性验证框架：案例、规则指标、Mock/Real 验证和 JSON 报告
+- 虚拟学生一致性规则回归框架：案例、规则指标、Mock/Real 运行和 JSON 报告（指标复用生产语义规则，因此是回归检查而非独立判定）
 - 支持一次函数 `linear_kb` 与完全平方公式 `binomial_square` 两类认知错误验证，并提供 Student A / Student B / Student C 验证画像
 
 ## 启动后端
@@ -123,6 +123,12 @@ npm run build
 ## 虚拟学生一致性验证
 
 验证框架当前包含一次函数 `linear_kb` 和完全平方公式 `binomial_square` 两类认知错误，并支持 Student A / Student B / Student C 验证画像；其中 `binomial_square` 当前仅使用 Student A，Student B / Student C 用于 `linear_kb` 验证。验证覆盖角色一致性、知识边界、错误认知保持性、可纠正性、语言自然度和状态一致性。默认 Mock 验证不调用真实 API，报告写入 `backend/validation/reports/`，该目录中的生成文件不会提交 Git。
+
+请注意框架的独立性边界：`validation/metrics.py` 直接导入生产的 `get_semantic_evaluator`、`has_correction_evidence` 和 `is_strong_correct_evidence`，因此错误认知保持性与可纠正性指标跟随生产判定，生产规则与指标会一起误判。该框架应作为生产规则的回归检查，其中的知识边界与语言自然度两项才使用自带词表；不要把整体结果当作与生产逻辑无关的独立验证。
+
+一次函数的陡峭程度断言使用共享的 `slope_claims.py` 核验，比较 `|k|` 而非带符号的 `k`。支持明确的数值变化、绝对值增减、正负条件及两条公式的前者/后者比较；缺少必要条件时记为 `insufficient_conditions`，不作为掌握证据，也不混记为“b 控制斜率”的误解。完整公式内部的数字不参与截距误解匹配。未识别的自然语言仍不评分，这不是通用语义模型。
+
+新认知轨迹分别保存 `explanation_content_correct`（解释内容是否正确）与 `explains_reason_correctly`（是否可作为独立解释证据），并用 `explanation_evidence_reason` 记录原因；正确复述不会推进独立理解或迁移证据。旧轨迹兼容读取，不自动重算。专项回归入口：后端 `python -m pytest tests/test_linear_math_claims.py -q`，前端 `node cognitiveEvidence.test.mjs`。
 
 运行 Mock 验证：
 
