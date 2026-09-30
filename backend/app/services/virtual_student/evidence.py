@@ -27,6 +27,9 @@ class StudentResponseEvidence:
     linguistic_hedging: bool = False
     conceptual_uncertainty: bool = False
     knowledge_precision: str = "incorrect"
+    explanation_content_correct: bool | None = None
+    explanation_evidence_reason: str | None = None
+    slope_claim_status: str = "not_applicable"
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -40,6 +43,9 @@ class StudentResponseEvidence:
             "linguistic_hedging": self.linguistic_hedging,
             "conceptual_uncertainty": self.conceptual_uncertainty,
             "knowledge_precision": self.knowledge_precision,
+            "explanation_content_correct": self.explanation_content_correct,
+            "explanation_evidence_reason": self.explanation_evidence_reason,
+            "slope_claim_status": self.slope_claim_status,
             "evidence_insufficient": self.evidence_insufficient,
             "parrots_teacher": self.parrots_teacher,
             "transfer_success": self.transfer_success,
@@ -83,7 +89,7 @@ class StudentResponseEvidenceAnalyzer:
         conceptual_uncertainty = _has_conceptual_uncertainty(
             text.lower(),
             residual=domain_evidence.shows_residual_misconception,
-        )
+        ) or domain_evidence.slope_claim_status == "insufficient_conditions"
         # Compatibility field: old callers used this as a knowledge-state gate.
         # Purely linguistic hedging must not block transfer or correction.
         uncertainty = conceptual_uncertainty
@@ -91,6 +97,14 @@ class StudentResponseEvidenceAnalyzer:
             text, previous_teacher_text
         )
         explains_reason = domain_evidence.explains_reason_correctly and not parrots
+        if domain_evidence.slope_claim_status == "incorrect":
+            explanation_reason = "slope_claim_incorrect"
+        elif domain_evidence.slope_claim_status == "insufficient_conditions":
+            explanation_reason = "missing_slope_conditions"
+        elif domain_evidence.explains_reason_correctly:
+            explanation_reason = "parroting_teacher" if parrots else "independent_explanation"
+        else:
+            explanation_reason = "no_explanation"
         states_correct = domain_evidence.states_correct_conclusion
         transfer = (
             domain_evidence.transfer_success
@@ -122,6 +136,9 @@ class StudentResponseEvidenceAnalyzer:
             linguistic_hedging=linguistic_hedging,
             conceptual_uncertainty=conceptual_uncertainty,
             knowledge_precision=knowledge_precision,
+            explanation_content_correct=domain_evidence.explains_reason_correctly,
+            explanation_evidence_reason=explanation_reason,
+            slope_claim_status=domain_evidence.slope_claim_status,
         )
 
 

@@ -80,12 +80,15 @@ export function EvidenceCard({ round }: { round?: CognitiveTraceRound }) {
   const surfaceRecall = evidence.parrots_teacher || round.state_after.surface_recall >= 0.1;
   const primaryEvidence: Array<{ text: string; className: string }> = [];
   if (evidence.shows_residual_misconception) primaryEvidence.push({ text: "⚠ 仍存在原有错误认知", className: "evidence-warn" });
-  if (evidence.states_correct_conclusion) primaryEvidence.push({ text: "✓ 得出了正确结论", className: "evidence-good" });
+  if (evidence.slope_claim_status === "incorrect") primaryEvidence.push({ text: "⚠ 斜率变化判断有误，应比较 |k|", className: "evidence-warn" });
+  if (evidence.states_correct_conclusion) primaryEvidence.push({ text: evidence.conclusion_level === "partial" ? "○ 包含部分正确结论" : "✓ 得出了正确结论", className: evidence.conclusion_level === "partial" ? "evidence-neutral" : "evidence-good" });
   if (evidence.explains_reason_correctly) primaryEvidence.push({ text: "✓ 能解释原因", className: "evidence-good" });
   if (evidence.transfer_success) primaryEvidence.push({ text: "✓ 能迁移到新的题目", className: "evidence-good" });
   const secondaryEvidence: string[] = [];
-  if (surfaceRecall) secondaryEvidence.push("可能只是复述教师结论");
-  if (evidence.conceptual_uncertainty) secondaryEvidence.push("对概念仍存在真实犹豫");
+  if (evidence.explanation_content_correct && evidence.parrots_teacher) secondaryEvidence.push("复述内容正确，尚需独立解释");
+  else if (surfaceRecall) secondaryEvidence.push("可能只是复述教师结论");
+  if (evidence.slope_claim_status === "insufficient_conditions") secondaryEvidence.push("判断陡峭程度还缺少 k 的正负或具体数值条件");
+  else if (evidence.conceptual_uncertainty) secondaryEvidence.push("对概念仍存在真实犹豫");
   if (evidence.linguistic_hedging) secondaryEvidence.push("表达较谨慎（不等于错误）");
   return (
     <div className="evidence-card">

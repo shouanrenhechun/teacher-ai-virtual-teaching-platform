@@ -126,6 +126,10 @@ npm run build
 
 请注意框架的独立性边界：`validation/metrics.py` 直接导入生产的 `get_semantic_evaluator`、`has_correction_evidence` 和 `is_strong_correct_evidence`，因此错误认知保持性与可纠正性指标跟随生产判定，生产规则与指标会一起误判。该框架应作为生产规则的回归检查，其中的知识边界与语言自然度两项才使用自带词表；不要把整体结果当作与生产逻辑无关的独立验证。
 
+一次函数的陡峭程度断言使用共享的 `slope_claims.py` 核验，比较 `|k|` 而非带符号的 `k`。支持明确的数值变化、绝对值增减、正负条件及两条公式的前者/后者比较；缺少必要条件时记为 `insufficient_conditions`，不作为掌握证据，也不混记为“b 控制斜率”的误解。完整公式内部的数字不参与截距误解匹配。未识别的自然语言仍不评分，这不是通用语义模型。
+
+新认知轨迹分别保存 `explanation_content_correct`（解释内容是否正确）与 `explains_reason_correctly`（是否可作为独立解释证据），并用 `explanation_evidence_reason` 记录原因；正确复述不会推进独立理解或迁移证据。旧轨迹兼容读取，不自动重算。专项回归入口：后端 `python -m pytest tests/test_linear_math_claims.py -q`，前端 `node cognitiveEvidence.test.mjs`。
+
 运行 Mock 验证：
 
 ```powershell

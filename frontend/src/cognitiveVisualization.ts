@@ -31,6 +31,9 @@ export type StudentResponseEvidence = {
   linguistic_hedging: boolean;
   conceptual_uncertainty: boolean;
   knowledge_precision: string;
+  explanation_content_correct?: boolean | null;
+  explanation_evidence_reason?: string | null;
+  slope_claim_status?: string;
   evidence_insufficient: boolean;
   parrots_teacher: boolean;
   transfer_success: boolean;

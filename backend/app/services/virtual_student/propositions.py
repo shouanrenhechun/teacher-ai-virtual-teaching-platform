@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import re
 
 from .clause_splitter import split_linear_clauses
+from .slope_claims import assess_slope_claims
 
 
 # Negation preceding a claim ("并没有更陡", "不会影响斜率"). Deliberately
@@ -76,6 +77,12 @@ def assess_claims(text: str) -> ClaimAssessment:
                 claims.append((key, not truth if local_denial else truth))
                 if not truth:
                     stances.append('denied' if local_denial else 'asserted')
+    for key, truth in assess_slope_claims(text).claims:
+        if truth is not None:
+            results.append(truth)
+            claims.append((key, truth))
+            if not truth:
+                stances.append('asserted')
     correct = all(results) if results else None
     stance = next((s for s in ('asserted', 'denied', 'questioned') if s in stances), None)
     return ClaimAssessment(correct, stance, tuple(claims))

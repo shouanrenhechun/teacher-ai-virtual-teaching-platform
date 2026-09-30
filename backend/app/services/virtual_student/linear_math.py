@@ -6,6 +6,12 @@ NUMBER = r"[+-]?(?:\d+/\d+|\d+(?:\.\d+)?)"
 EQUATION = re.compile(rf"y=({NUMBER}|[+-]?)x({NUMBER})?(?![\d./])")
 
 
+def mask_equations(text: str) -> str:
+    """Hide complete formula literals while retaining surrounding assertions."""
+    normalized = re.sub(r"\s+", "", text.lower()).replace("＋", "+").replace("−", "-")
+    return EQUATION.sub("〈公式〉", normalized)
+
+
 def number(value: str) -> Fraction:
     return Fraction(value)
 
