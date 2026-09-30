@@ -13,6 +13,7 @@ from app.services.virtual_student.clause_splitter import split_linear_clauses
 from app.services.virtual_student.evidence import StudentResponseEvidenceAnalyzer
 from app.services.virtual_student.propositions import assess_claims
 from app.services.virtual_student.semantic import get_semantic_evaluator
+from app.services.virtual_student.state_rules import is_strong_correct_evidence
 
 # The exact sentence from the issue report.
 ISSUE_SENTENCE = (
@@ -217,3 +218,72 @@ def test_validation_metrics_reuse_production_rules() -> None:
 
     assert metrics.get_semantic_evaluator is not None
     assert metrics.is_strong_correct_evidence is not None
+
+
+# --- cross-domain vocabulary must not leak into conceptual uncertainty -----
+
+class _BinomialMisconception:
+    """Minimal stand-in so the analyzer selects the binomial evaluator."""
+
+    semantic_type = "binomial_square"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "b 会不会影响斜率呢？",
+        "y=kx+b 里的 k 会不会改变倾斜程度？",
+    ],
+)
+def test_linear_wording_still_counts_as_uncertainty_in_the_linear_domain(text: str) -> None:
+    evidence = StudentResponseEvidenceAnalyzer().analyze(text)
+    assert evidence.conceptual_uncertainty is True
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "交叉项会不会要算进去？",
+        "展开时会不会漏掉中间项？",
+        "括号相乘会不会出现中间项？",
+    ],
+)
+def test_binomial_wording_counts_as_uncertainty_in_the_binomial_domain(text: str) -> None:
+    """The check follows the active domain, not a hard-coded linear vocabulary."""
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        text, misconception=_BinomialMisconception()
+    )
+    assert evidence.conceptual_uncertainty is True
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "(a+b)^2 会不会漏掉 ab 呢？",
+        "这个会不会影响斜率？",
+    ],
+)
+def test_binomial_context_does_not_adopt_linear_uncertainty(text: str) -> None:
+    """Doubting the linear topic is not hesitating about the binomial one."""
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        text, misconception=_BinomialMisconception()
+    )
+    assert evidence.conceptual_uncertainty is False
+
+
+def test_correct_binomial_answer_is_strong_evidence_despite_linear_words() -> None:
+    """Regression: hard-coded linear vocabulary used to block binomial correction.
+
+    The answer opens by doubting the *linear* topic, then explains the binomial
+    one correctly. Only the binomial doubt may count, otherwise the correct
+    explanation is discarded as uncertain.
+    """
+    text = (
+        "这个会不会影响斜率？展开得到 a^2+2ab+b^2，因为中间项来自交叉相乘。"
+    )
+    evidence = StudentResponseEvidenceAnalyzer().analyze(
+        text, misconception=_BinomialMisconception()
+    )
+    assert evidence.conceptual_uncertainty is False
+    assert evidence.explains_reason_correctly is True
+    assert is_strong_correct_evidence(evidence.to_dict())

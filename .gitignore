@@ -19,6 +19,15 @@ backend/validation/reports/*.json
 backend/validation/reports/*.md
 backend/validation/reports/*.csv
 
+# Audit scripts also emit timestamped transcripts. Only the timestamped
+# variants are ignored: the fixed-name reports, case files and run_*.py
+# scripts in this directory are curated and stay tracked.
+backend/audits/mock_classroom_repeated_[0-9]*.json
+backend/audits/mock_classroom_repeated_[0-9]*.md
+backend/audits/mock_classroom_two_rounds_[0-9]*.json
+backend/audits/mock_classroom_two_rounds_[0-9]*.md
+backend/audits/real_classroom_acceptance_[0-9]*.json
+
 # Node / Vite
 node_modules/
 frontend/dist/

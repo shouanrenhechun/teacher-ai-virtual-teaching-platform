@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 
 from .state_rules import is_evidence_insufficient
-from .semantic import get_semantic_evaluator
+from .semantic import LINEAR_KB, get_semantic_evaluator
 
 
 _LINGUISTIC_HEDGING_MARKERS = (
@@ -89,6 +89,7 @@ class StudentResponseEvidenceAnalyzer:
         conceptual_uncertainty = _has_conceptual_uncertainty(
             text.lower(),
             residual=domain_evidence.shows_residual_misconception,
+            evaluator=evaluator,
         ) or domain_evidence.slope_claim_status == "insufficient_conditions"
         # Compatibility field: old callers used this as a knowledge-state gate.
         # Purely linguistic hedging must not block transfer or correction.
@@ -142,7 +143,7 @@ class StudentResponseEvidenceAnalyzer:
         )
 
 
-def _has_conceptual_uncertainty(response: str, *, residual: bool) -> bool:
+def _has_conceptual_uncertainty(response: str, *, residual: bool, evaluator=None) -> bool:
     direct_uncertainty = tuple(
         marker
         for marker in _CONCEPTUAL_UNCERTAINTY_MARKERS
@@ -150,15 +151,30 @@ def _has_conceptual_uncertainty(response: str, *, residual: bool) -> bool:
     )
     if any(marker in response for marker in direct_uncertainty):
         return True
-    if "会不会" in response and any(
-        marker in response for marker in ("b", "截距", "陡", "倾斜", "斜率")
-    ):
-        return True
+    # "会不会" expresses doubt about the misconception under assessment, so the
+    # vocabulary must be that misconception's, not a hard-coded domain. This used
+    # to test linear words only, so a binomial answer such as
+    # "(a+b)^2 会不会漏掉 ab 呢" was misread as hesitation. When only the linear
+    # words match while a different domain is under assessment, the doubt is
+    # about the other topic and must not block correction here.
+    if "会不会" in response and evaluator is not None:
+        if evaluator.matches_text(response) and not _is_other_domain_doubt(
+            response, evaluator
+        ):
+            return True
     if re.search(r"(?:我|自己|还).{0,6}不会(?:判断|计算|算|解释|做|答|弄)", response):
         return True
     if residual and any(marker in response for marker in ("可能", "也许", "有点", "担心")):
         return True
     return False
+
+
+def _is_other_domain_doubt(response: str, evaluator: object) -> bool:
+    """True when "会不会" is about a different misconception than this one."""
+    linear = get_semantic_evaluator(LINEAR_KB)
+    if type(evaluator) is type(linear):
+        return False
+    return linear.matches_text(response)
 
 
 def _is_parroting(response: str, teacher_text: str) -> bool:
